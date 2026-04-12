@@ -1,0 +1,60 @@
+.marquee-bar {
+  width: 100%;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-top: 2px solid #e8552a;
+  border-bottom: 2px solid #e8552a;
+  padding: 14px 0;
+  white-space: nowrap;
+}
+
+.marquee-track {
+  display: inline-flex;
+  animation: marquee-scroll 20s linear infinite;
+}
+
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  font-size: 17px;
+  color: #111;
+  font-weight: 400;
+  padding-right: 48px;
+  gap: 14px;
+  letter-spacing: 0.01em;
+}
+
+.marquee-dot {
+  color: #333;
+  font-size: 20px;
+  line-height: 1;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-bar:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (max-width: 600px) {
+  .marquee-item {
+    font-size: 13px;
+    padding-right: 28px;
+    gap: 8px;
+  }
+
+  .marquee-dot {
+    font-size: 15px;
+  }
+
+  .marquee-bar {
+    padding: 10px 0;
+  }
+}

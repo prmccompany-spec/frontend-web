@@ -1,0 +1,184 @@
+.uc-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fff 0%, #fff5f3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 20px;
+}
+
+/* Background circles */
+.uc-bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.uc-bg-circle-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(232,52,26,0.07) 0%, transparent 70%);
+  top: -200px;
+  right: -150px;
+}
+
+.uc-bg-circle-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(232,52,26,0.05) 0%, transparent 70%);
+  bottom: -150px;
+  left: -100px;
+}
+
+/* Card */
+.uc-card {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  border-radius: 28px;
+  padding: 60px 56px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 60px rgba(0,0,0,0.09);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Gear icon */
+.uc-icon-wrap {
+  width: 100px;
+  height: 100px;
+  background: #fff0eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.uc-gear {
+  width: 64px;
+  height: 64px;
+}
+
+.uc-gear-1 {
+  animation: uc-spin 4s linear infinite;
+}
+
+@keyframes uc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Text */
+.uc-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e8341a;
+}
+
+.uc-title {
+  font-size: 34px;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.uc-subtitle {
+  font-size: 15px;
+  color: #888;
+  line-height: 1.75;
+}
+
+/* Progress bar */
+.uc-progress-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.uc-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.uc-progress-bar::after {
+  content: '';
+  position: absolute;
+  left: -60%;
+  top: 0;
+  height: 100%;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, #e8341a, transparent);
+  border-radius: 99px;
+  animation: uc-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes uc-shimmer {
+  0% { left: -60%; }
+  100% { left: 110%; }
+}
+
+.uc-progress-label {
+  font-size: 11.5px;
+  color: #bbb;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Button */
+.uc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8341a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  box-shadow: 0 4px 18px rgba(232,52,26,0.3);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.uc-btn:hover {
+  background: #c42a14;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232,52,26,0.4);
+}
+
+.uc-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile */
+@media (max-width: 560px) {
+  .uc-card {
+    padding: 40px 28px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  .uc-title {
+    font-size: 26px;
+  }
+}

@@ -1,0 +1,368 @@
+/* ── Layout ──────────────────────────────────────── */
+.lp-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Left panel ──────────────────────────────────── */
+.lp-left {
+  flex: 0 0 42%;
+  background: #e8341a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 48px;
+}
+
+/* Decorative blobs */
+.lp-left-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.lp-blob-1 {
+  width: 340px;
+  height: 340px;
+  background: rgba(255,255,255,0.08);
+  top: -80px;
+  right: -80px;
+}
+
+.lp-blob-2 {
+  width: 220px;
+  height: 220px;
+  background: rgba(255,255,255,0.06);
+  bottom: -60px;
+  left: -40px;
+}
+
+.lp-left-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.lp-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  margin-bottom: 4px;
+}
+
+.lp-brand {
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.lp-brand-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.lp-divider {
+  width: 48px;
+  height: 2px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  margin: 8px auto;
+}
+
+.lp-quote {
+  font-size: 15px;
+  color: rgba(255,255,255,0.75);
+  font-style: italic;
+  line-height: 1.7;
+  max-width: 280px;
+}
+
+/* ── Right panel ─────────────────────────────────── */
+.lp-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  padding: 40px 24px;
+}
+
+.lp-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 44px 40px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.08);
+}
+
+/* Card header */
+.lp-card-header {
+  margin-bottom: 32px;
+}
+
+.lp-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.lp-subtitle {
+  font-size: 14px;
+  color: #888;
+}
+
+/* Error */
+.lp-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.lp-error svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Form */
+.lp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.lp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lp-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.02em;
+}
+
+.lp-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-forgot {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #e8341a;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.lp-forgot:hover {
+  opacity: 0.7;
+}
+
+/* Input wrapper */
+.lp-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lp-input-icon {
+  position: absolute;
+  left: 14px;
+  width: 17px;
+  height: 17px;
+  color: #bbb;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.lp-input {
+  width: 100%;
+  padding: 13px 14px 13px 42px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #111;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.lp-input:focus {
+  border-color: #e8341a;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(232, 52, 26, 0.1);
+}
+
+.lp-input:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+  color: #aaa;
+}
+
+.lp-input::placeholder {
+  color: #ccc;
+}
+
+/* Password eye toggle */
+.lp-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #bbb;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.lp-eye-btn:hover {
+  color: #e8341a;
+}
+
+.lp-eye-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Submit button */
+.lp-submit {
+  width: 100%;
+  padding: 15px;
+  background: #e8341a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(232, 52, 26, 0.3);
+}
+
+.lp-submit:hover:not(:disabled) {
+  background: #c42a14;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(232, 52, 26, 0.4);
+}
+
+.lp-submit:disabled {
+  background: #e8a090;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Loading spinner */
+.lp-spinner {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: lp-spin 0.7s linear infinite;
+}
+
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Register link */
+.lp-register-text {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.lp-register-link {
+  background: none;
+  border: none;
+  color: #e8341a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.lp-register-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ── Mobile responsive ───────────────────────────── */
+@media (max-width: 700px) {
+  .lp-container {
+    flex-direction: column;
+  }
+
+  .lp-left {
+    flex: 0 0 auto;
+    padding: 36px 24px;
+  }
+
+  .lp-logo {
+    width: 64px;
+    height: 64px;
+  }
+
+  .lp-brand {
+    font-size: 30px;
+  }
+
+  .lp-quote {
+    display: none;
+  }
+
+  .lp-right {
+    padding: 32px 20px;
+  }
+
+  .lp-card {
+    padding: 32px 24px;
+    border-radius: 16px;
+  }
+
+  .lp-title {
+    font-size: 22px;
+  }
+}

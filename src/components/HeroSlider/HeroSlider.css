@@ -1,0 +1,274 @@
+/* ── Hero Slider ─────────────────────────────────── */
+.hero-slider {
+  position: relative;
+  width: 100%;
+  background-color: #fff;
+  padding: 48px 0 56px;
+  overflow: hidden;
+}
+
+/* Soft peach circle top-right decoration */
+.hero-bg-circle {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f9c4b0 0%, #f5a090 100%);
+  opacity: 0.45;
+  top: -30px;
+  right: -210px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Two-column layout */
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 60px;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  box-sizing: border-box;
+}
+
+/* ── Left: image ─────────────────────────────────── */
+.hero-image-wrap {
+  position: relative;
+  flex: 0 0 62%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.hero-img-card {
+  width: 100%;
+  height: 460px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  transition: opacity 0.45s ease;
+}
+
+.hero-img-card.hero-img-fade {
+  opacity: 0.35;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* prev / next arrows on sides of image */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  background: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 28px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+  transition: background 0.2s, color 0.2s;
+}
+
+.hero-arrow:hover {
+  background: #e8552a;
+  color: #fff;
+}
+
+.hero-arrow-left  { left:  -22px; }
+.hero-arrow-right { right: -22px; }
+
+/* ── Right: text ─────────────────────────────────── */
+.hero-content {
+  flex: 1 1 38%;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  transition: opacity 0.45s ease;
+}
+
+.hero-content.hero-content-fade {
+  opacity: 0.3;
+}
+
+.hero-tag {
+  display: inline-block;
+  background-color: #fff0eb;
+  color: #e8552a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 20px;
+  padding: 5px 14px;
+  margin-bottom: 16px;
+}
+
+.hero-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #111;
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+
+.hero-subtitle {
+  font-size: 16px;
+  color: #555;
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+/* Buttons */
+.hero-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.hero-btn-primary {
+  background-color: #e8552a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 34px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background-color 0.2s, transform 0.15s;
+  width: auto;
+}
+
+.hero-btn-primary:hover {
+  background-color: #c94420;
+  transform: translateY(-1px);
+}
+
+.hero-btn-arrow {
+  background-color: #e8552a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.hero-btn-arrow:hover {
+  background-color: #c94420;
+  transform: translateY(-1px);
+}
+
+/* Dot indicators */
+.hero-dots {
+  display: flex;
+  gap: 10px;
+}
+
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #e8552a;
+  background-color: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.25s, transform 0.2s;
+}
+
+.hero-dot-active {
+  background-color: #e8552a;
+  transform: scale(1.25);
+}
+
+/* ── end ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .hero-slider {
+    padding: 24px 0 36px;
+  }
+
+  .hero-inner {
+    flex-direction: column;
+    padding: 0 20px;
+    gap: 24px;
+  }
+
+  .hero-image-wrap {
+    flex: unset;
+    width: 100%;
+  }
+
+  .hero-img-card {
+    height: 240px;
+  }
+
+  .hero-content {
+    flex: unset;
+    width: 100%;
+    min-width: unset;
+    align-items: flex-start;
+  }
+
+  .hero-title {
+    font-size: 22px;
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .hero-bg-circle {
+    width: 200px;
+    height: 200px;
+    top: -40px;
+    right: -40px;
+  }
+
+  .hero-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  .hero-arrow-left  { left:  -10px; }
+  .hero-arrow-right { right: -10px; }
+
+  .hero-btn-primary {
+    padding: 11px 22px;
+    font-size: 14px;
+  }
+
+  .hero-btn-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+}

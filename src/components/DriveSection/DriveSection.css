@@ -1,0 +1,184 @@
+.drive-section {
+  width: 100%;
+  background-color: #fafafa;
+  padding: 72px 0 90px;
+}
+
+.drive-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 60px;
+}
+
+/* Heading */
+.drive-heading {
+  font-size: 36px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 56px;
+  letter-spacing: -0.01em;
+}
+
+.drive-heading-accent {
+  color: #e8341a;
+}
+
+/* Cards grid */
+.drive-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+}
+
+/* Single card */
+.drive-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 18px;
+  padding-left: 18px;
+}
+
+/* Salmon dot top-left - overlaps the stacked frames */
+.drive-card-dot {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f07070;
+  z-index: 4;
+}
+
+/* Stacked frames wrapper */
+.drive-card-frames {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  margin-bottom: 22px;
+}
+
+/* Back shadow frame - offset bottom-right */
+.drive-frame-back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: -12px;
+  bottom: -12px;
+  background-color: #dedad7;
+  border-radius: 14px;
+  z-index: 0;
+}
+
+/* Front main frame */
+.drive-frame-front {
+  position: absolute;
+  inset: 0;
+  background-color: #e8e4e1;
+  border-radius: 14px;
+  z-index: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drive-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.drive-card-placeholder svg {
+  width: 72px;
+  height: 72px;
+  opacity: 0.5;
+}
+
+.drive-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text */
+.drive-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+
+.drive-card-desc {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.7;
+}
+  align-items: center;
+  justify-content: center;
+}
+
+.drive-card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.drive-card-placeholder svg {
+  width: 80px;
+  height: 80px;
+  opacity: 0.6;
+}
+
+.drive-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Text */
+.drive-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 14px;
+}
+
+.drive-card-desc {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.65;
+  margin-top: -4px;
+}
+
+@media (max-width: 768px) {
+  .drive-section {
+    padding: 48px 0 60px;
+  }
+
+  .drive-inner {
+    padding: 0 20px;
+  }
+
+  .drive-heading {
+    font-size: 26px;
+    margin-bottom: 36px;
+  }
+
+  .drive-cards {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .drive-card-frames {
+    height: 180px;
+  }
+}

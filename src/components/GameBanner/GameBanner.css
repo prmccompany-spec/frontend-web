@@ -1,0 +1,75 @@
+.game-banner {
+  width: 100%;
+  background-color: #f7f5f4;
+  padding: 28px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.game-banner-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.game-banner-dot {
+  color: #e8341a;
+  font-size: 50px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.game-banner-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 0.01em;
+}
+
+.game-banner-btn {
+  background-color: #e8341a;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background-color 0.2s, transform 0.15s;
+  margin-left: 8px;
+  width: auto;
+}
+
+.game-banner-btn:hover {
+  background-color: #c42a14;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .game-banner-inner {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  .game-banner-text {
+    font-size: 16px;
+  }
+
+  .game-banner-dot {
+    font-size: 32px;
+  }
+
+  .game-banner-btn {
+    padding: 10px 28px;
+    font-size: 15px;
+    margin-left: 0;
+    width: 100%;
+  }
+}

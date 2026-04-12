@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import LoginPage from '../pages/auth/LoginPage';
 import RegisterPage from '../pages/auth/RegisterPage';
 import AboutPage from '../pages/about/AboutPage';
+import EventsPage from '../pages/events/EventsPage';
 import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
 import AdminPanel from '../pages/admin/AdminPanel';
@@ -54,7 +55,7 @@ function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />
-      <Route path="/events" element={<UnderConstruction />} />
+      <Route path="/events" element={<EventsPage />} />
       <Route path="/news" element={<UnderConstruction />} />
       <Route path="/awards" element={<UnderConstruction />} />
       <Route path="/donate" element={<UnderConstruction />} />

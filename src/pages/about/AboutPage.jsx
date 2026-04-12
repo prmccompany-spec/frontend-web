@@ -48,23 +48,98 @@ const ACCORDION_ITEMS = [
 ];
 
 const COMMITTEE_MEMBERS = [
-  { name: 'Name', position: 'President' },
-  { name: 'Name', position: 'Vice President' },
-  { name: 'Name', position: 'Secretary' },
-  { name: 'Name', position: 'Treasurer' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
-  { name: 'Name', position: 'Member' },
+  { name: 'K.G. Prakash Raja', position: 'President' },
+  { name: 'N.S. Ramakrishna Raja', position: 'Member' },
+  { name: 'A.R. Balamurugan Raja', position: 'Member' },
+  { name: 'K.K. Venketsha Raja', position: 'Member' },
+  { name: 'S.R. Dhanushkodi Raja', position: 'Member' },
+  { name: 'A.S. Jeganatha Raja', position: 'Member' },
+  { name: 'K.P. Muruga Raja', position: 'Member' },
+  { name: 'P.V. Ramesh Raja', position: 'Member' },
+  { name: 'T.B. Kumarasamy Raja', position: 'Member' },
+  { name: 'S.A. Muruganantha Raja', position: 'Member' },
+  { name: 'N.K. Rajendra Raja', position: 'Member' },
+  { name: 'P.R. Vignesh', position: 'Member' },
+  { name: 'P.R. Samraj', position: 'Member' },
+  { name: 'P.S. Arjun Raja', position: 'Member' },
+  { name: 'K.R. Karthick Ayyappan', position: 'Member' },
+  { name: 'P.S. Ramakrishnan', position: 'Member' },
+  { name: 'M.A. Venkeda Perumal Raja', position: 'Member' },
+  { name: 'V.M. Kannan Raja', position: 'Member' },
+  { name: 'K.D. Jeyagurudeva Raja', position: 'Member' },
+  { name: 'P.D. Radhakrishnan Raja - Murali', position: 'Member' },
+  { name: 'S.S. Vignesh (King)', position: 'Member' },
+  { name: 'P.G. Venkadesha Raja (Meesai)', position: 'Member' },
+  { name: 'N.R. Ramshankar Raja (Manoj)', position: 'Member' },
+  { name: 'P.L. Murugan Raja', position: 'Member' },
+  { name: 'N.R. Gopikrishnan (Tharasu)', position: 'Member' },
+  { name: 'A.R. Parthiban @ Madhan', position: 'Member' },
+  { name: 'K.V. Harishankar (A.V.M. Siva)', position: 'Member' },
+  { name: 'K.K. Murugantha Raja', position: 'Member' },
+  { name: 'N.R. Dharmalinga Raja', position: 'Member' },
+  { name: 'K.M. Kasi Subramaniya Raja', position: 'Member' },
+  { name: 'K.A. Ravikumar Raja', position: 'Member' },
+  { name: 'T.V. Ramasubramaniya Raja', position: 'Member' },
+  { name: 'K.R. Shankara Subramaniya Raja', position: 'Member' },
+  { name: 'P.A. Sivakumar Raja', position: 'Member' },
+  { name: 'S.S. Subramaniya Raja (Peesari)', position: 'Member' },
+  { name: 'M.R. Vasudeva Raja', position: 'Member' },
+  { name: 'V.N. Ramamoorthy Raja', position: 'Member' },
+  { name: 'P.K. Dharmakrishna Raja', position: 'Member' },
+  { name: 'M.K. Thiyaga Raja', position: 'Member' },
+  { name: 'P.P. Venkedesha Raja', position: 'Member' },
+  { name: 'K.R. Dharmakrishna Raja', position: 'Member' },
+  { name: 'M.A. Srirengaraja', position: 'Member' },
+  { name: 'S.N. Ramakrishna Raja', position: 'Member' },
+  { name: 'S.A. Ramasubramaniya Raja (Kallathu)', position: 'Member' },
+  { name: 'V.B. Jenarthana Raja', position: 'Member' },
+  { name: 'P.G. Venkadesha Raja (Pulu)', position: 'Member' },
+  { name: 'K.B. Thulasirama Raja', position: 'Member' },
+  { name: 'S.S. Subramaniya Raja - Giri Texs', position: 'Member' },
+  { name: 'K.C. Venkedeshan Raja', position: 'Member' },
+  { name: 'K.D. Sundhar (Koli Pannai)', position: 'Member' },
+  { name: 'P.A. Arvinth Kumar', position: 'Member' },
+  { name: 'K.R. Dinesh (CCTV)', position: 'Member' },
+  { name: 'N.S. Sathishkumar Raja', position: 'Member' },
+  { name: 'K.P. Ganesha Raja', position: 'Member' },
+  { name: 'P.P. Ramakrishna Raja (Padaiyappa)', position: 'Member' },
+  { name: 'P.S. Ramakrishna Raja (Vizag)', position: 'Member' },
+  { name: 'P.S. Srirenga Raja (EB)', position: 'Member' },
+  { name: 'P.D. Kodhandarama Raja', position: 'Member' },
+  { name: 'K.S. Jeganatha Raja', position: 'Member' },
+  { name: 'K.R. Rehupathi Raja', position: 'Member' },
+  { name: 'A.R. Shankar (Thenkai Petta)', position: 'Member' },
+  { name: 'M.B. Radhakrishna Raja', position: 'Member' },
+  { name: 'P.S. Ramakrishna Raja (Army)', position: 'Member' },
+  { name: 'P.S. Muruga Raja (Vijaya Mill St.)', position: 'Member' },
+  { name: 'V.A. Ravishankar Raja (P.S.K.Nagar)', position: 'Member' },
+  { name: 'S.R. Viyash (D2b)', position: 'Member' },
+  { name: 'T.S. Ramakrishna Raja (Thengai Petta)', position: 'Member' },
+  { name: 'S.K. Pethu Raja', position: 'Member' },
+  { name: 'P.G. Janarthanan Raja', position: 'Member' },
+  { name: 'P.R. Venkadesha Raja', position: 'Member' },
 ];
 
 function AboutPage() {
   const [openId, setOpenId] = useState('history');
+  const [currentPage, setCurrentPage] = useState(0);
 
   const toggle = (id) => setOpenId((prev) => (prev === id ? null : id));
+
+  // Pagination setup: 2 rows, 5 items per row = 10 items per page
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(COMMITTEE_MEMBERS.length / ITEMS_PER_PAGE);
+  const startIdx = currentPage * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const currentMembers = COMMITTEE_MEMBERS.slice(startIdx, endIdx);
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
+  };
 
   return (
     <div className="ab-page">
@@ -188,23 +263,54 @@ function AboutPage() {
             <p className="ab-committee-sub">Current Management Committee (2024–2027)</p>
           </div>
 
-          <div className="ab-members-grid">
-            {COMMITTEE_MEMBERS.map((member, i) => (
-              <div className="ab-member-card" key={i}>
-                <div className="ab-member-avatar-wrap">
-                  <div className="ab-member-avatar">
-                    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="80" height="80" fill="#f5f5f5" />
-                      <circle cx="40" cy="28" r="16" fill="#ddd" />
-                      <ellipse cx="40" cy="72" rx="26" ry="18" fill="#ddd" />
-                    </svg>
+          <div className="ab-members-pagination-wrap">
+            {/* Left Arrow */}
+            <button
+              className="ab-members-arrow ab-members-arrow-left"
+              onClick={handlePrevPage}
+              aria-label="Previous page"
+              disabled={totalPages <= 1}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <div className="ab-members-grid">
+              {currentMembers.map((member, i) => (
+                <div className="ab-member-card" key={`${currentPage}-${i}`}>
+                  <div className="ab-member-avatar-wrap">
+                    <div className="ab-member-avatar">
+                      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="80" height="80" fill="#f5f5f5" />
+                        <circle cx="40" cy="28" r="16" fill="#ddd" />
+                        <ellipse cx="40" cy="72" rx="26" ry="18" fill="#ddd" />
+                      </svg>
+                    </div>
+                    {startIdx + i === 0 && <span className="ab-member-badge">President</span>}
                   </div>
-                  {i === 0 && <span className="ab-member-badge">President</span>}
+                  <p className="ab-member-name">{member.name}</p>
+                  <p className="ab-member-position">{member.position}</p>
                 </div>
-                <p className="ab-member-name">{member.name}</p>
-                <p className="ab-member-position">{member.position}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Right Arrow */}
+            <button
+              className="ab-members-arrow ab-members-arrow-right"
+              onClick={handleNextPage}
+              aria-label="Next page"
+              disabled={totalPages <= 1}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Pagination Indicator */}
+          <div className="ab-pagination-info">
+            Page {currentPage + 1} of {totalPages}
           </div>
         </div>
       </section>

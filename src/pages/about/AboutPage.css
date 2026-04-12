@@ -439,9 +439,57 @@
 /* Member grid */
 .ab-members-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 24px;
-  row-gap: 36px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+  row-gap: 32px;
+  padding: 0 20px;
+}
+
+.ab-members-pagination-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.ab-members-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e8341a;
+  color: #e8341a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.ab-members-arrow:hover:not(:disabled) {
+  background: #e8341a;
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.ab-members-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ab-members-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ab-pagination-info {
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
 .ab-member-card {
@@ -450,6 +498,7 @@
   align-items: center;
   text-align: center;
   gap: 10px;
+  padding: 0 4px;
 }
 
 .ab-member-avatar-wrap {
@@ -457,9 +506,9 @@
 }
 
 .ab-member-avatar {
-  width: 88px;
-  height: 88px;
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
   overflow: hidden;
   background: #efefef;
   box-shadow: 0 4px 16px rgba(0,0,0,0.09);
@@ -478,31 +527,37 @@
 
 .ab-member-badge {
   position: absolute;
-  bottom: -8px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
   background: #e8341a;
   color: #fff;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
   white-space: nowrap;
 }
 
 .ab-member-name {
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #222;
-  line-height: 1.2;
-  margin-top: 4px;
+  line-height: 1.35;
+  margin-top: 2px;
+  min-height: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-word;
 }
 
 .ab-member-position {
-  font-size: 12px;
+  font-size: 11px;
   color: #aaa;
   line-height: 1.2;
+  font-weight: 600;
 }
 
 /* ── Scroll-to-top FAB ─────────────────────────────────── */
@@ -562,7 +617,20 @@
   }
 
   .ab-members-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    row-gap: 28px;
+    padding: 0 12px;
+  }
+
+  .ab-members-pagination-wrap {
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .ab-members-arrow {
+    width: 40px;
+    height: 40px;
   }
 }
 
@@ -608,8 +676,23 @@
 
   .ab-members-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    row-gap: 24px;
+    padding: 0 8px;
+  }
+
+  .ab-members-pagination-wrap {
     gap: 16px;
-    row-gap: 28px;
+    margin-bottom: 20px;
+  }
+
+  .ab-members-arrow {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ab-pagination-info {
+    font-size: 12px;
   }
 
   .ab-fab {

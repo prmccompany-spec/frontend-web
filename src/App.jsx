@@ -11,7 +11,7 @@ function App() {
       <AuthProvider>
         <Navbar />
         <AppRoutes />
-        <Footer />
+        <Footer /> 
       </AuthProvider>
     </Router>
   );

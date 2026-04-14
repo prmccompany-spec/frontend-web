@@ -1,7 +1,27 @@
 import { useState } from 'react';
 import logo from '../../assets/logo.png';
 import festivalImg from '../../assets/slide1.jpg';
+import prakashRaja from '../../assets/profile/K.G. Prakash Raja.jpeg';
+import ramakrishnaRaja from '../../assets/profile/N.S. Ramakrishna Raja.jpeg';
+import balamuruganRaja from '../../assets/profile/A.R. Balamurugan Raja.jpeg';
+import venketshRaja from '../../assets/profile/K.K. Venketsha Raja.jpeg';
+import dhanushkodiRaja from '../../assets/profile/S.R. Dhanushkodi Raja.jpeg';
+import jeganathaRaja from '../../assets/profile/A.S. Jeganatha Raja.jpeg';
+import murugaRaja from '../../assets/profile/K.P. Muruga Raja.jpeg';
 import './AboutPage.css';
+
+const getProfileImage = (name) => {
+  const images = {
+    'K.G. Prakash Raja': prakashRaja,
+    'N.S. Ramakrishna Raja': ramakrishnaRaja,
+    'A.R. Balamurugan Raja': balamuruganRaja,
+    'K.K. Venketsha Raja': venketshRaja,
+    'S.R. Dhanushkodi Raja': dhanushkodiRaja,
+    'A.S. Jeganatha Raja': jeganathaRaja,
+    'K.P. Muruga Raja': murugaRaja,
+  };
+  return images[name];
+};
 
 const ACCORDION_ITEMS = [
   {
@@ -48,13 +68,13 @@ const ACCORDION_ITEMS = [
 ];
 
 const COMMITTEE_MEMBERS = [
-  { name: 'K.G. Prakash Raja', position: 'President' },
-  { name: 'N.S. Ramakrishna Raja', position: 'Member' },
-  { name: 'A.R. Balamurugan Raja', position: 'Member' },
-  { name: 'K.K. Venketsha Raja', position: 'Member' },
-  { name: 'S.R. Dhanushkodi Raja', position: 'Member' },
-  { name: 'A.S. Jeganatha Raja', position: 'Member' },
-  { name: 'K.P. Muruga Raja', position: 'Member' },
+  { name: 'K.G. Prakash Raja', position: 'President', isPic: true },
+  { name: 'N.S. Ramakrishna Raja', position: 'Vice President', isPic: true },
+  { name: 'A.R. Balamurugan Raja', position: 'Secretary', isPic: true },
+  { name: 'K.K. Venketsha Raja', position: 'Treasurer', isPic: true },
+  { name: 'S.R. Dhanushkodi Raja', position: 'Management', isPic: true },
+  { name: 'A.S. Jeganatha Raja', position: 'Management', isPic: true },
+  { name: 'K.P. Muruga Raja', position: 'Management', isPic: true },
   { name: 'P.V. Ramesh Raja', position: 'Member' },
   { name: 'T.B. Kumarasamy Raja', position: 'Member' },
   { name: 'S.A. Muruganantha Raja', position: 'Member' },
@@ -281,13 +301,17 @@ function AboutPage() {
                 <div className="ab-member-card" key={`${currentPage}-${i}`}>
                   <div className="ab-member-avatar-wrap">
                     <div className="ab-member-avatar">
-                      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="80" height="80" fill="#f5f5f5" />
-                        <circle cx="40" cy="28" r="16" fill="#ddd" />
-                        <ellipse cx="40" cy="72" rx="26" ry="18" fill="#ddd" />
-                      </svg>
+                      {member.isPic && getProfileImage(member.name) ? (
+                        <img src={getProfileImage(member.name)} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="80" height="80" fill="#f5f5f5" />
+                          <circle cx="40" cy="28" r="16" fill="#ddd" />
+                          <ellipse cx="40" cy="72" rx="26" ry="18" fill="#ddd" />
+                        </svg>
+                      )}
                     </div>
-                    {startIdx + i === 0 && <span className="ab-member-badge">President</span>}
+                    {member.position !== 'Member' && <span className="ab-member-badge">{member.position}</span>}
                   </div>
                   <p className="ab-member-name">{member.name}</p>
                   <p className="ab-member-position">{member.position}</p>

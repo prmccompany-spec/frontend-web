@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 function Footer() {
@@ -59,10 +60,10 @@ function Footer() {
         <div className="footer-col footer-col-links">
           <h3 className="footer-col-heading">About us</h3>
           <ul className="footer-link-list">
-            <li><a href="#">Awards</a></li>
-            <li><a href="#">News &amp; Articles</a></li>
-            <li><a href="#">Events</a></li>
-            <li><a href="#">Donate</a></li>
+            <li><Link to="/awards">Awards</Link></li>
+            <li><Link to="/news">News &amp; Articles</Link></li>
+            <li><Link to="/events">Events</Link></li>
+            <li><Link to="/donate">Donate</Link></li>
           </ul>
         </div>
 

@@ -6,6 +6,7 @@ const PAGE_LABELS = {
   '/news': 'News & Articles',
   '/awards': 'Awards',
   '/donate': 'Donate',
+  '/login': 'Login',
 };
 
 function UnderConstruction() {

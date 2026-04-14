@@ -1,14 +1,15 @@
 import './MarqueeBar.css';
 
 const items = [
-  'Upcoming Event: Grand Annual Meeting',
-  'on June 15th, 2025',
-  'Venue: Palayapalayam Community Hall',
-  'All Members are Welcome!',
-  'Upcoming Event: Grand Annual Meeting',
-  'on June 15th, 2025',
-  'Venue: Palayapalayam Community Hall',
-  'All Members are Welcome!',
+  'Ongoing Event : Tamil New Year Chitirai Vizha',
+  'On Apr 14, 2026',
+  'All members are welcome!',
+  'Ongoing Event : Tamil New Year Chitirai Vizha',
+  'On Apr 14, 2026',
+  'All members are welcome!',
+  'Ongoing Event : Tamil New Year Chitirai Vizha',
+  'On Apr 14, 2026',
+  'All members are welcome!'
 ];
 
 function MarqueeBar() {

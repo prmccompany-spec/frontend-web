@@ -1,94 +1,137 @@
-.admin-container {
-  padding: 0;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
-
-.admin-header {
-  background-color: #dc3545;
-  color: white;
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.admin-header h1 {
-  margin: 0;
-  font-size: 28px;
-}
-
-.logout-btn {
-  background-color: #f0ad4e;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.logout-btn:hover {
-  background-color: #ec971f;
-}
-
 .admin-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 30px 20px;
+  padding: 32px 36px 60px;
+  max-width: 900px;
 }
 
-.admin-card {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+.admin-page-header {
+  margin-bottom: 28px;
 }
 
-.admin-card h2 {
-  margin-top: 0;
-  color: #dc3545;
+.admin-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+.admin-page-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
 }
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
 }
 
 .admin-section {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px 22px;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-section-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.admin-section-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-section-icon--members {
+  background: #fff0eb;
+}
+
+.admin-section-icon--members svg {
+  color: #dc3545;
+}
+
+.admin-section-icon--logs {
+  background: #eef4ff;
+}
+
+.admin-section-icon--logs svg {
+  color: #3b6fd4;
+}
+
+.admin-section-icon--view {
+  background: #eef4ff;
+}
+
+.admin-section-icon--view svg {
+  color: #3b6fd4;
+}
+
+.admin-section-icon--usertypes {
+  background: #f3f0ff;
+}
+
+.admin-section-icon--usertypes svg {
+  color: #7c3aed;
+}
+
+.admin-section-icon--settings {
+  background: #f0f0f0;
+}
+
+.admin-section-icon--settings svg {
+  color: #666;
 }
 
 .admin-section h3 {
-  color: #dc3545;
-  margin-top: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
 }
 
 .admin-section p {
-  color: #666;
-  font-size: 14px;
+  color: #888;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .admin-section button {
+  margin-top: 8px;
   background-color: #dc3545;
   color: white;
-  padding: 10px 20px;
+  padding: 9px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 13px;
   font-weight: 600;
-  transition: background-color 0.3s;
-  width: 100%;
-  margin-top: 10px;
+  transition: background-color 0.2s;
+  align-self: flex-start;
 }
 
-.admin-section button:hover {
+.admin-section button:hover:not(:disabled) {
   background-color: #c82333;
+}
+
+.admin-section button:disabled {
+  background-color: #e0e0e0;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .admin-content {
+    padding: 20px 16px 48px;
+  }
 }

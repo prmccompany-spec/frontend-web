@@ -6,20 +6,18 @@ import AboutPage from '../pages/about/AboutPage';
 import EventsPage from '../pages/events/EventsPage';
 import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
+import AdminLayout from '../pages/admin/AdminLayout';
 import AdminPanel from '../pages/admin/AdminPanel';
+import RegisterMember from '../pages/admin/RegisterMember';
+import MemberList from '../pages/admin/MemberList';
+import UserTypes from '../pages/admin/UserTypes';
 import HomePage from '../pages/home/HomePage';
 
-const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const { isAuthenticated, user } = useAuth();
-
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return children;
 };
 
@@ -44,14 +42,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminPanel />
-          </ProtectedRoute>
-        }
-      />
+
+      {/* Admin — auth free, sidebar layout */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminPanel />} />
+        <Route path="members" element={<MemberList />} />
+        <Route path="register-member" element={<RegisterMember />} />
+        <Route path="user-types" element={<UserTypes />} />
+      </Route>
+
       <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/about" element={<AboutPage />} />

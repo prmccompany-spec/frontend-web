@@ -7,6 +7,7 @@ import {
   getMembersByActiveStatus,
   getMembersByRole,
   getMembersByActiveStatusAndRole,
+  getAllMembers,
 } from '../models/memberModel.js';
 
 export const createNewMember = async (memberData) => {
@@ -74,4 +75,18 @@ export const fetchMembersByRole = async (userTypeId) => {
 
 export const fetchMembersByStatusAndRole = async (isActive = true, userTypeId) => {
   return await getMembersByActiveStatusAndRole(isActive, userTypeId);
+};
+
+export const fetchAllMembers = async () => {
+  return await getAllMembers();
+};
+
+export const fetchMemberById = async (memberId) => {
+  const member = await getMemberById(memberId);
+  if (!member) {
+    const error = new Error('Member not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return member;
 };

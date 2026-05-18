@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import memberRoutes from './routes/memberRoutes.js';
 import addressRoutes from './routes/addressRoutes.js';
 import addressProofRoutes from './routes/addressProofRoutes.js';
+import userTypeRoutes from './routes/userTypeRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/address-proofs', addressProofRoutes);
+app.use('/api/user-types', userTypeRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

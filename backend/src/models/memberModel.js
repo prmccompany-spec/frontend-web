@@ -100,3 +100,7 @@ export const getMembersByActiveStatusAndRole = async (isActive = true, userTypeI
   );
   return results;
 };
+
+export const getAllMembers = async () => {
+  return await query('SELECT * FROM members ORDER BY created_at DESC');
+};

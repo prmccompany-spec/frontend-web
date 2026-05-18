@@ -1,0 +1,321 @@
+.rm-page {
+  padding: 32px 36px 60px;
+  max-width: 900px;
+}
+
+/* ── Page header ──────────────────────────────────── */
+.rm-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.rm-page-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fff0eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rm-page-header-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #dc3545;
+}
+
+.rm-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+  margin: 0 0 3px;
+}
+
+.rm-page-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Alert banners ────────────────────────────────── */
+.rm-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.rm-alert svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.rm-alert--error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+}
+
+.rm-alert--success {
+  background: #f0fff4;
+  border: 1px solid #b7ebc7;
+  color: #1a6b35;
+}
+
+/* ── Form layout ──────────────────────────────────── */
+.rm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Card ─────────────────────────────────────────── */
+.rm-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rm-card--outside {
+  border: 1.5px solid #fde0da;
+}
+
+/* ── Section label ────────────────────────────────── */
+.rm-section-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #dc3545;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #f5e0e0;
+  margin-bottom: 2px;
+}
+
+.rm-section-label--outside {
+  color: #e8341a;
+  border-bottom-color: #fde0da;
+}
+
+/* ── Grid layouts ─────────────────────────────────── */
+.rm-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.rm-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Field ────────────────────────────────────────── */
+.rm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rm-field--checkbox {
+  margin-top: 4px;
+}
+
+.rm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rm-required {
+  color: #dc3545;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Input ────────────────────────────────────────── */
+.rm-input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 9px;
+  font-size: 13.5px;
+  color: #111;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.rm-input:focus {
+  border-color: #dc3545;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.rm-input:disabled {
+  background: #f3f3f3;
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+.rm-input::placeholder {
+  color: #ccc;
+}
+
+.rm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 15px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* ── Checkbox row ─────────────────────────────────── */
+.rm-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rm-checkbox {
+  accent-color: #dc3545;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.rm-checkbox-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Same-as-phone inline checkbox */
+.rm-same-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.rm-same-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+}
+
+/* ── Action buttons ───────────────────────────────── */
+.rm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.rm-btn {
+  padding: 11px 28px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+
+.rm-btn--secondary {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.rm-btn--secondary:hover {
+  background: #e4e4e4;
+}
+
+.rm-btn--primary {
+  background: #dc3545;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(220, 53, 69, 0.3);
+}
+
+.rm-btn--primary:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 53, 69, 0.4);
+}
+
+.rm-btn--primary:disabled {
+  background: #e89099;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Spinner ──────────────────────────────────────── */
+.rm-spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: rm-spin 0.7s linear infinite;
+}
+
+@keyframes rm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .rm-page {
+    padding: 20px 16px 48px;
+  }
+
+  .rm-card {
+    padding: 18px 16px;
+  }
+
+  .rm-grid-2,
+  .rm-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .rm-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -1,0 +1,607 @@
+import { useState, useEffect, useCallback } from 'react';
+import {
+  getMembers,
+  getMemberAddresses,
+  updateMember,
+  updateAddress,
+  createAddress,
+} from '../../services/memberService';
+import { BLOOD_GROUPS, toMemberPayload } from '../../types/member';
+import { getUserTypes } from '../../services/userTypeService';
+import './MemberList.css';
+
+// ── View Modal ────────────────────────────────────────────────────────────────
+function ViewModal({ member, typeMap, onClose }) {
+  const [addresses, setAddresses] = useState([]);
+
+  useEffect(() => {
+    getMemberAddresses(member.id)
+      .then((res) => setAddresses(res.data.data ?? []))
+      .catch(() => setAddresses([]));
+  }, [member.id]);
+
+  const local = addresses.find((a) => a.type === 'local');
+  const outside = addresses.find((a) => a.type === 'outside');
+
+  const row = (label, value) =>
+    value ? (
+      <div className="vm-row">
+        <span className="vm-row-label">{label}</span>
+        <span className="vm-row-value">{value}</span>
+      </div>
+    ) : null;
+
+  const addressBlock = (addr) =>
+    addr ? (
+      [addr.door_no, addr.area, addr.city, addr.pincode, addr.state]
+        .filter(Boolean)
+        .join(', ')
+    ) : null;
+
+  return (
+    <div className="ml-modal-backdrop" onClick={onClose}>
+      <div className="ml-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="ml-modal-header">
+          <div className="ml-modal-header-left">
+            <div className="ml-modal-avatar">
+              {(member.name || '?')[0].toUpperCase()}
+            </div>
+            <div>
+              <h2 className="ml-modal-title">{member.name}</h2>
+              <span className="ml-modal-badge">{typeMap[member.user_type_id] ?? `Type ${member.user_type_id}`}</span>
+            </div>
+          </div>
+          <button className="ml-modal-close" onClick={onClose} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="ml-modal-body">
+          <div className="vm-section-label">Identity</div>
+          {row('Member ID', member.member_id)}
+          {row('Gotra', member.gotra)}
+          {row('Family Name', member.family_name)}
+          {row("Father's Name", member.father_name)}
+
+          <div className="vm-section-label">Contact</div>
+          {row('Phone', member.phone)}
+          {row('WhatsApp', member.whatsapp)}
+
+          <div className="vm-section-label">Personal</div>
+          {row('Blood Group', member.blood_group)}
+          {row('Date of Birth', member.dob ? new Date(member.dob).toLocaleDateString('en-IN') : null)}
+          {row('Occupation', member.occupation)}
+          {row('Outside Rajapalayam', member.out_of_rajapalayam ? 'Yes' : null)}
+
+          {(local || outside) && <div className="vm-section-label">Addresses</div>}
+          {row('Local Address', addressBlock(local))}
+          {row('Outside Address', addressBlock(outside))}
+
+          <div className="vm-section-label">Meta</div>
+          {row('Status', member.is_active ? 'Active' : 'Inactive')}
+          {row('Registered', member.created_at ? new Date(member.created_at).toLocaleDateString('en-IN') : null)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+function EditModal({ member, userTypes, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    memberId: member.member_id ?? '',
+    userTypeId: member.user_type_id ?? '',
+    name: member.name ?? '',
+    gotra: member.gotra ?? '',
+    familyName: member.family_name ?? '',
+    fatherName: member.father_name ?? '',
+    phone: member.phone ?? '',
+    whatsapp: member.whatsapp ?? '',
+    sameAsPhone: member.phone === member.whatsapp && !!member.phone,
+    bloodGroup: member.blood_group ?? '',
+    dob: member.dob ? member.dob.split('T')[0] : '',
+    occupation: member.occupation ?? '',
+    outOfRajapalayam: !!member.out_of_rajapalayam,
+    // local address
+    localDoorNo: '', localArea: '', localCity: '', localPincode: '', localState: '',
+    // outside address
+    outsideDoorNo: '', outsideArea: '', outsideCity: '', outsidePincode: '', outsideState: '',
+  });
+  const [localAddressId, setLocalAddressId] = useState(null);
+  const [outsideAddressId, setOutsideAddressId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Pre-fill address fields from existing addresses
+  useEffect(() => {
+    getMemberAddresses(member.id)
+      .then((res) => {
+        const addrs = res.data.data ?? [];
+        const local = addrs.find((a) => a.type === 'local');
+        const outside = addrs.find((a) => a.type === 'outside');
+        if (local) {
+          setLocalAddressId(local.id);
+          setForm((p) => ({
+            ...p,
+            localDoorNo: local.door_no ?? '',
+            localArea: local.area ?? '',
+            localCity: local.city ?? '',
+            localPincode: local.pincode ?? '',
+            localState: local.state ?? '',
+          }));
+        }
+        if (outside) {
+          setOutsideAddressId(outside.id);
+          setForm((p) => ({
+            ...p,
+            outsideDoorNo: outside.door_no ?? '',
+            outsideArea: outside.area ?? '',
+            outsideCity: outside.city ?? '',
+            outsidePincode: outside.pincode ?? '',
+            outsideState: outside.state ?? '',
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [member.id]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (name === 'sameAsPhone') {
+      setForm((p) => ({ ...p, sameAsPhone: checked, whatsapp: checked ? p.phone : '' }));
+      return;
+    }
+    if (name === 'phone' && form.sameAsPhone) {
+      setForm((p) => ({ ...p, phone: value, whatsapp: value }));
+      return;
+    }
+    setForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const saveAddress = async (type, idRef, fields) => {
+    const hasData = Object.values(fields).some((v) => v);
+    if (!hasData) return;
+    const payload = { member_id: member.id, type, ...fields };
+    if (idRef) {
+      await updateAddress(idRef, payload);
+    } else {
+      await createAddress(payload);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await updateMember(member.id, toMemberPayload(form));
+      await saveAddress('local', localAddressId, {
+        door_no: form.localDoorNo || null,
+        area: form.localArea || null,
+        city: form.localCity || null,
+        pincode: form.localPincode || null,
+        state: form.localState || null,
+      });
+      if (form.outOfRajapalayam) {
+        await saveAddress('outside', outsideAddressId, {
+          door_no: form.outsideDoorNo || null,
+          area: form.outsideArea || null,
+          city: form.outsideCity || null,
+          pincode: form.outsidePincode || null,
+          state: form.outsideState || null,
+        });
+      }
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Update failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="ml-modal-backdrop" onClick={onClose}>
+      <div className="ml-modal ml-modal--wide" onClick={(e) => e.stopPropagation()}>
+        <div className="ml-modal-header">
+          <div className="ml-modal-header-left">
+            <div className="ml-modal-avatar ml-modal-avatar--edit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="ml-modal-title">Edit Member</h2>
+              <p className="ml-modal-subtitle">{member.member_id}</p>
+            </div>
+          </div>
+          <button className="ml-modal-close" onClick={onClose} aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSave}>
+          <div className="ml-modal-body ml-modal-body--form">
+
+            {error && (
+              <div className="ml-form-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {/* Core */}
+            <div className="ml-form-section">Core Details</div>
+            <div className="ml-form-grid-3">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Member ID <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="memberId" value={form.memberId}
+                  onChange={handleChange} required />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Full Name <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="name" value={form.name}
+                  onChange={handleChange} required />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">User Type <span className="ml-required">*</span></label>
+                <select className="ml-form-input ml-form-select" name="userTypeId"
+                  value={form.userTypeId} onChange={handleChange} required>
+                  <option value="">Select</option>
+                  {userTypes.map((ut) => (
+                    <option key={ut.id} value={ut.id}>{ut.type_name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Identity */}
+            <div className="ml-form-section">Identity</div>
+            <div className="ml-form-grid-3">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Gotra</label>
+                <input className="ml-form-input" name="gotra" value={form.gotra} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Family Name</label>
+                <input className="ml-form-input" name="familyName" value={form.familyName} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Father's Name</label>
+                <input className="ml-form-input" name="fatherName" value={form.fatherName} onChange={handleChange} />
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="ml-form-section">Contact</div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Phone</label>
+                <input className="ml-form-input" name="phone" type="tel"
+                  value={form.phone} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">
+                  WhatsApp
+                  <span className="ml-same-wrap">
+                    <input type="checkbox" name="sameAsPhone" id="editSameCheck"
+                      checked={form.sameAsPhone} onChange={handleChange} className="ml-form-checkbox" />
+                    <label htmlFor="editSameCheck" className="ml-same-label">Same as phone</label>
+                  </span>
+                </label>
+                <input className="ml-form-input" name="whatsapp" type="tel"
+                  value={form.whatsapp} onChange={handleChange} disabled={form.sameAsPhone} />
+              </div>
+            </div>
+
+            {/* Personal */}
+            <div className="ml-form-section">Personal Details</div>
+            <div className="ml-form-grid-3">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Blood Group</label>
+                <select className="ml-form-input ml-form-select" name="bloodGroup"
+                  value={form.bloodGroup} onChange={handleChange}>
+                  <option value="">Select</option>
+                  {BLOOD_GROUPS.map((bg) => <option key={bg} value={bg}>{bg}</option>)}
+                </select>
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Date of Birth</label>
+                <input className="ml-form-input" name="dob" type="date"
+                  value={form.dob} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Occupation</label>
+                <input className="ml-form-input" name="occupation" value={form.occupation} onChange={handleChange} />
+              </div>
+            </div>
+
+            <div className="ml-form-field">
+              <label className="ml-form-checkbox-row">
+                <input type="checkbox" name="outOfRajapalayam" checked={form.outOfRajapalayam}
+                  onChange={handleChange} className="ml-form-checkbox" />
+                <span>Lives outside Rajapalayam</span>
+              </label>
+            </div>
+
+            {/* Local Address */}
+            <div className="ml-form-section">Local Address (Rajapalayam)</div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Door No.</label>
+                <input className="ml-form-input" name="localDoorNo" placeholder="Door / flat number"
+                  value={form.localDoorNo} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Area / Street</label>
+                <input className="ml-form-input" name="localArea" placeholder="Area or street"
+                  value={form.localArea} onChange={handleChange} />
+              </div>
+            </div>
+            <div className="ml-form-grid-3">
+              <div className="ml-form-field">
+                <label className="ml-form-label">City</label>
+                <input className="ml-form-input" name="localCity" placeholder="City"
+                  value={form.localCity} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Pincode</label>
+                <input className="ml-form-input" name="localPincode" placeholder="626117"
+                  value={form.localPincode} onChange={handleChange} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">State</label>
+                <input className="ml-form-input" name="localState" placeholder="Tamil Nadu"
+                  value={form.localState} onChange={handleChange} />
+              </div>
+            </div>
+
+            {/* Outside Address */}
+            {form.outOfRajapalayam && (
+              <>
+                <div className="ml-form-section">Outside Address (Current Residence)</div>
+                <div className="ml-form-grid-2">
+                  <div className="ml-form-field">
+                    <label className="ml-form-label">Door No.</label>
+                    <input className="ml-form-input" name="outsideDoorNo" placeholder="Door / flat number"
+                      value={form.outsideDoorNo} onChange={handleChange} />
+                  </div>
+                  <div className="ml-form-field">
+                    <label className="ml-form-label">Area / Street</label>
+                    <input className="ml-form-input" name="outsideArea" placeholder="Area or street"
+                      value={form.outsideArea} onChange={handleChange} />
+                  </div>
+                </div>
+                <div className="ml-form-grid-3">
+                  <div className="ml-form-field">
+                    <label className="ml-form-label">City</label>
+                    <input className="ml-form-input" name="outsideCity" placeholder="City"
+                      value={form.outsideCity} onChange={handleChange} />
+                  </div>
+                  <div className="ml-form-field">
+                    <label className="ml-form-label">Pincode</label>
+                    <input className="ml-form-input" name="outsidePincode" placeholder="Pincode"
+                      value={form.outsidePincode} onChange={handleChange} />
+                  </div>
+                  <div className="ml-form-field">
+                    <label className="ml-form-label">State</label>
+                    <input className="ml-form-input" name="outsideState" placeholder="State"
+                      value={form.outsideState} onChange={handleChange} />
+                  </div>
+                </div>
+              </>
+            )}
+
+          </div>
+
+          <div className="ml-modal-footer">
+            <button type="button" className="ml-btn ml-btn--ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="ml-btn ml-btn--primary" disabled={loading}>
+              {loading ? <><span className="ml-spinner" /> Saving...</> : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Main MemberList ───────────────────────────────────────────────────────────
+function MemberList() {
+  const [members, setMembers] = useState([]);
+  const [userTypes, setUserTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [viewMember, setViewMember] = useState(null);
+  const [editMember, setEditMember] = useState(null);
+
+  // id → type_name lookup used in table and view modal
+  const typeMap = Object.fromEntries(userTypes.map((t) => [t.id, t.type_name]));
+
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [membersRes, typesRes] = await Promise.all([getMembers(), getUserTypes()]);
+      setMembers(membersRes.data.data ?? []);
+      setUserTypes(typesRes.data.data ?? []);
+    } catch {
+      setError('Failed to load members. Is the backend running?');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
+  const filtered = members.filter((m) => {
+    const q = search.toLowerCase();
+    return (
+      m.name?.toLowerCase().includes(q) ||
+      m.member_id?.toLowerCase().includes(q) ||
+      m.phone?.includes(q)
+    );
+  });
+
+  const handleEditSaved = () => {
+    setEditMember(null);
+    loadMembers();
+  };
+
+  return (
+    <div className="ml-page">
+      <div className="ml-page-header">
+        <div className="ml-page-header-left">
+          <div className="ml-page-header-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="ml-page-title">Members</h1>
+            <p className="ml-page-subtitle">{members.length} registered member{members.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+
+        <div className="ml-search-wrap">
+          <svg className="ml-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            className="ml-search"
+            placeholder="Search by name, ID or phone…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {error && (
+        <div className="ml-alert ml-alert--error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          {error}
+        </div>
+      )}
+
+      <div className="ml-table-wrap">
+        {loading ? (
+          <div className="ml-loading">
+            <span className="ml-loading-spinner" />
+            Loading members…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="ml-empty">
+            {search ? 'No members match your search.' : 'No members registered yet.'}
+          </div>
+        ) : (
+          <table className="ml-table">
+            <thead>
+              <tr>
+                <th>Member ID</th>
+                <th>Name</th>
+                <th>User Type</th>
+                <th>Phone</th>
+                <th>Blood Group</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((m) => (
+                <tr key={m.id}>
+                  <td className="ml-td-id">{m.member_id}</td>
+                  <td className="ml-td-name">
+                    <div className="ml-name-cell">
+                      <div className="ml-avatar">{(m.name || '?')[0].toUpperCase()}</div>
+                      <span>{m.name}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="ml-type-badge">{typeMap[m.user_type_id] ?? `Type ${m.user_type_id}`}</span>
+                  </td>
+                  <td className="ml-td-phone">{m.phone || <span className="ml-nil">—</span>}</td>
+                  <td>{m.blood_group || <span className="ml-nil">—</span>}</td>
+                  <td>
+                    <span className={`ml-status-badge ${m.is_active ? 'ml-status-badge--active' : 'ml-status-badge--inactive'}`}>
+                      {m.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="ml-actions">
+                      <button
+                        className="ml-action-btn ml-action-btn--view"
+                        onClick={() => setViewMember(m)}
+                        title="View details"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        View
+                      </button>
+                      <button
+                        className="ml-action-btn ml-action-btn--edit"
+                        onClick={() => setEditMember(m)}
+                        title="Edit member"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Edit
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {viewMember && (
+        <ViewModal member={viewMember} typeMap={typeMap} onClose={() => setViewMember(null)} />
+      )}
+      {editMember && (
+        <EditModal
+          member={editMember}
+          userTypes={userTypes}
+          onClose={() => setEditMember(null)}
+          onSaved={handleEditSaved}
+        />
+      )}
+    </div>
+  );
+}
+
+export default MemberList;

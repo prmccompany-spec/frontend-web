@@ -6,6 +6,8 @@ import {
   fetchMembersByStatus,
   fetchMembersByRole,
   fetchMembersByStatusAndRole,
+  fetchAllMembers,
+  fetchMemberById,
 } from '../services/memberService.js';
 
 const validateMemberPayload = (payload) => {
@@ -107,6 +109,20 @@ export const getMembersByRole = asyncHandler(async (req, res) => {
     count: members.length,
     data: members,
   });
+});
+
+export const listMembers = asyncHandler(async (req, res) => {
+  const members = await fetchAllMembers();
+  res.json({ success: true, count: members.length, data: members });
+});
+
+export const getMember = asyncHandler(async (req, res) => {
+  const memberId = Number(req.params.id);
+  if (!memberId || Number.isNaN(memberId)) {
+    return res.status(400).json({ success: false, message: 'Invalid member ID' });
+  }
+  const member = await fetchMemberById(memberId);
+  res.json({ success: true, data: member });
 });
 
 export const getMembersByStatusAndRole = asyncHandler(async (req, res) => {

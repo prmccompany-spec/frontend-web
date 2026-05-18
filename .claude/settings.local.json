@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"d:\\\\projects\\\\frontend-web\\\\frontend-web\\\\src\" -Recurse -File | ForEach-Object { $_.FullName } | Sort-Object)"
+    ]
+  }
+}

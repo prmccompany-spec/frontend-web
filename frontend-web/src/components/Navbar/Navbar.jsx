@@ -97,14 +97,12 @@ function Navbar() {
               </button>
             </li>
           ))}
-          {user?.role === 'admin' && (
-            <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
-              <button onClick={() => goTo('/admin')}>
-                <span className="nav-drawer-dot" />
-                Admin Panel
-              </button>
-            </li>
-          )}
+          <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
+            <button onClick={() => goTo('/admin')}>
+              <span className="nav-drawer-dot" />
+              Admin Panel
+            </button>
+          </li>
         </ul>
 
         {/* Drawer footer */}

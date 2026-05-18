@@ -1,0 +1,146 @@
+/* ── Root: full viewport, no page scroll — sidebar + main both scroll independently ── */
+.al-root {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+.al-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid #ebebeb;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Brand */
+.al-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.al-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* no filter — logo renders naturally on white sidebar */
+}
+
+.al-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.al-brand-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.al-brand-sub {
+  font-size: 10px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Nav */
+.al-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.al-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #666;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.al-nav-item svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.al-nav-item:hover {
+  background: #fdf0ef;
+  color: #e8341a;
+}
+
+.al-nav-item--active {
+  background: #fdf0ef;
+  color: #dc3545;
+  font-weight: 700;
+}
+
+.al-nav-item--active:hover {
+  background: #fde4e1;
+}
+
+/* Footer */
+.al-sidebar-footer {
+  padding: 12px 10px 18px;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.al-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.al-back-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.al-back-btn:hover {
+  background: #fdf0ef;
+  color: #e8341a;
+  border-color: #fbd0cb;
+}
+
+/* ── Main content ────────────────────────────────── */
+.al-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  height: 100%;
+}

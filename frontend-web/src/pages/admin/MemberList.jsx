@@ -10,6 +10,8 @@ import { BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import './MemberList.css';
 
+const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+
 // ── View Modal ────────────────────────────────────────────────────────────────
 function ViewModal({ member, typeMap, onClose }) {
   const [addresses, setAddresses] = useState([]);
@@ -82,8 +84,37 @@ function ViewModal({ member, typeMap, onClose }) {
           {row('Outside Address', addressBlock(outside))}
 
           <div className="vm-section-label">Meta</div>
+          {row('Member Table ID', member.member_table_id)}
           {row('Status', member.is_active ? 'Active' : 'Inactive')}
           {row('Registered', member.created_at ? new Date(member.created_at).toLocaleDateString('en-IN') : null)}
+
+          {member.qr_code && (
+            <>
+              <div className="vm-section-label">QR Code</div>
+              <div className="vm-qr-wrap">
+                <img
+                  className="vm-qr-img"
+                  src={`${BACKEND_BASE}/${member.qr_code}`}
+                  alt={`QR code for ${member.name}`}
+                />
+                <a
+                  className="vm-qr-download"
+                  href={`${BACKEND_BASE}/${member.qr_code}`}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Download QR
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

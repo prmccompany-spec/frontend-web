@@ -1,4 +1,5 @@
 import { query } from '../config/database.js';
+import { generateMemberQR } from '../utils/qrUtils.js';
 
 export const getMemberById = async (memberId) => {
   const results = await query('SELECT * FROM members WHERE id = ?', [memberId]);
@@ -52,7 +53,21 @@ export const createMember = async (memberData) => {
     ]
   );
 
-  return results.insertId;
+  const newId = results.insertId;
+  const memberTableId = newId + 1987;
+
+  const qrPath = await generateMemberQR({
+    memberTableId,
+    memberId: member_id,
+    name,
+  });
+
+  await query(
+    'UPDATE members SET member_table_id = ?, qr_code = ? WHERE id = ?',
+    [String(memberTableId), qrPath, newId]
+  );
+
+  return newId;
 };
 
 export const updateMember = async (memberId, updates) => {

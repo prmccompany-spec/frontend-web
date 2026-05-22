@@ -67,3 +67,7 @@ CREATE TABLE address_proofs (
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE members ADD COLUMN member_table_id TEXT NULL DEFAULT NULL AFTER member_id;
+
+ALTER TABLE members ADD COLUMN qr_code VARCHAR(255) NULL AFTER member_table_id;

@@ -1,0 +1,152 @@
+.ph-page {
+  max-width: 1100px;
+}
+
+.ph-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.ph-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #111;
+  outline: none;
+  background: white;
+  transition: border-color 0.15s;
+}
+
+.ph-input:focus {
+  border-color: #dc3545;
+}
+
+.ph-input:first-child {
+  flex: 1;
+  min-width: 200px;
+}
+
+.ph-clear {
+  background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.ph-clear:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.ph-summary-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #666;
+  padding: 0 2px;
+}
+
+.ph-summary-total {
+  font-size: 14px;
+  color: #111;
+}
+
+.ph-table-wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  overflow-x: auto;
+}
+
+.ph-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ph-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.ph-table tbody tr {
+  border-bottom: 1px solid #f7f7f7;
+  transition: background 0.1s;
+}
+
+.ph-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ph-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.ph-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  color: #333;
+}
+
+.ph-ref {
+  font-family: monospace;
+  font-size: 12px;
+  background: #f3f4f6;
+  border-radius: 5px;
+  padding: 2px 7px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ph-member-name {
+  font-weight: 600;
+  color: #111;
+}
+
+.ph-member-code {
+  font-size: 11px;
+  color: #999;
+  margin-top: 1px;
+}
+
+.ph-amount {
+  font-weight: 700;
+  color: #065f46;
+  white-space: nowrap;
+}
+
+.ph-notes {
+  color: #888;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ph-loading,
+.ph-empty {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 48px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}

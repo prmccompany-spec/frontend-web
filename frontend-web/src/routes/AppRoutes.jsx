@@ -11,6 +11,10 @@ import AdminPanel from '../pages/admin/AdminPanel';
 import RegisterMember from '../pages/admin/RegisterMember';
 import MemberList from '../pages/admin/MemberList';
 import UserTypes from '../pages/admin/UserTypes';
+import Settings from '../pages/admin/Settings';
+import PaymentEntry from '../pages/admin/payments/PaymentEntry';
+import PaymentHistory from '../pages/admin/payments/PaymentHistory';
+import PaymentReports from '../pages/admin/payments/PaymentReports';
 import HomePage from '../pages/home/HomePage';
 
 const ProtectedRoute = ({ children }) => {
@@ -49,6 +53,10 @@ function AppRoutes() {
         <Route path="members" element={<MemberList />} />
         <Route path="register-member" element={<RegisterMember />} />
         <Route path="user-types" element={<UserTypes />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="payments/entry" element={<PaymentEntry />} />
+        <Route path="payments/history" element={<PaymentHistory />} />
+        <Route path="payments/reports" element={<PaymentReports />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />

@@ -1,6 +1,6 @@
 .admin-content {
   padding: 32px 36px 60px;
-  max-width: 900px;
+  max-width: 1200px;
 }
 
 .admin-page-header {
@@ -23,8 +23,14 @@
 
 .admin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .admin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .admin-section {
@@ -90,6 +96,30 @@
 
 .admin-section-icon--settings svg {
   color: #666;
+}
+
+.admin-section-icon--payment {
+  background: #ecfdf5;
+}
+
+.admin-section-icon--payment svg {
+  color: #059669;
+}
+
+.admin-section-icon--history {
+  background: #fffbeb;
+}
+
+.admin-section-icon--history svg {
+  color: #d97706;
+}
+
+.admin-section-icon--reports {
+  background: #eff6ff;
+}
+
+.admin-section-icon--reports svg {
+  color: #2563eb;
 }
 
 .admin-section h3 {

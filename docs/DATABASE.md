@@ -71,3 +71,35 @@ CREATE TABLE address_proofs (
 ALTER TABLE members ADD COLUMN member_table_id TEXT NULL DEFAULT NULL AFTER member_id;
 
 ALTER TABLE members ADD COLUMN qr_code VARCHAR(255) NULL AFTER member_table_id;
+
+-- ============================================================
+-- PAYMENT FEATURE
+-- ============================================================
+
+CREATE TABLE payment_categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(255),
+  default_amount DECIMAL(10, 2) DEFAULT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO payment_categories (name, description, default_amount) VALUES
+('Annual Membership Fee', 'Yearly membership fee for all members', 500.00),
+('Event Fee', 'Fee collected for specific events', NULL),
+('Donation', 'Voluntary donation by member', NULL),
+('Other', 'Other miscellaneous payments', NULL);
+
+CREATE TABLE payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  payment_ref VARCHAR(30) UNIQUE NOT NULL,
+  member_id INT NOT NULL,
+  category_id INT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  payment_date DATE NOT NULL,
+  collected_by INT NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

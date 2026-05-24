@@ -54,20 +54,6 @@ function AdminPanel() {
         </div>
 
         <div className="admin-section">
-          <div className="admin-section-icon admin-section-icon--usertypes">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-              <line x1="19" y1="8" x2="23" y2="8" />
-              <line x1="21" y1="6" x2="21" y2="10" />
-            </svg>
-          </div>
-          <h3>User Types</h3>
-          <p>Define and manage member role types for the registry</p>
-          <button onClick={() => navigate('/admin/user-types')}>Manage Types</button>
-        </div>
-
-        <div className="admin-section">
           <div className="admin-section-icon admin-section-icon--settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
@@ -75,8 +61,47 @@ function AdminPanel() {
             </svg>
           </div>
           <h3>Settings</h3>
-          <p>Configure system settings and preferences</p>
-          <button disabled>Settings</button>
+          <p>Manage user types and payment gateway categories</p>
+          <button onClick={() => navigate('/admin/settings')}>Open Settings</button>
+        </div>
+
+        <div className="admin-section">
+          <div className="admin-section-icon admin-section-icon--payment">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+          </div>
+          <h3>Record Payment</h3>
+          <p>Record a cash payment collected from a member</p>
+          <button onClick={() => navigate('/admin/payments/entry')}>Record Payment</button>
+        </div>
+
+        <div className="admin-section">
+          <div className="admin-section-icon admin-section-icon--history">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <h3>Payment History</h3>
+          <p>View and filter all recorded cash payments</p>
+          <button onClick={() => navigate('/admin/payments/history')}>View History</button>
+        </div>
+
+        <div className="admin-section">
+          <div className="admin-section-icon admin-section-icon--reports">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+          </div>
+          <h3>Reports</h3>
+          <p>Balance overview, category breakdown and top contributors</p>
+          <button onClick={() => navigate('/admin/payments/reports')}>View Reports</button>
         </div>
       </div>
     </div>

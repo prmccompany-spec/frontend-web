@@ -88,6 +88,15 @@ function Footer() {
 
       <div className="footer-bottom">
         <p>© {new Date().getFullYear()} PRMCF. All rights reserved.</p>
+        <div className="footer-bottom-links">
+          <Link to="/terms" className="footer-bottom-link">Terms &amp; Conditions</Link>
+          <span className="footer-bottom-sep">·</span>
+          <Link to="/privacy-policy" className="footer-bottom-link">Privacy Policy</Link>
+          <span className="footer-bottom-sep">·</span>
+          <Link to="/refund-policy" className="footer-bottom-link">Refund &amp; Cancellation Policy</Link>
+          <span className="footer-bottom-sep">·</span>
+          <Link to="/pay" className="footer-bottom-link">Pay via CC Avenue</Link>
+        </div>
       </div>
     </footer>
   );

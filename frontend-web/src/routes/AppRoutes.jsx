@@ -8,6 +8,9 @@ import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
 import AdminPanel from '../pages/admin/AdminPanel';
 import HomePage from '../pages/home/HomePage';
+import TermsPage from '../pages/legal/TermsPage';
+import PrivacyPage from '../pages/legal/PrivacyPage';
+import RefundPage from '../pages/legal/RefundPage';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { isAuthenticated, user } = useAuth();
@@ -59,6 +62,9 @@ function AppRoutes() {
       <Route path="/news" element={<UnderConstruction />} />
       <Route path="/awards" element={<UnderConstruction />} />
       <Route path="/donate" element={<UnderConstruction />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPage />} />
+      <Route path="/refund-policy" element={<RefundPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

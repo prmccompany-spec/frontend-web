@@ -54,7 +54,7 @@ prmcf/
 │   │   └── main.dart      # Entry point
 │   ├── pubspec.yaml
 │   └── .env.example
-│
+│    
 ├── docs/                  # Documentation
 │   ├── API.md
 │   ├── DATABASE.md

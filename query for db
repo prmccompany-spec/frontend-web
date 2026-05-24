@@ -1,0 +1,24 @@
+ALTER TABLE `members` ADD `photo` TEXT NULL AFTER `qr_code`;
+
+
+ `CREATE TABLE events (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      title            VARCHAR(500)  NOT NULL,
+      status           ENUM('upcoming','ongoing','completed') NOT NULL DEFAULT 'upcoming',
+      date             DATE          NOT NULL,
+      start_time       VARCHAR(20)   NULL,
+      end_time         VARCHAR(20)   NULL,
+      location         VARCHAR(500)  NULL,
+      attendees        VARCHAR(50)   NULL,
+      short_description TEXT         NULL,
+      full_description  TEXT         NULL,
+      highlights       JSON          NULL,
+      organizer        VARCHAR(300)  NULL,
+      contact_person   VARCHAR(300)  NULL,
+      phone            VARCHAR(30)   NULL,
+      is_live          TINYINT(1)    NOT NULL DEFAULT 0,
+      video_link       VARCHAR(1000) NULL,
+      image            VARCHAR(500)  NULL,
+      is_active        TINYINT(1)    NOT NULL DEFAULT 1,
+      created_at       DATETIME      NOT NULL
+    )`

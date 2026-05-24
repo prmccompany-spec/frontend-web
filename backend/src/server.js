@@ -12,6 +12,7 @@ import addressRoutes from './routes/addressRoutes.js';
 import addressProofRoutes from './routes/addressProofRoutes.js';
 import userTypeRoutes from './routes/userTypeRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -37,6 +38,7 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/address-proofs', addressProofRoutes);
 app.use('/api/user-types', userTypeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/events', eventRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -53,7 +55,6 @@ app.use((req, res) => {
 
 const startServer = async () => {
   await initializePool();
-
   app.listen(PORT, () => {
     console.log(`✓ Server running on http://localhost:${PORT}`);
     console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);

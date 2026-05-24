@@ -5,8 +5,9 @@ import {
   updateMember,
   updateAddress,
   createAddress,
+  uploadMemberPhoto,
 } from '../../services/memberService';
-import { BLOOD_GROUPS, toMemberPayload } from '../../types/member';
+import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import './MemberList.css';
 
@@ -43,28 +44,28 @@ function ViewModal({ member, typeMap, onClose }) {
   return (
     <div className="ml-modal-backdrop" onClick={onClose}>
       <div className="ml-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ml-modal-header">
-          <div className="ml-modal-header-left">
-            <div className="ml-modal-avatar">
-              {(member.name || '?')[0].toUpperCase()}
-            </div>
-            <div>
-              <h2 className="ml-modal-title">{member.name}</h2>
-              <span className="ml-modal-badge">{typeMap[member.user_type_id] ?? `Type ${member.user_type_id}`}</span>
-            </div>
-          </div>
-          <button className="ml-modal-close" onClick={onClose} aria-label="Close">
+        <div className="vm-profile-header">
+          <button className="ml-modal-close vm-close-btn" onClick={onClose} aria-label="Close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
+          <div className="vm-profile-photo">
+            {member.photo
+              ? <img src={`${BACKEND_BASE}/${member.photo}`} alt={member.name} className="vm-profile-img" />
+              : <span className="vm-profile-initial">{(member.name || '?')[0].toUpperCase()}</span>}
+          </div>
+          <h2 className="vm-profile-name">{member.name}</h2>
+          <div className="vm-profile-meta">
+            <span className="ml-modal-badge">{typeMap[member.user_type_id] ?? `Type ${member.user_type_id}`}</span>
+            {member.member_id && <span className="vm-profile-id">#{member.member_id}</span>}
+          </div>
         </div>
 
         <div className="ml-modal-body">
           <div className="vm-section-label">Identity</div>
-          {row('Member ID', member.member_id)}
           {row('Gotra', member.gotra)}
           {row('Family Name', member.family_name)}
           {row("Father's Name", member.father_name)}
@@ -144,8 +145,19 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
   });
   const [localAddressId, setLocalAddressId] = useState(null);
   const [outsideAddressId, setOutsideAddressId] = useState(null);
+  const [newPhoto, setNewPhoto] = useState(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const currentPhotoUrl = member.photo ? `${BACKEND_BASE}/${member.photo}` : '';
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setNewPhoto(file);
+    setNewPhotoPreview(URL.createObjectURL(file));
+  };
 
   // Pre-fill address fields from existing addresses
   useEffect(() => {
@@ -210,6 +222,11 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
     setLoading(true);
     try {
       await updateMember(member.id, toMemberPayload(form));
+      if (newPhoto) {
+        const fd = new FormData();
+        fd.append('photo', newPhoto);
+        await uploadMemberPhoto(member.id, fd);
+      }
       await saveAddress('local', localAddressId, {
         door_no: form.localDoorNo || null,
         area: form.localArea || null,
@@ -274,6 +291,51 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                 {error}
               </div>
             )}
+
+            {/* Photo */}
+            <div className="ml-form-section">Member Photo</div>
+            <div className="ml-photo-row">
+              <div
+                className="ml-photo-zone"
+                onClick={() => document.getElementById('ml-photo-input').click()}
+              >
+                {newPhotoPreview || currentPhotoUrl ? (
+                  <img
+                    src={newPhotoPreview || currentPhotoUrl}
+                    alt="Member"
+                    className="ml-photo-preview"
+                  />
+                ) : (
+                  <div className="ml-photo-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="3" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span>No photo</span>
+                  </div>
+                )}
+                <div className="ml-photo-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Change
+                </div>
+              </div>
+              <input
+                id="ml-photo-input"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handlePhotoChange}
+              />
+              <p className="ml-photo-note">
+                {newPhoto ? `New: ${newPhoto.name}` : currentPhotoUrl ? 'Click photo to change' : 'Click to upload a photo (optional)'}
+              </p>
+            </div>
 
             {/* Core */}
             <div className="ml-form-section">Core Details</div>
@@ -470,7 +532,12 @@ function MemberList() {
     try {
       const [membersRes, typesRes] = await Promise.all([getMembers(), getUserTypes()]);
       setMembers(membersRes.data.data ?? []);
-      setUserTypes(typesRes.data.data ?? []);
+      const apiTypes = typesRes.data.data ?? [];
+      setUserTypes(
+        apiTypes.length > 0
+          ? apiTypes
+          : USER_TYPES.map((t) => ({ id: t.id, type_name: t.label }))
+      );
     } catch {
       setError('Failed to load members. Is the backend running?');
     } finally {
@@ -571,7 +638,11 @@ function MemberList() {
                   <td className="ml-td-id">{m.member_id}</td>
                   <td className="ml-td-name">
                     <div className="ml-name-cell">
-                      <div className="ml-avatar">{(m.name || '?')[0].toUpperCase()}</div>
+                      <div className="ml-avatar">
+                        {m.photo
+                          ? <img src={`${BACKEND_BASE}/${m.photo}`} alt={m.name} className="ml-avatar-img" />
+                          : (m.name || '?')[0].toUpperCase()}
+                      </div>
                       <span>{m.name}</span>
                     </div>
                   </td>

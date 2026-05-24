@@ -8,6 +8,7 @@ import {
   fetchMembersByStatusAndRole,
   fetchAllMembers,
   fetchMemberById,
+  saveMemberPhoto,
 } from '../services/memberService.js';
 
 const validateMemberPayload = (payload) => {
@@ -123,6 +124,21 @@ export const getMember = asyncHandler(async (req, res) => {
   }
   const member = await fetchMemberById(memberId);
   res.json({ success: true, data: member });
+});
+
+export const uploadMemberPhoto = asyncHandler(async (req, res) => {
+  const memberId = Number(req.params.id);
+  if (!memberId || Number.isNaN(memberId)) {
+    return res.status(400).json({ success: false, message: 'Invalid member ID' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No photo file provided' });
+  }
+
+  const photoPath = `uploads/members/${req.file.filename}`;
+  await saveMemberPhoto(memberId, photoPath);
+
+  res.json({ success: true, message: 'Photo uploaded successfully', photo: photoPath });
 });
 
 export const getMembersByStatusAndRole = asyncHandler(async (req, res) => {

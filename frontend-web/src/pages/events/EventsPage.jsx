@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import eventImg from '../../assets/slide1.jpg';
 import EventDetailsModal from './EventDetailsModal';
 import LiveEventBanner from './LiveEvent/LiveEventBanner';
 import LiveEventModal from './LiveEvent/LiveEventModal';
+import { getEvents } from '../../services/eventService';
 import './EventsPage.css';
+
+const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 const EVENTS_DATA = {
   completed: [
@@ -155,9 +158,29 @@ function EventsPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [liveEvent, setLiveEvent] = useState(null);
+  const [eventsData, setEventsData] = useState({ completed: [], ongoing: [], upcoming: [] });
+  const [loadingEvents, setLoadingEvents] = useState(true);
+
+  useEffect(() => {
+    setLoadingEvents(true);
+    getEvents()
+      .then((res) => {
+        const all = res.data.data ?? [];
+        setEventsData({
+          completed: all.filter((e) => e.status === 'completed'),
+          ongoing:   all.filter((e) => e.status === 'ongoing'),
+          upcoming:  all.filter((e) => e.status === 'upcoming'),
+        });
+      })
+      .catch(() => {
+        // Fallback to hardcoded data if API is unavailable
+        setEventsData(EVENTS_DATA);
+      })
+      .finally(() => setLoadingEvents(false));
+  }, []);
 
   const EVENTS_PER_PAGE = 4;
-  const currentEvents = EVENTS_DATA[activeTab];
+  const currentEvents = eventsData[activeTab] ?? [];
   const totalPages = Math.ceil(currentEvents.length / EVENTS_PER_PAGE);
   const startIdx = currentPage * EVENTS_PER_PAGE;
   const endIdx = startIdx + EVENTS_PER_PAGE;
@@ -194,10 +217,10 @@ function EventsPage() {
     setLiveEvent(null);
   };
 
-  // Find active live event
-  const activeEvent = Object.values(EVENTS_DATA)
+  // Find active live event (API uses is_live, hardcoded uses isActive)
+  const activeEvent = Object.values(eventsData)
     .flat()
-    .find((event) => event.isActive);
+    .find((event) => event.is_live || event.isActive);
 
   return (
     <div className="events-page">
@@ -251,10 +274,20 @@ function EventsPage() {
 
           {/* Events Grid */}
           <div className="ev-events-list">
-            {displayedEvents.map((event) => (
+            {loadingEvents ? (
+              <div className="ev-loading">Loading events…</div>
+            ) : currentEvents.length === 0 ? (
+              <div className="ev-empty">No {activeTab} events found.</div>
+            ) : null}
+            {!loadingEvents && displayedEvents.map((event) => (
               <div className="ev-event-card" key={event.id}>
                 <div className="ev-event-image">
-                  <img src={event.image} alt={event.title} />
+                  <img
+                    src={event.image
+                      ? (event.image.startsWith('http') ? event.image : `${BACKEND_BASE}/${event.image}`)
+                      : eventImg}
+                    alt={event.title}
+                  />
                   <div className="ev-event-overlay" />
                 </div>
 
@@ -294,7 +327,17 @@ function EventsPage() {
                       <span className="ev-attendee-count">{event.attendees}</span>
                       <span className="ev-attendee-label">Attendees</span>
                     </div>
-                    <button className="ev-event-btn" onClick={() => openEventDetails(event)}>View Details</button>
+                    <button className="ev-event-btn" onClick={() => openEventDetails({
+                    ...event,
+                    // normalise API snake_case → camelCase expected by the modal
+                    startTime: event.startTime ?? event.start_time,
+                    endTime: event.endTime ?? event.end_time,
+                    description: event.description ?? event.short_description,
+                    fullDescription: event.fullDescription ?? event.full_description,
+                    keyHighlights: event.keyHighlights ?? event.highlights ?? [],
+                    contactPerson: event.contactPerson ?? event.contact_person,
+                    youtubeLink: event.youtubeLink ?? event.video_link,
+                  })}>View Details</button>
                   </div>
                 </div>
               </div>

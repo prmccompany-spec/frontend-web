@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
+  USER_TYPES,
   BLOOD_GROUPS,
   toMemberPayload,
   toLocalAddressPayload,
@@ -7,7 +8,7 @@ import {
   hasLocalAddress,
   hasOutsideAddress,
 } from '../../types/member';
-import { createMember, createAddress } from '../../services/memberService';
+import { createMember, createAddress, uploadMemberPhoto } from '../../services/memberService';
 import { getUserTypes } from '../../services/userTypeService';
 import './RegisterMember.css';
 
@@ -39,6 +40,8 @@ const initialForm = {
 
 function RegisterMember() {
   const [form, setForm] = useState(initialForm);
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,9 +49,31 @@ function RegisterMember() {
 
   useEffect(() => {
     getUserTypes()
-      .then((res) => setUserTypes(res.data.data ?? []))
-      .catch(() => setUserTypes([]));
+      .then((res) => {
+        const apiTypes = res.data.data ?? [];
+        if (apiTypes.length > 0) {
+          setUserTypes(apiTypes);
+        } else {
+          // fallback to hardcoded types if DB is empty
+          setUserTypes(USER_TYPES.map((t) => ({ id: t.id, type_name: t.label })));
+        }
+      })
+      .catch(() => {
+        setUserTypes(USER_TYPES.map((t) => ({ id: t.id, type_name: t.label })));
+      });
   }, []);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handlePhotoRemove = () => {
+    setPhoto(null);
+    setPhotoPreview('');
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -86,8 +111,17 @@ function RegisterMember() {
         await createAddress(toOutsideAddressPayload(memberId, form));
       }
 
+      // 4. Upload photo if selected
+      if (photo) {
+        const fd = new FormData();
+        fd.append('photo', photo);
+        await uploadMemberPhoto(memberId, fd);
+      }
+
       setSuccess(`Member "${form.name}" registered successfully (ID: ${form.memberId}).`);
       setForm(initialForm);
+      setPhoto(null);
+      setPhotoPreview('');
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please try again.';
       setError(msg);
@@ -269,7 +303,62 @@ function RegisterMember() {
             </div>
           </div>
         </div>
-
+  <div className="rm-card rm-card--photo">
+          <div className="rm-section-label">Member Photo</div>
+          <div className="rm-photo-row">
+            <div
+              className={`rm-photo-zone ${photoPreview ? 'rm-photo-zone--filled' : ''}`}
+              onClick={() => document.getElementById('rm-photo-input').click()}
+            >
+              {photoPreview ? (
+                <img src={photoPreview} alt="Preview" className="rm-photo-preview" />
+              ) : (
+                <div className="rm-photo-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  <span>Click to upload</span>
+                  <span className="rm-photo-hint">JPG, PNG or WebP · max 5 MB</span>
+                </div>
+              )}
+              {photoPreview && (
+                <div className="rm-photo-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Change
+                </div>
+              )}
+            </div>
+            <input
+              id="rm-photo-input"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              style={{ display: 'none' }}
+              onChange={handlePhotoChange}
+            />
+            <div className="rm-photo-info">
+              <p className="rm-photo-info-title">
+                {photoPreview ? photo?.name : 'No photo selected'}
+              </p>
+              <p className="rm-photo-info-sub">
+                {photoPreview
+                  ? `${(photo.size / 1024).toFixed(0)} KB`
+                  : 'Upload a clear passport-size photo of the member (optional).'}
+              </p>
+              {photoPreview && (
+                <button type="button" className="rm-photo-remove" onClick={handlePhotoRemove}>
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
         {/* ── Personal Details ── */}
         <div className="rm-card">
           <div className="rm-section-label">Personal Details</div>

@@ -119,3 +119,7 @@ export const getMembersByActiveStatusAndRole = async (isActive = true, userTypeI
 export const getAllMembers = async () => {
   return await query('SELECT * FROM members ORDER BY created_at DESC');
 };
+
+export const updateMemberPhoto = async (memberId, photoPath) => {
+  return await query('UPDATE members SET photo = ? WHERE id = ?', [photoPath, memberId]);
+};

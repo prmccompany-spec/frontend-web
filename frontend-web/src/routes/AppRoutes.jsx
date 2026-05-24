@@ -16,6 +16,7 @@ import PaymentEntry from '../pages/admin/payments/PaymentEntry';
 import PaymentHistory from '../pages/admin/payments/PaymentHistory';
 import PaymentReports from '../pages/admin/payments/PaymentReports';
 import HomePage from '../pages/home/HomePage';
+import AddEvent from '../pages/admin/events/AddEvent';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="payments/entry" element={<PaymentEntry />} />
         <Route path="payments/history" element={<PaymentHistory />} />
         <Route path="payments/reports" element={<PaymentReports />} />
+        <Route path="events/add" element={<AddEvent />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />

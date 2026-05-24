@@ -1,5 +1,29 @@
 import './EventDetailsModal.css';
 
+const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+
+const formatDate = (raw) => {
+  if (!raw) return '';
+  try {
+    return new Date(raw).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return raw; }
+};
+
+const formatTime = (raw) => {
+  if (!raw) return '';
+  const [h, m] = raw.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return raw;
+  const period = h >= 12 ? 'pm' : 'am';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+};
+
+const resolveImage = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http')) return src;
+  return `${BACKEND_BASE}/${src}`;
+};
+
 function EventDetailsModal({ event, onClose }) {
   if (!event) return null;
 
@@ -20,7 +44,9 @@ function EventDetailsModal({ event, onClose }) {
         </button>
 
         <div className="ev-modal-image">
-          <img src={event.image} alt={event.title} />
+          {resolveImage(event.image) && (
+            <img src={resolveImage(event.image)} alt={event.title} />
+          )}
         </div>
 
         <div className="ev-modal-content">
@@ -36,7 +62,7 @@ function EventDetailsModal({ event, onClose }) {
               </svg>
               <div>
                 <div className="ev-modal-meta-label">Date</div>
-                <div className="ev-modal-meta-value">{event.date}</div>
+                <div className="ev-modal-meta-value">{formatDate(event.date)}</div>
               </div>
             </div>
 
@@ -48,7 +74,9 @@ function EventDetailsModal({ event, onClose }) {
               </svg>
               <div>
                 <div className="ev-modal-meta-label">Time</div>
-                <div className="ev-modal-meta-value">{event.startTime} - {event.endTime}</div>
+                <div className="ev-modal-meta-value">
+                  {formatTime(event.startTime)}{event.endTime ? ` – ${formatTime(event.endTime)}` : ''}
+                </div>
               </div>
             </div>
 

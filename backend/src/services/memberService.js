@@ -1,6 +1,7 @@
 import {
   createMember,
   updateMember,
+  updateMemberPhoto,
   deactivateMember,
   getMemberById,
   getMemberByMemberId,
@@ -79,6 +80,16 @@ export const fetchMembersByStatusAndRole = async (isActive = true, userTypeId) =
 
 export const fetchAllMembers = async () => {
   return await getAllMembers();
+};
+
+export const saveMemberPhoto = async (memberId, photoPath) => {
+  const member = await getMemberById(memberId);
+  if (!member) {
+    const error = new Error('Member not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return await updateMemberPhoto(memberId, photoPath);
 };
 
 export const fetchMemberById = async (memberId) => {

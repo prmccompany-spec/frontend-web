@@ -17,6 +17,7 @@ function PaymentEntry() {
     category_id: '',
     amount: '',
     payment_date: today(),
+    payment_type: 'cash',
     collected_by: '',
     collectorDisplay: '',
     notes: '',
@@ -75,6 +76,7 @@ function PaymentEntry() {
         category_id: Number(form.category_id),
         amount: Number(form.amount),
         payment_date: form.payment_date,
+        payment_type: form.payment_type,
         collected_by: form.collected_by,
         notes: form.notes || null,
       });
@@ -85,6 +87,7 @@ function PaymentEntry() {
         category_id: '',
         amount: '',
         payment_date: today(),
+        payment_type: 'cash',
         collected_by: '',
         collectorDisplay: '',
         notes: '',
@@ -169,6 +172,41 @@ function PaymentEntry() {
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Payment Type */}
+          <div className="pe-field">
+            <label className="pe-label">Payment Type *</label>
+            <div className="pe-type-toggle">
+              <button
+                type="button"
+                className={`pe-type-btn${form.payment_type === 'cash' ? ' pe-type-btn--active' : ''}`}
+                onClick={() => setForm((f) => ({ ...f, payment_type: 'cash' }))}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M6 12h.01M18 12h.01" />
+                </svg>
+                Cash
+              </button>
+              <button
+                type="button"
+                className={`pe-type-btn${form.payment_type === 'qr' ? ' pe-type-btn--active' : ''}`}
+                onClick={() => setForm((f) => ({ ...f, payment_type: 'qr' }))}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="3" height="3" />
+                  <line x1="19" y1="14" x2="19" y2="14" strokeWidth="3" strokeLinecap="round" />
+                  <line x1="19" y1="19" x2="19" y2="19" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                QR Code
+              </button>
+            </div>
           </div>
 
           <div className="pe-row">

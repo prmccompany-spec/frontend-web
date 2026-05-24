@@ -122,6 +122,14 @@
   color: #2563eb;
 }
 
+.admin-section-icon--auth {
+  background: #fef3c7;
+}
+
+.admin-section-icon--auth svg {
+  color: #d97706;
+}
+
 .admin-section h3 {
   font-size: 15px;
   font-weight: 700;

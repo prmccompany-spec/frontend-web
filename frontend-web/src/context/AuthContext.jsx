@@ -1,24 +1,47 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
 import authService from '../services/authService';
+import api from '../services/api';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUser());
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
+  const [routePermissions, setRoutePermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const login = useCallback(async (email, password) => {
+  useEffect(() => {
+    api.get('/route-permissions')
+      .then((res) => setRoutePermissions(res.data.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  const requestOtp = useCallback(async (phone) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.login(email, password);
+      return await authService.requestOtp(phone);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to send OTP';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const verifyOtp = useCallback(async (phone, otp) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await authService.verifyOtp(phone, otp);
       setUser(data.user);
       setIsAuthenticated(true);
       return data;
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const msg = err.response?.data?.message || 'Invalid OTP';
+      setError(msg);
       throw err;
     } finally {
       setLoading(false);
@@ -32,37 +55,34 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   }, []);
 
-  const register = useCallback(async (userData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await authService.register(userData);
-      return data;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const canAccess = useCallback(
+    (routeKey) => {
+      const perm = routePermissions.find((p) => p.route_key === routeKey);
+      if (!perm) return true;
+      if (perm.require_login && !isAuthenticated) return false;
+      const allowedIds =
+        typeof perm.allowed_type_ids === 'string'
+          ? JSON.parse(perm.allowed_type_ids)
+          : perm.allowed_type_ids ?? [];
+      if (allowedIds.length > 0) {
+        return !!user && allowedIds.includes(user.user_type_id);
+      }
+      return true;
+    },
+    [routePermissions, isAuthenticated, user]
+  );
 
-  const value = {
-    user,
-    isAuthenticated,
-    loading,
-    error,
-    login,
-    logout,
-    register,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, routePermissions, loading, error, requestOtp, verifyOtp, logout, canAccess }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

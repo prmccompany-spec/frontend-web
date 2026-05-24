@@ -1,68 +1,49 @@
-import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
-import { generateToken } from '../utils/tokenUtils.js';
-import { getUserByEmail, createUser, getUserById } from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { findMemberByPhone, createOtpSession, validateAndConsumeOtp } from '../models/authModel.js';
 
-export const loginUser = async (email, password) => {
-  const user = await getUserByEmail(email);
+dotenv.config();
 
-  if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 401;
-    throw error;
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
+const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
+const HARDCODED_OTP = '9707';
+
+export const requestOtp = async (phone) => {
+  const member = await findMemberByPhone(phone);
+  if (!member) {
+    const err = new Error('Mobile number not registered');
+    err.statusCode = 404;
+    throw err;
   }
-
-  const isPasswordValid = await comparePassword(password, user.password);
-
-  if (!isPasswordValid) {
-    const error = new Error('Invalid password');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  const token = generateToken(user.id, user.role);
-
-  return {
-    access_token: token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  };
+  await createOtpSession(phone, HARDCODED_OTP);
+  return { message: 'OTP sent successfully' };
 };
 
-export const registerUser = async (userData) => {
-  const { name, email, password } = userData;
-
-  // Check if user already exists
-  const existingUser = await getUserByEmail(email);
-  if (existingUser) {
-    const error = new Error('User already exists');
-    error.statusCode = 409;
-    throw error;
+export const verifyOtp = async (phone, otp) => {
+  const member = await findMemberByPhone(phone);
+  if (!member) {
+    const err = new Error('Mobile number not registered');
+    err.statusCode = 404;
+    throw err;
   }
 
-  // Hash password
-  const hashedPassword = await hashPassword(password);
+  const valid = await validateAndConsumeOtp(phone, otp);
+  if (!valid) {
+    const err = new Error('Invalid or expired OTP');
+    err.statusCode = 401;
+    throw err;
+  }
 
-  // Create user
-  const userId = await createUser({
-    name,
-    email,
-    hashedPassword,
-  });
-
-  const user = await getUserById(userId);
-  const token = generateToken(user.id, user.role);
-
-  return {
-    access_token: token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
+  const payload = {
+    id: member.id,
+    member_id: member.member_id,
+    name: member.name,
+    phone: member.phone,
+    user_type_id: member.user_type_id,
+    type_name: member.type_name,
   };
+
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
+
+  return { access_token: token, user: payload };
 };

@@ -93,6 +93,43 @@
   min-height: 76px;
 }
 
+.pe-type-toggle {
+  display: flex;
+  gap: 10px;
+}
+
+.pe-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.pe-type-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.pe-type-btn:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.pe-type-btn--active {
+  border-color: #dc3545;
+  background: #fff0eb;
+  color: #dc3545;
+}
+
 .pe-search-wrap {
   position: relative;
 }

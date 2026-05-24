@@ -69,15 +69,19 @@ function ViewModal({ member, typeMap, onClose }) {
           {row('Gotra', member.gotra)}
           {row('Family Name', member.family_name)}
           {row("Father's Name", member.father_name)}
+          {row('Aadhar Number', member.aadhar_number)}
 
           <div className="vm-section-label">Contact</div>
           {row('Phone', member.phone)}
           {row('WhatsApp', member.whatsapp)}
+          {row('Email', member.email)}
 
           <div className="vm-section-label">Personal</div>
           {row('Blood Group', member.blood_group)}
           {row('Date of Birth', member.dob ? new Date(member.dob).toLocaleDateString('en-IN') : null)}
           {row('Occupation', member.occupation)}
+          {row('Engagement Date', member.engagement_date ? new Date(member.engagement_date).toLocaleDateString('en-IN') : null)}
+          {row('Marriage Date', member.marriage_date ? new Date(member.marriage_date).toLocaleDateString('en-IN') : null)}
           {row('Outside Rajapalayam', member.out_of_rajapalayam ? 'Yes' : null)}
 
           {(local || outside) && <div className="vm-section-label">Addresses</div>}
@@ -138,6 +142,10 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
     dob: member.dob ? member.dob.split('T')[0] : '',
     occupation: member.occupation ?? '',
     outOfRajapalayam: !!member.out_of_rajapalayam,
+    email: member.email ?? '',
+    aadharNumber: member.aadhar_number ?? '',
+    engagementDate: member.engagement_date ? member.engagement_date.split('T')[0] : '',
+    marriageDate: member.marriage_date ? member.marriage_date.split('T')[0] : '',
     // local address
     localDoorNo: '', localArea: '', localCity: '', localPincode: '', localState: '',
     // outside address
@@ -366,16 +374,23 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
             <div className="ml-form-section">Identity</div>
             <div className="ml-form-grid-3">
               <div className="ml-form-field">
-                <label className="ml-form-label">Gotra</label>
-                <input className="ml-form-input" name="gotra" value={form.gotra} onChange={handleChange} />
+                <label className="ml-form-label">Gotra <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="gotra" value={form.gotra} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Family Name</label>
-                <input className="ml-form-input" name="familyName" value={form.familyName} onChange={handleChange} />
+                <label className="ml-form-label">Family Name <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="familyName" value={form.familyName} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Father's Name</label>
-                <input className="ml-form-input" name="fatherName" value={form.fatherName} onChange={handleChange} />
+                <label className="ml-form-label">Father's Name <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="fatherName" value={form.fatherName} onChange={handleChange} required />
+              </div>
+            </div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Aadhar Number <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="aadharNumber" maxLength={12}
+                  placeholder="12-digit Aadhar number" value={form.aadharNumber} onChange={handleChange} required />
               </div>
             </div>
 
@@ -383,13 +398,13 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
             <div className="ml-form-section">Contact</div>
             <div className="ml-form-grid-2">
               <div className="ml-form-field">
-                <label className="ml-form-label">Phone</label>
+                <label className="ml-form-label">Phone <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="phone" type="tel"
-                  value={form.phone} onChange={handleChange} />
+                  value={form.phone} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
                 <label className="ml-form-label">
-                  WhatsApp
+                  WhatsApp <span className="ml-required">*</span>
                   <span className="ml-same-wrap">
                     <input type="checkbox" name="sameAsPhone" id="editSameCheck"
                       checked={form.sameAsPhone} onChange={handleChange} className="ml-form-checkbox" />
@@ -397,7 +412,15 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                   </span>
                 </label>
                 <input className="ml-form-input" name="whatsapp" type="tel"
-                  value={form.whatsapp} onChange={handleChange} disabled={form.sameAsPhone} />
+                  value={form.whatsapp} onChange={handleChange} disabled={form.sameAsPhone}
+                  required={!form.sameAsPhone} />
+              </div>
+            </div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Email</label>
+                <input className="ml-form-input" name="email" type="email"
+                  placeholder="example@email.com" value={form.email} onChange={handleChange} />
               </div>
             </div>
 
@@ -405,21 +428,34 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
             <div className="ml-form-section">Personal Details</div>
             <div className="ml-form-grid-3">
               <div className="ml-form-field">
-                <label className="ml-form-label">Blood Group</label>
+                <label className="ml-form-label">Blood Group <span className="ml-required">*</span></label>
                 <select className="ml-form-input ml-form-select" name="bloodGroup"
-                  value={form.bloodGroup} onChange={handleChange}>
+                  value={form.bloodGroup} onChange={handleChange} required>
                   <option value="">Select</option>
                   {BLOOD_GROUPS.map((bg) => <option key={bg} value={bg}>{bg}</option>)}
                 </select>
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Date of Birth</label>
+                <label className="ml-form-label">Date of Birth <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="dob" type="date"
-                  value={form.dob} onChange={handleChange} />
+                  value={form.dob} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Occupation</label>
-                <input className="ml-form-input" name="occupation" value={form.occupation} onChange={handleChange} />
+                <label className="ml-form-label">Occupation <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="occupation" value={form.occupation} onChange={handleChange} required />
+              </div>
+            </div>
+
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Engagement Date <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="engagementDate" type="date"
+                  value={form.engagementDate} onChange={handleChange} required />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Marriage Date <span className="ml-required">*</span></label>
+                <input className="ml-form-input" name="marriageDate" type="date"
+                  value={form.marriageDate} onChange={handleChange} required />
               </div>
             </div>
 
@@ -435,31 +471,31 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
             <div className="ml-form-section">Local Address (Rajapalayam)</div>
             <div className="ml-form-grid-2">
               <div className="ml-form-field">
-                <label className="ml-form-label">Door No.</label>
+                <label className="ml-form-label">Door No. <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="localDoorNo" placeholder="Door / flat number"
-                  value={form.localDoorNo} onChange={handleChange} />
+                  value={form.localDoorNo} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Area / Street</label>
+                <label className="ml-form-label">Area / Street <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="localArea" placeholder="Area or street"
-                  value={form.localArea} onChange={handleChange} />
+                  value={form.localArea} onChange={handleChange} required />
               </div>
             </div>
             <div className="ml-form-grid-3">
               <div className="ml-form-field">
-                <label className="ml-form-label">City</label>
+                <label className="ml-form-label">City <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="localCity" placeholder="City"
-                  value={form.localCity} onChange={handleChange} />
+                  value={form.localCity} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">Pincode</label>
+                <label className="ml-form-label">Pincode <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="localPincode" placeholder="626117"
-                  value={form.localPincode} onChange={handleChange} />
+                  value={form.localPincode} onChange={handleChange} required />
               </div>
               <div className="ml-form-field">
-                <label className="ml-form-label">State</label>
+                <label className="ml-form-label">State <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="localState" placeholder="Tamil Nadu"
-                  value={form.localState} onChange={handleChange} />
+                  value={form.localState} onChange={handleChange} required />
               </div>
             </div>
 
@@ -469,31 +505,31 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                 <div className="ml-form-section">Outside Address (Current Residence)</div>
                 <div className="ml-form-grid-2">
                   <div className="ml-form-field">
-                    <label className="ml-form-label">Door No.</label>
+                    <label className="ml-form-label">Door No. <span className="ml-required">*</span></label>
                     <input className="ml-form-input" name="outsideDoorNo" placeholder="Door / flat number"
-                      value={form.outsideDoorNo} onChange={handleChange} />
+                      value={form.outsideDoorNo} onChange={handleChange} required />
                   </div>
                   <div className="ml-form-field">
-                    <label className="ml-form-label">Area / Street</label>
+                    <label className="ml-form-label">Area / Street <span className="ml-required">*</span></label>
                     <input className="ml-form-input" name="outsideArea" placeholder="Area or street"
-                      value={form.outsideArea} onChange={handleChange} />
+                      value={form.outsideArea} onChange={handleChange} required />
                   </div>
                 </div>
                 <div className="ml-form-grid-3">
                   <div className="ml-form-field">
-                    <label className="ml-form-label">City</label>
+                    <label className="ml-form-label">City <span className="ml-required">*</span></label>
                     <input className="ml-form-input" name="outsideCity" placeholder="City"
-                      value={form.outsideCity} onChange={handleChange} />
+                      value={form.outsideCity} onChange={handleChange} required />
                   </div>
                   <div className="ml-form-field">
-                    <label className="ml-form-label">Pincode</label>
+                    <label className="ml-form-label">Pincode <span className="ml-required">*</span></label>
                     <input className="ml-form-input" name="outsidePincode" placeholder="Pincode"
-                      value={form.outsidePincode} onChange={handleChange} />
+                      value={form.outsidePincode} onChange={handleChange} required />
                   </div>
                   <div className="ml-form-field">
-                    <label className="ml-form-label">State</label>
+                    <label className="ml-form-label">State <span className="ml-required">*</span></label>
                     <input className="ml-form-input" name="outsideState" placeholder="State"
-                      value={form.outsideState} onChange={handleChange} />
+                      value={form.outsideState} onChange={handleChange} required />
                   </div>
                 </div>
               </>

@@ -26,6 +26,10 @@ const initialForm = {
   dob: '',
   occupation: '',
   outOfRajapalayam: false,
+  email: '',
+  aadharNumber: '',
+  engagementDate: '',
+  marriageDate: '',
   localDoorNo: '',
   localArea: '',
   localCity: '',
@@ -228,33 +232,51 @@ function RegisterMember() {
 
           <div className="rm-grid-3">
             <div className="rm-field">
-              <label className="rm-label">Gotra</label>
+              <label className="rm-label">Gotra <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="gotra"
                 placeholder="Enter gotra"
                 value={form.gotra}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">Family Name</label>
+              <label className="rm-label">Family Name <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="familyName"
                 placeholder="Family / clan name"
                 value={form.familyName}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">Father's Name</label>
+              <label className="rm-label">Father's Name <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="fatherName"
                 placeholder="Father's full name"
                 value={form.fatherName}
                 onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="rm-grid-2">
+            <div className="rm-field">
+              <label className="rm-label">Aadhar Number <span className="rm-required">*</span></label>
+              <input
+                className="rm-input"
+                name="aadharNumber"
+                placeholder="12-digit Aadhar number"
+                maxLength={12}
+                value={form.aadharNumber}
+                onChange={handleChange}
+                required
               />
             </div>
           </div>
@@ -266,7 +288,7 @@ function RegisterMember() {
 
           <div className="rm-grid-2">
             <div className="rm-field">
-              <label className="rm-label">Phone Number</label>
+              <label className="rm-label">Phone Number <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="phone"
@@ -274,11 +296,12 @@ function RegisterMember() {
                 placeholder="+91 XXXXX XXXXX"
                 value={form.phone}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
               <label className="rm-label">
-                WhatsApp Number
+                WhatsApp Number <span className="rm-required">*</span>
                 <span className="rm-same-wrap">
                   <input
                     type="checkbox"
@@ -299,6 +322,21 @@ function RegisterMember() {
                 value={form.whatsapp}
                 onChange={handleChange}
                 disabled={form.sameAsPhone}
+                required={!form.sameAsPhone}
+              />
+            </div>
+          </div>
+
+          <div className="rm-grid-2">
+            <div className="rm-field">
+              <label className="rm-label">Email Address</label>
+              <input
+                className="rm-input"
+                name="email"
+                type="email"
+                placeholder="example@email.com"
+                value={form.email}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -365,12 +403,13 @@ function RegisterMember() {
 
           <div className="rm-grid-3">
             <div className="rm-field">
-              <label className="rm-label">Blood Group</label>
+              <label className="rm-label">Blood Group <span className="rm-required">*</span></label>
               <select
                 className="rm-input rm-select"
                 name="bloodGroup"
                 value={form.bloodGroup}
                 onChange={handleChange}
+                required
               >
                 <option value="">Select</option>
                 {BLOOD_GROUPS.map((bg) => (
@@ -379,23 +418,50 @@ function RegisterMember() {
               </select>
             </div>
             <div className="rm-field">
-              <label className="rm-label">Date of Birth</label>
+              <label className="rm-label">Date of Birth <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="dob"
                 type="date"
                 value={form.dob}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">Occupation</label>
+              <label className="rm-label">Occupation <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="occupation"
                 placeholder="e.g. Engineer"
                 value={form.occupation}
                 onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="rm-grid-2">
+            <div className="rm-field">
+              <label className="rm-label">Engagement Date <span className="rm-required">*</span></label>
+              <input
+                className="rm-input"
+                name="engagementDate"
+                type="date"
+                value={form.engagementDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="rm-field">
+              <label className="rm-label">Marriage Date <span className="rm-required">*</span></label>
+              <input
+                className="rm-input"
+                name="marriageDate"
+                type="date"
+                value={form.marriageDate}
+                onChange={handleChange}
+                required
               />
             </div>
           </div>
@@ -420,56 +486,61 @@ function RegisterMember() {
 
           <div className="rm-grid-2">
             <div className="rm-field">
-              <label className="rm-label">Door No.</label>
+              <label className="rm-label">Door No. <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="localDoorNo"
                 placeholder="Door / flat number"
                 value={form.localDoorNo}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">Area / Street</label>
+              <label className="rm-label">Area / Street <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="localArea"
                 placeholder="Area or street name"
                 value={form.localArea}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
 
           <div className="rm-grid-3">
             <div className="rm-field">
-              <label className="rm-label">City</label>
+              <label className="rm-label">City <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="localCity"
                 placeholder="City"
                 value={form.localCity}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">Pincode</label>
+              <label className="rm-label">Pincode <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="localPincode"
                 placeholder="626117"
                 value={form.localPincode}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="rm-field">
-              <label className="rm-label">State</label>
+              <label className="rm-label">State <span className="rm-required">*</span></label>
               <input
                 className="rm-input"
                 name="localState"
                 placeholder="Tamil Nadu"
                 value={form.localState}
                 onChange={handleChange}
+                required
               />
             </div>
           </div>
@@ -484,56 +555,61 @@ function RegisterMember() {
 
             <div className="rm-grid-2">
               <div className="rm-field">
-                <label className="rm-label">Door No.</label>
+                <label className="rm-label">Door No. <span className="rm-required">*</span></label>
                 <input
                   className="rm-input"
                   name="outsideDoorNo"
                   placeholder="Door / flat number"
                   value={form.outsideDoorNo}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="rm-field">
-                <label className="rm-label">Area / Street</label>
+                <label className="rm-label">Area / Street <span className="rm-required">*</span></label>
                 <input
                   className="rm-input"
                   name="outsideArea"
                   placeholder="Area or street name"
                   value={form.outsideArea}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
 
             <div className="rm-grid-3">
               <div className="rm-field">
-                <label className="rm-label">City</label>
+                <label className="rm-label">City <span className="rm-required">*</span></label>
                 <input
                   className="rm-input"
                   name="outsideCity"
                   placeholder="City"
                   value={form.outsideCity}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="rm-field">
-                <label className="rm-label">Pincode</label>
+                <label className="rm-label">Pincode <span className="rm-required">*</span></label>
                 <input
                   className="rm-input"
                   name="outsidePincode"
                   placeholder="Pincode"
                   value={form.outsidePincode}
                   onChange={handleChange}
+                  required
                 />
               </div>
               <div className="rm-field">
-                <label className="rm-label">State</label>
+                <label className="rm-label">State <span className="rm-required">*</span></label>
                 <input
                   className="rm-input"
                   name="outsideState"
                   placeholder="State"
                   value={form.outsideState}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>

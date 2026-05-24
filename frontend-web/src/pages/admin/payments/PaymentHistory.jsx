@@ -117,6 +117,7 @@ function PaymentHistory() {
                   <th>Ref</th>
                   <th>Member</th>
                   <th>Category</th>
+                  <th>Type</th>
                   <th>Amount</th>
                   <th>Date</th>
                   <th>Collected By</th>
@@ -132,6 +133,11 @@ function PaymentHistory() {
                       <div className="ph-member-code">{p.member_code}</div>
                     </td>
                     <td>{p.category_name}</td>
+                    <td>
+                      <span className={`ph-type-badge ph-type-badge--${p.payment_type}`}>
+                        {p.payment_type === 'qr' ? 'QR' : 'Cash'}
+                      </span>
+                    </td>
                     <td className="ph-amount">₹{fmt(p.amount)}</td>
                     <td>{fmtDate(p.payment_date)}</td>
                     <td>{p.collected_by_name}</td>

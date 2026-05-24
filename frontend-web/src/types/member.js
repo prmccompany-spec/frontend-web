@@ -24,6 +24,10 @@ export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
  * @property {string} dob             - Date of birth (YYYY-MM-DD)
  * @property {string} occupation      - Occupation
  * @property {boolean} outOfRajapalayam - Lives outside Rajapalayam
+ * @property {string} email           - Email address
+ * @property {string} aadharNumber    - Aadhar card number (12 digits)
+ * @property {string} engagementDate  - Engagement date (YYYY-MM-DD)
+ * @property {string} marriageDate    - Marriage date (YYYY-MM-DD)
  * @property {string} localDoorNo     - Local address: door number
  * @property {string} localArea       - Local address: area
  * @property {string} localCity       - Local address: city
@@ -51,6 +55,10 @@ export function toMemberPayload(form) {
     dob: form.dob || null,
     occupation: form.occupation || null,
     out_of_rajapalayam: Boolean(form.outOfRajapalayam),
+    email: form.email || null,
+    aadhar_number: form.aadharNumber || null,
+    engagement_date: form.engagementDate || null,
+    marriage_date: form.marriageDate || null,
   };
 }
 

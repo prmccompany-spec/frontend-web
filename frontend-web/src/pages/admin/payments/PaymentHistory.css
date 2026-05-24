@@ -105,6 +105,26 @@
   color: #333;
 }
 
+.ph-type-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ph-type-badge--cash {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.ph-type-badge--qr {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
 .ph-ref {
   font-family: monospace;
   font-size: 12px;

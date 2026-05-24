@@ -13,6 +13,7 @@ import addressProofRoutes from './routes/addressProofRoutes.js';
 import userTypeRoutes from './routes/userTypeRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import routePermissionRoutes from './routes/routePermissionRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -39,6 +40,7 @@ app.use('/api/address-proofs', addressProofRoutes);
 app.use('/api/user-types', userTypeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/route-permissions', routePermissionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

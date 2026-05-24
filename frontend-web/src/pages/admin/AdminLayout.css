@@ -147,6 +147,56 @@
   border-color: #fbd0cb;
 }
 
+.al-user-info {
+  padding: 8px 12px 10px;
+  margin-bottom: 4px;
+}
+
+.al-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.al-user-type {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: capitalize;
+  margin-top: 1px;
+}
+
+.al-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  margin-top: 6px;
+}
+
+.al-logout-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.al-logout-btn:hover {
+  background: #fff5f5;
+  color: #dc3545;
+  border-color: #fbd0cb;
+}
+
 /* ── Main content ────────────────────────────────── */
 .al-main {
   flex: 1;

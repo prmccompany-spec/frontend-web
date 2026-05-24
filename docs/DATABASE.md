@@ -103,3 +103,64 @@ CREATE TABLE payments (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+ALTER TABLE `members` ADD `photo` TEXT NULL AFTER `qr_code`;
+
+
+CREATE TABLE events (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      title            VARCHAR(500)  NOT NULL,
+      status           ENUM('upcoming','ongoing','completed') NOT NULL DEFAULT 'upcoming',
+      date             DATE          NOT NULL,
+      start_time       VARCHAR(20)   NULL,
+      end_time         VARCHAR(20)   NULL,
+      location         VARCHAR(500)  NULL,
+      attendees        VARCHAR(50)   NULL,
+      short_description TEXT         NULL,
+      full_description  TEXT         NULL,
+      highlights       JSON          NULL,
+      organizer        VARCHAR(300)  NULL,
+      contact_person   VARCHAR(300)  NULL,
+      phone            VARCHAR(30)   NULL,
+      is_live          TINYINT(1)    NOT NULL DEFAULT 0,
+      video_link       VARCHAR(1000) NULL,
+      image            VARCHAR(500)  NULL,
+      is_active        TINYINT(1)    NOT NULL DEFAULT 1,
+      created_at       DATETIME      NOT NULL
+    );
+
+ALTER TABLE members ADD COLUMN email VARCHAR(150) NULL;
+ALTER TABLE members ADD COLUMN aadhar_number VARCHAR(12) NULL;
+ALTER TABLE members ADD COLUMN engagement_date DATE NULL;
+ALTER TABLE members ADD COLUMN marriage_date DATE NULL;
+
+ALTER TABLE payments ADD COLUMN payment_type ENUM('cash', 'qr') NOT NULL DEFAULT 'cash';
+
+-- ============================================================
+-- AUTH FEATURE
+-- ============================================================
+
+CREATE TABLE otp_sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  phone VARCHAR(15) NOT NULL,
+  otp VARCHAR(10) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  is_used TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE route_permissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  route_key VARCHAR(100) NOT NULL UNIQUE,
+  route_label VARCHAR(200) NOT NULL,
+  description VARCHAR(300),
+  require_login TINYINT(1) DEFAULT 0,
+  allowed_type_ids JSON,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT INTO route_permissions (route_key, route_label, description, require_login, allowed_type_ids) VALUES
+('admin', 'Admin Panel', 'Full admin panel access — requires admin user type', 1, '[1]'),
+('donate', 'Donate Page', 'Donation page — any logged-in member can access', 1, '[]'),
+('dashboard', 'Member Dashboard', 'Member dashboard — any logged-in user', 1, '[]');

@@ -39,14 +39,22 @@ export const deactivateCategory = async (id) => {
 
 // ─── Payments ────────────────────────────────────────────────────
 
-export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, notes = null }) => {
+export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null }) => {
   const payment_ref = generatePaymentRef();
   const result = await query(
-    `INSERT INTO payments (payment_ref, member_id, category_id, amount, payment_date, collected_by, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [payment_ref, member_id, category_id, amount, payment_date, collected_by, notes]
+    `INSERT INTO payments (payment_ref, member_id, category_id, amount, payment_date, collected_by, payment_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [payment_ref, member_id, category_id, amount, payment_date, collected_by, payment_type, notes]
   );
   return { id: result.insertId, payment_ref };
+};
+
+export const updatePayment = async (id, { category_id, amount, payment_date, payment_type, notes }) => {
+  return await query(
+    `UPDATE payments SET category_id = ?, amount = ?, payment_date = ?, payment_type = ?, notes = ?, updated_at = NOW()
+     WHERE id = ?`,
+    [category_id, amount, payment_date, payment_type, notes ?? null, id]
+  );
 };
 
 export const getPaymentById = async (id) => {
@@ -107,7 +115,9 @@ export const getPaymentSummary = async () => {
   const [totals] = await query(
     `SELECT
        COUNT(*) AS total_transactions,
-       COALESCE(SUM(amount), 0) AS total_collected
+       COALESCE(SUM(amount), 0) AS total_collected,
+       COALESCE(SUM(CASE WHEN MONTH(payment_date) = MONTH(CURDATE()) AND YEAR(payment_date) = YEAR(CURDATE()) THEN amount ELSE 0 END), 0) AS this_month,
+       COALESCE(SUM(CASE WHEN YEAR(payment_date) = YEAR(CURDATE()) THEN amount ELSE 0 END), 0) AS this_year
      FROM payments`
   );
 
@@ -117,6 +127,20 @@ export const getPaymentSummary = async () => {
      JOIN payment_categories c ON p.category_id = c.id
      GROUP BY p.category_id, c.name
      ORDER BY total DESC`
+  );
+
+  const byPaymentType = await query(
+    `SELECT payment_type, COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total
+     FROM payments
+     GROUP BY payment_type`
+  );
+
+  const byCollector = await query(
+    `SELECT m.name, m.member_id AS member_code, COUNT(*) AS count, COALESCE(SUM(p.amount), 0) AS total_collected
+     FROM payments p
+     JOIN members m ON p.collected_by = m.id
+     GROUP BY p.collected_by, m.name, m.member_id
+     ORDER BY total_collected DESC`
   );
 
   const topPayers = await query(
@@ -129,12 +153,12 @@ export const getPaymentSummary = async () => {
   );
 
   const monthly = await query(
-    `SELECT DATE_FORMAT(payment_date, '%Y-%m') AS month, SUM(amount) AS total
+    `SELECT DATE_FORMAT(payment_date, '%Y-%m') AS month, COUNT(*) AS count, SUM(amount) AS total
      FROM payments
      GROUP BY month
      ORDER BY month DESC
      LIMIT 12`
   );
 
-  return { totals, byCategory, topPayers, monthly };
+  return { totals, byCategory, byPaymentType, byCollector, topPayers, monthly };
 };

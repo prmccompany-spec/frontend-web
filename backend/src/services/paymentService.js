@@ -25,10 +25,16 @@ export const addCategory = async (data) => {
 };
 
 export const recordPayment = async (data) => {
-  const { member_id, category_id, amount, payment_date, collected_by, notes } = data;
+  const { member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes } = data;
 
   if (!member_id || !category_id || !amount || !payment_date || !collected_by) {
     const err = new Error('member_id, category_id, amount, payment_date and collected_by are required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (!['cash', 'qr'].includes(payment_type)) {
+    const err = new Error('payment_type must be cash or qr');
     err.statusCode = 400;
     throw err;
   }
@@ -61,7 +67,7 @@ export const recordPayment = async (data) => {
     throw err;
   }
 
-  return await createPayment({ member_id, category_id, amount, payment_date, collected_by, notes });
+  return await createPayment({ member_id, category_id, amount, payment_date, collected_by, payment_type, notes });
 };
 
 export const fetchPayments = async (filters) => {

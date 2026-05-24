@@ -28,12 +28,16 @@ export const createMember = async (memberData) => {
     dob = null,
     occupation = null,
     out_of_rajapalayam = false,
+    email = null,
+    aadhar_number = null,
+    engagement_date = null,
+    marriage_date = null,
   } = memberData;
 
   const results = await query(
     `INSERT INTO members
-      (member_id, user_type_id, gotra, family_name, name, father_name, phone, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      (member_id, user_type_id, gotra, family_name, name, father_name, phone, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       member_id,
       user_type_id,
@@ -50,6 +54,10 @@ export const createMember = async (memberData) => {
       outside_address_id,
       address_proof_id,
       out_of_rajapalayam ? 1 : 0,
+      email,
+      aadhar_number,
+      engagement_date,
+      marriage_date,
     ]
   );
 

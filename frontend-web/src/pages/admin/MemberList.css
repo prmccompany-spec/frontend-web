@@ -305,6 +305,27 @@
   border-color: #fcd34d;
 }
 
+.ml-action-btn--download {
+  background: #edfaf3;
+  color: #1a6b35;
+  border-color: #b7e8cc;
+}
+
+.ml-action-btn--download:hover:not(:disabled) {
+  background: #d1f5e2;
+  border-color: #86d9aa;
+}
+
+.ml-action-btn--download:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ml-spinner--dark {
+  border-color: rgba(26, 107, 53, 0.25);
+  border-top-color: #1a6b35;
+}
+
 /* ── Modal backdrop ───────────────────────────────── */
 .ml-modal-backdrop {
   position: fixed;

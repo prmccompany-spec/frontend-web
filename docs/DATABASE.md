@@ -164,3 +164,96 @@ INSERT INTO route_permissions (route_key, route_label, description, require_logi
 ('admin', 'Admin Panel', 'Full admin panel access — requires admin user type', 1, '[1]'),
 ('donate', 'Donate Page', 'Donation page — any logged-in member can access', 1, '[]'),
 ('dashboard', 'Member Dashboard', 'Member dashboard — any logged-in user', 1, '[]');
+
+-- ============================================================
+-- OFFLINE FORM WORKFLOW FEATURE
+-- ============================================================
+-- Adapted from docs/PRMCF_Offline_Workflow_Design.md to this project's
+-- conventions:
+--   * INT AUTO_INCREMENT (not BIGINT) to match the rest of the schema.
+--   * No FOREIGN KEY constraints, matching every other table in this
+--     schema (members, payments, events, etc. all reference each other
+--     via plain INT columns with no FK enforcement) — only PRIMARY KEY
+--     and UNIQUE are used.
+--   * services has BOTH is_active (soft delete) and is_published
+--     (member-facing visibility toggle) instead of a single flag, so
+--     "Delete Service" and "Publish/Unpublish Service" stay independent.
+--   * workflow_steps.user_type_id is a plain INT referencing
+--     user_types.id instead of a free-text role column, reusing the
+--     existing RBAC (admin/member/committee/president) instead of
+--     hardcoding role names.
+--   * request_workflow_history has no role column — it's derived via
+--     workflow_step_id -> user_type_id when needed.
+--   * The filled offline form itself is stored as a request_documents
+--     row with service_document_id = NULL and document_type =
+--     'OFFLINE_FORM', so no separate column/table is needed for it.
+
+CREATE TABLE services (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  slug VARCHAR(200) UNIQUE NOT NULL,
+  description TEXT,
+  offline_form_path VARCHAR(500),
+  offline_form_name VARCHAR(255),
+  is_active BOOLEAN DEFAULT TRUE,
+  is_published BOOLEAN DEFAULT FALSE,
+  created_by INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE service_documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  service_id INT NOT NULL,
+  document_name VARCHAR(200) NOT NULL,
+  mandatory BOOLEAN DEFAULT TRUE,
+  allowed_extensions VARCHAR(100) DEFAULT 'pdf,jpg,jpeg,png',
+  max_file_size_mb INT DEFAULT 5,
+  display_order INT DEFAULT 1
+);
+
+CREATE TABLE workflow_steps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  service_id INT NOT NULL,
+  step_no INT NOT NULL,
+  user_type_id INT NOT NULL,
+  step_label VARCHAR(100),
+  can_reject BOOLEAN DEFAULT TRUE,
+  is_final BOOLEAN DEFAULT FALSE,
+  UNIQUE KEY uniq_service_step (service_id, step_no)
+);
+
+CREATE TABLE service_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  request_no VARCHAR(30) UNIQUE,
+  service_id INT NOT NULL,
+  member_id INT NOT NULL,
+  status ENUM('SUBMITTED','IN_PROGRESS','APPROVED','REJECTED','COMPLETED') DEFAULT 'SUBMITTED',
+  current_step INT DEFAULT 1,
+  remarks TEXT,
+  submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP NULL
+);
+
+CREATE TABLE request_documents (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  request_id INT NOT NULL,
+  service_document_id INT NULL,
+  document_type VARCHAR(200),
+  file_path VARCHAR(500) NOT NULL,
+  original_name VARCHAR(255),
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE request_workflow_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  request_id INT NOT NULL,
+  workflow_step_id INT NOT NULL,
+  action_by INT,
+  status VARCHAR(50),
+  remarks TEXT,
+  action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO route_permissions (route_key, route_label, description, require_login, allowed_type_ids) VALUES
+('services', 'Offline Services', 'Browse services, submit requests, track status and approvals', 1, '[]');

@@ -3,7 +3,8 @@
     "allow": [
       "PowerShell(Get-ChildItem -Path \"d:\\\\projects\\\\frontend-web\\\\frontend-web\\\\src\" -Recurse -File | ForEach-Object { $_.FullName } | Sort-Object)",
       "Bash(Get-ChildItem -Path \"d:\\\\projects\\\\frontend-web\" -Directory)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git status *)"
     ]
   }
 }

@@ -97,7 +97,15 @@ function Navbar() {
               </button>
             </li>
           ))}
-          <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
+          {isAuthenticated && (
+            <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
+              <button onClick={() => goTo('/services')}>
+                <span className="nav-drawer-dot" />
+                Offline Services
+              </button>
+            </li>
+          )}
+          <li className="nav-drawer-item" style={{ '--i': navLinks.length + 1 }}>
             <button onClick={() => goTo('/admin')}>
               <span className="nav-drawer-dot" />
               Admin Panel

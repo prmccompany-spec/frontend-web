@@ -1,0 +1,132 @@
+.sf-page {
+  max-width: 720px;
+}
+
+.sf-state {
+  color: #999;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.sf-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 28px 28px 32px;
+}
+
+.sf-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.sf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sf-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.sf-required {
+  color: #dc3545;
+}
+
+.sf-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #111;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.sf-input:focus {
+  border-color: #dc3545;
+}
+
+.sf-textarea {
+  resize: vertical;
+}
+
+.sf-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 18px 16px;
+  cursor: pointer;
+  color: #666;
+  font-size: 13px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sf-dropzone:hover {
+  border-color: #dc3545;
+  background: #fffafa;
+}
+
+.sf-dropzone svg {
+  width: 22px;
+  height: 22px;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.sf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.sf-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.sf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sf-btn--primary {
+  background: #dc3545;
+  color: white;
+}
+
+.sf-btn--primary:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.sf-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.sf-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}

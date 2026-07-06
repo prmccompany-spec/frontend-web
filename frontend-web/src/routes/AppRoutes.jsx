@@ -5,6 +5,7 @@ import AboutPage from '../pages/about/AboutPage';
 import EventsPage from '../pages/events/EventsPage';
 import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
+import Services from '../pages/user/Services';
 import AdminLayout from '../pages/admin/AdminLayout';
 import AdminPanel from '../pages/admin/AdminPanel';
 import RegisterMember from '../pages/admin/RegisterMember';
@@ -16,6 +17,9 @@ import PaymentHistory from '../pages/admin/payments/PaymentHistory';
 import PaymentReports from '../pages/admin/payments/PaymentReports';
 import HomePage from '../pages/home/HomePage';
 import AddEvent from '../pages/admin/events/AddEvent';
+import ServicesList from '../pages/admin/ServicesList';
+import ServiceForm from '../pages/admin/ServiceForm';
+import ServiceConfig from '../pages/admin/ServiceConfig';
 
 const ProtectedRoute = ({ children, routeKey }) => {
   const { canAccess, isAuthenticated } = useAuth();
@@ -45,6 +49,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/services"
+        element={
+          <ProtectedRoute routeKey="services">
+            <Services />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/admin"
         element={
           <ProtectedRoute routeKey="admin">
@@ -61,6 +74,10 @@ function AppRoutes() {
         <Route path="payments/history" element={<PaymentHistory />} />
         <Route path="payments/reports" element={<PaymentReports />} />
         <Route path="events/add" element={<AddEvent />} />
+        <Route path="services" element={<ServicesList />} />
+        <Route path="services/new" element={<ServiceForm />} />
+        <Route path="services/:id/edit" element={<ServiceForm />} />
+        <Route path="services/:id/configure" element={<ServiceConfig />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />

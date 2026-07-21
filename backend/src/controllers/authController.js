@@ -1,21 +1,30 @@
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { requestOtp, verifyOtp } from '../services/authService.js';
+import { loginWithPhone, requestLoginOtp, verifyLoginOtp } from '../services/authService.js';
 
-export const handleRequestOtp = asyncHandler(async (req, res) => {
+export const handleLogin = asyncHandler(async (req, res) => {
   const { phone } = req.body;
   if (!phone) {
     return res.status(400).json({ success: false, message: 'Phone number is required' });
   }
-  const result = await requestOtp(phone.trim());
-  res.json({ success: true, ...result });
+  const result = await loginWithPhone(phone.trim());
+  res.json({ success: true, message: 'Login successful', ...result });
+});
+
+export const handleSendOtp = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) {
+    return res.status(400).json({ success: false, message: 'Phone number is required' });
+  }
+  await requestLoginOtp(phone.trim());
+  res.json({ success: true, message: 'OTP sent' });
 });
 
 export const handleVerifyOtp = asyncHandler(async (req, res) => {
-  const { phone, otp } = req.body;
-  if (!phone || !otp) {
-    return res.status(400).json({ success: false, message: 'Phone and OTP are required' });
+  const { phone, code } = req.body;
+  if (!phone || !code) {
+    return res.status(400).json({ success: false, message: 'Phone number and OTP code are required' });
   }
-  const result = await verifyOtp(phone.trim(), otp.trim());
+  const result = await verifyLoginOtp(phone.trim(), code.trim());
   res.json({ success: true, message: 'Login successful', ...result });
 });
 

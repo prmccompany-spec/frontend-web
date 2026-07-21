@@ -8,7 +8,7 @@ import {
   hasLocalAddress,
   hasOutsideAddress,
 } from '../../types/member';
-import { createMember, createAddress, uploadMemberPhoto } from '../../services/memberService';
+import { createMember, createAddress, uploadMemberPhoto, createPendingPayment } from '../../services/memberService';
 import { getUserTypes } from '../../services/userTypeService';
 import './RegisterMember.css';
 
@@ -44,6 +44,7 @@ const initialForm = {
 
 function RegisterMember() {
   const [form, setForm] = useState(initialForm);
+  const [pendingItems, setPendingItems] = useState([]);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [error, setError] = useState('');
@@ -94,6 +95,15 @@ function RegisterMember() {
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  const addPendingItem = () =>
+    setPendingItems((prev) => [...prev, { title: '', amount: '', dueDate: '' }]);
+
+  const removePendingItem = (index) =>
+    setPendingItems((prev) => prev.filter((_, i) => i !== index));
+
+  const handlePendingChange = (index, field, value) =>
+    setPendingItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -122,8 +132,21 @@ function RegisterMember() {
         await uploadMemberPhoto(memberId, fd);
       }
 
+      // 5. Create pending payment entries
+      for (const item of pendingItems) {
+        if (item.title.trim() && Number(item.amount) > 0) {
+          await createPendingPayment({
+            member_id: memberId,
+            title: item.title.trim(),
+            amount: Number(item.amount),
+            due_date: item.dueDate || null,
+          });
+        }
+      }
+
       setSuccess(`Member "${form.name}" registered successfully (ID: ${form.memberId}).`);
       setForm(initialForm);
+      setPendingItems([]);
       setPhoto(null);
       setPhotoPreview('');
     } catch (err) {
@@ -616,8 +639,84 @@ function RegisterMember() {
           </div>
         )}
 
+        {/* ── Pending Payments ── */}
+        <div className="rm-card">
+          <div className="rm-section-label">Pending Payments (Dues)</div>
+          <p className="rm-pending-hint">
+            Add any amounts this member still owes — annual fee, marriage certificate payment, etc.
+          </p>
+
+          {pendingItems.map((item, index) => (
+            <div className="rm-pending-row" key={index}>
+              <div className="rm-field">
+                <label className="rm-label">Payment For <span className="rm-required">*</span></label>
+                <input
+                  className="rm-input"
+                  placeholder="e.g. Annual Fee"
+                  value={item.title}
+                  onChange={(e) => handlePendingChange(index, 'title', e.target.value)}
+                  required
+                />
+              </div>
+              <div className="rm-field">
+                <label className="rm-label">Amount (₹) <span className="rm-required">*</span></label>
+                <input
+                  className="rm-input"
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={item.amount}
+                  onChange={(e) => handlePendingChange(index, 'amount', e.target.value)}
+                  required
+                />
+              </div>
+              <div className="rm-field">
+                <label className="rm-label">Due Date</label>
+                <input
+                  className="rm-input"
+                  type="date"
+                  value={item.dueDate}
+                  onChange={(e) => handlePendingChange(index, 'dueDate', e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                className="rm-pending-remove"
+                onClick={() => removePendingItem(index)}
+                aria-label="Remove item"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          ))}
+
+          <button type="button" className="rm-pending-add" onClick={addPendingItem}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Pending Payment
+          </button>
+
+          {pendingItems.length > 0 && (
+            <div className="rm-pending-total">
+              Total pending: ₹
+              {pendingItems
+                .reduce((s, i) => s + (Number(i.amount) || 0), 0)
+                .toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          )}
+        </div>
+
         <div className="rm-actions">
-          <button type="button" className="rm-btn rm-btn--secondary" onClick={() => setForm(initialForm)}>
+          <button type="button" className="rm-btn rm-btn--secondary"
+            onClick={() => { setForm(initialForm); setPendingItems([]); }}>
             Clear Form
           </button>
           <button type="submit" className="rm-btn rm-btn--primary" disabled={loading}>

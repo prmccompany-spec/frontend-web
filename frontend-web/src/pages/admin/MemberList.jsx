@@ -6,6 +6,10 @@ import {
   updateAddress,
   createAddress,
   uploadMemberPhoto,
+  getPendingPayments,
+  createPendingPayment,
+  updatePendingPayment,
+  deletePendingPayment,
 } from '../../services/memberService';
 import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
@@ -17,11 +21,15 @@ const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:300
 // ── View Modal ────────────────────────────────────────────────────────────────
 function ViewModal({ member, typeMap, onClose }) {
   const [addresses, setAddresses] = useState([]);
+  const [pendings, setPendings] = useState([]);
 
   useEffect(() => {
     getMemberAddresses(member.id)
       .then((res) => setAddresses(res.data.data ?? []))
       .catch(() => setAddresses([]));
+    getPendingPayments(member.id, 'pending')
+      .then((res) => setPendings(res.data.data ?? []))
+      .catch(() => setPendings([]));
   }, [member.id]);
 
   const local = addresses.find((a) => a.type === 'local');
@@ -84,6 +92,17 @@ function ViewModal({ member, typeMap, onClose }) {
           {row('Engagement Date', member.engagement_date ? new Date(member.engagement_date).toLocaleDateString('en-IN') : null)}
           {row('Marriage Date', member.marriage_date ? new Date(member.marriage_date).toLocaleDateString('en-IN') : null)}
           {row('Outside Rajapalayam', member.out_of_rajapalayam ? 'Yes' : null)}
+
+          {pendings.length > 0 && (
+            <>
+              <div className="vm-section-label">Pending Payments</div>
+              {pendings.map((p) => row(p.title,
+                `₹${Number(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`))}
+              {row('Total Pending',
+                `₹${pendings.reduce((s, p) => s + Number(p.amount), 0)
+                  .toLocaleString('en-IN', { minimumFractionDigits: 2 })}`)}
+            </>
+          )}
 
           {(local || outside) && <div className="vm-section-label">Addresses</div>}
           {row('Local Address', addressBlock(local))}
@@ -158,6 +177,60 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pendings, setPendings] = useState([]);
+  const [newPending, setNewPending] = useState({ title: '', amount: '', dueDate: '' });
+  const [pendingBusy, setPendingBusy] = useState(false);
+
+  const loadPendings = useCallback(() => {
+    getPendingPayments(member.id)
+      .then((res) => setPendings(res.data.data ?? []))
+      .catch(() => setPendings([]));
+  }, [member.id]);
+
+  useEffect(() => { loadPendings(); }, [loadPendings]);
+
+  const handleAddPending = async () => {
+    if (!newPending.title.trim() || !(Number(newPending.amount) > 0)) return;
+    setPendingBusy(true);
+    try {
+      await createPendingPayment({
+        member_id: member.id,
+        title: newPending.title.trim(),
+        amount: Number(newPending.amount),
+        due_date: newPending.dueDate || null,
+      });
+      setNewPending({ title: '', amount: '', dueDate: '' });
+      loadPendings();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to add pending payment.');
+    } finally {
+      setPendingBusy(false);
+    }
+  };
+
+  const handleMarkPaid = async (id) => {
+    setPendingBusy(true);
+    try {
+      await updatePendingPayment(id, { status: 'paid' });
+      loadPendings();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to update pending payment.');
+    } finally {
+      setPendingBusy(false);
+    }
+  };
+
+  const handleDeletePending = async (id) => {
+    setPendingBusy(true);
+    try {
+      await deletePendingPayment(id);
+      loadPendings();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to delete pending payment.');
+    } finally {
+      setPendingBusy(false);
+    }
+  };
 
   const currentPhotoUrl = member.photo ? `${BACKEND_BASE}/${member.photo}` : '';
 
@@ -458,6 +531,73 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                 <input className="ml-form-input" name="marriageDate" type="date"
                   value={form.marriageDate} onChange={handleChange} required />
               </div>
+            </div>
+
+            {/* Pending payments */}
+            <div className="ml-form-section">Pending Payments (Dues)</div>
+            {pendings.length === 0 ? (
+              <p className="ml-pp-empty">No pending payments recorded.</p>
+            ) : (
+              <div className="ml-pp-list">
+                {pendings.map((p) => (
+                  <div className={`ml-pp-item ${p.status === 'paid' ? 'ml-pp-item--paid' : ''}`} key={p.id}>
+                    <div className="ml-pp-info">
+                      <span className="ml-pp-title">{p.title}</span>
+                      <span className="ml-pp-meta">
+                        ₹{Number(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {p.due_date && ` · due ${new Date(p.due_date).toLocaleDateString('en-IN')}`}
+                      </span>
+                    </div>
+                    <span className={`ml-pp-badge ml-pp-badge--${p.status}`}>{p.status}</span>
+                    {p.status === 'pending' && (
+                      <button type="button" className="ml-pp-btn ml-pp-btn--paid"
+                        disabled={pendingBusy} onClick={() => handleMarkPaid(p.id)}>
+                        Mark Paid
+                      </button>
+                    )}
+                    <button type="button" className="ml-pp-btn ml-pp-btn--delete"
+                      disabled={pendingBusy} onClick={() => handleDeletePending(p.id)} aria-label="Delete">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <div className="ml-pp-total">
+                  Total pending: ₹
+                  {pendings
+                    .filter((p) => p.status === 'pending')
+                    .reduce((s, p) => s + Number(p.amount), 0)
+                    .toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            )}
+            <div className="ml-pp-addrow">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Payment For</label>
+                <input className="ml-form-input" placeholder="e.g. Annual Fee"
+                  value={newPending.title}
+                  onChange={(e) => setNewPending((p) => ({ ...p, title: e.target.value }))} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Amount (₹)</label>
+                <input className="ml-form-input" type="number" min="1" step="0.01" placeholder="0.00"
+                  value={newPending.amount}
+                  onChange={(e) => setNewPending((p) => ({ ...p, amount: e.target.value }))} />
+              </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Due Date</label>
+                <input className="ml-form-input" type="date"
+                  value={newPending.dueDate}
+                  onChange={(e) => setNewPending((p) => ({ ...p, dueDate: e.target.value }))} />
+              </div>
+              <button type="button" className="ml-pp-add"
+                disabled={pendingBusy || !newPending.title.trim() || !(Number(newPending.amount) > 0)}
+                onClick={handleAddPending}>
+                Add
+              </button>
             </div>
 
             <div className="ml-form-field">

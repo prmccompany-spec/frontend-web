@@ -18,3 +18,14 @@ export const uploadMemberPhoto = (id, formData) =>
   api.patch(`/members/${id}/photo`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
+// ── Pending payments ──────────────────────────────────────────────
+
+export const getPendingPayments = (memberId, status) =>
+  api.get('/pending-payments', { params: { member_id: memberId, status } });
+
+export const createPendingPayment = (data) => api.post('/pending-payments', data);
+
+export const updatePendingPayment = (id, data) => api.put(`/pending-payments/${id}`, data);
+
+export const deletePendingPayment = (id) => api.delete(`/pending-payments/${id}`);

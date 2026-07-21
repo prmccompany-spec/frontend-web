@@ -2,7 +2,7 @@
 
 ## Overview
 
-PRMCF uses a **mobile OTP-based login** system. There are no passwords — a registered member enters their phone number, receives an OTP, and logs in. On successful verification a signed JWT is issued and stored in `localStorage`.
+PRMCF uses a **phone-number login** system. There are no passwords and no OTP — a registered member enters their phone number and is logged in directly if it matches an active member record. On success a signed JWT is issued and stored in `localStorage`.
 
 Access to routes is fully configurable through the **Auth Control** admin panel, which reads from the `route_permissions` table at runtime.
 
@@ -14,19 +14,9 @@ Access to routes is fully configurable through the **Auth Control** admin panel,
 Member enters phone number
         │
         ▼
-POST /api/auth/request-otp
-  → Looks up member by phone in members table
-  → If found: writes OTP + expiry to otp_sessions table
-  → Returns { success: true, message: "OTP sent" }
-        │
-        ▼
-Member enters OTP (hardcoded: 9707 until SMS service integrated)
-        │
-        ▼
-POST /api/auth/verify-otp
-  → Validates OTP from otp_sessions (not expired, not used)
-  → Marks session as used
-  → Signs JWT with member payload
+POST /api/auth/login
+  → Looks up member by phone in members table (is_active = 1)
+  → If found: signs JWT with member payload
   → Returns { access_token, user }
         │
         ▼
@@ -38,19 +28,6 @@ User redirected → /admin (admin type) or /dashboard (others)
 ---
 
 ## Database Tables
-
-### `otp_sessions`
-
-Tracks active OTP requests. Each new request for a phone deletes prior sessions for that number.
-
-| Column      | Type           | Notes                              |
-|-------------|----------------|------------------------------------|
-| id          | INT PK AUTO    |                                    |
-| phone       | VARCHAR(15)    | Member's registered phone number   |
-| otp         | VARCHAR(10)    | OTP value (currently hardcoded)    |
-| expires_at  | TIMESTAMP      | 10 minutes from creation           |
-| is_used     | TINYINT(1)     | Marked 1 after successful verify   |
-| created_at  | TIMESTAMP      |                                    |
 
 ### `route_permissions`
 
@@ -104,23 +81,20 @@ Token is attached as `Authorization: Bearer <token>` on every API request via th
 
 | File | Exports |
 |------|---------|
-| `backend/src/models/authModel.js` | `findMemberByPhone`, `createOtpSession`, `validateAndConsumeOtp` |
+| `backend/src/models/authModel.js` | `findMemberByPhone` |
 | `backend/src/models/routePermissionModel.js` | `getAllRoutePermissions`, `createRoutePermission`, `updateRoutePermission`, `deleteRoutePermission` |
 
 ### Service
 
 | File | Exports |
 |------|---------|
-| `backend/src/services/authService.js` | `requestOtp(phone)`, `verifyOtp(phone, otp)` |
-
-`HARDCODED_OTP` is defined as a constant in `authService.js`. Replace with a real SMS provider (e.g. Twilio, MSG91) when ready.
+| `backend/src/services/authService.js` | `loginWithPhone(phone)` |
 
 ### Controllers & Routes
 
 | Route | Method | Handler | Auth |
 |-------|--------|---------|------|
-| `/api/auth/request-otp` | POST | `handleRequestOtp` | Public |
-| `/api/auth/verify-otp` | POST | `handleVerifyOtp` | Public |
+| `/api/auth/login` | POST | `handleLogin` | Public |
 | `/api/auth/profile` | GET | `profile` | JWT required |
 | `/api/route-permissions` | GET | `getAll` | Public |
 | `/api/route-permissions` | POST | `create` | JWT required |
@@ -154,8 +128,7 @@ router.delete('/:id', authMiddleware, requireTypes(1), destroy);
 
 | Method | Description |
 |--------|-------------|
-| `requestOtp(phone)` | POST to `/auth/request-otp` |
-| `verifyOtp(phone, otp)` | POST to `/auth/verify-otp`, stores token + user in `localStorage` |
+| `login(phone)` | POST to `/auth/login`, stores token + user in `localStorage` |
 | `logout()` | Clears `localStorage` |
 | `getCurrentUser()` | Returns parsed user object from `localStorage` |
 | `getToken()` | Returns raw JWT string |
@@ -172,10 +145,9 @@ Provides to the entire app via `AuthProvider`:
 | `user` | object | Decoded member info from JWT |
 | `isAuthenticated` | boolean | Whether a valid session exists |
 | `routePermissions` | array | Loaded from `/api/route-permissions` on mount |
-| `loading` | boolean | True while OTP requests are in-flight |
+| `loading` | boolean | True while the login request is in-flight |
 | `error` | string | Last auth error message |
-| `requestOtp(phone)` | fn | Step 1 of login |
-| `verifyOtp(phone, otp)` | fn | Step 2 of login |
+| `login(phone)` | fn | Logs the member in directly |
 | `logout()` | fn | Clears session |
 | `canAccess(routeKey)` | fn | Returns true if current user can access the route |
 
@@ -190,9 +162,7 @@ Provides to the entire app via `AuthProvider`:
 
 **`frontend-web/src/pages/auth/LoginPage.jsx`**
 
-Two-step UI:
-- **Step 1 (phone)** — enter 10-digit mobile number → "Get OTP"
-- **Step 2 (otp)** — enter OTP → "Verify OTP" — "Change number" link to go back
+Single-step UI — enter 10-digit mobile number → "Sign in".
 
 On success, navigates to `/admin` for admin users, `/dashboard` for all others.
 
@@ -225,21 +195,6 @@ Current protected routes:
 | `/admin/*` | `admin` |
 | `/dashboard` | `dashboard` |
 | `/donate` | `donate` |
-
----
-
-## OTP — Current State & Upgrade Path
-
-| Phase | OTP Source |
-|-------|-----------|
-| **Now** | Hardcoded `9707` in `authService.js` |
-| **Next** | Integrate SMS provider (MSG91, Twilio, Fast2SMS) |
-
-To upgrade:
-1. In `backend/src/services/authService.js`, replace `HARDCODED_OTP` with a random 6-digit generator
-2. Pass the generated OTP to `createOtpSession(phone, otp)`
-3. Send the OTP via SMS API before returning the response
-4. No other code changes needed — validation flow stays the same
 
 ---
 

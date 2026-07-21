@@ -233,6 +233,11 @@
   color: #ccc;
 }
 
+.lp-input--flat {
+  padding-left: 14px;
+  letter-spacing: 0.2em;
+}
+
 /* Password eye toggle */
 .lp-eye-btn {
   position: absolute;
@@ -290,6 +295,28 @@
   transform: none;
 }
 
+/* OTP step link button */
+.lp-link-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #e8341a;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.lp-link-btn:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.lp-link-btn:disabled {
+  color: #e8a090;
+  cursor: not-allowed;
+}
+
 /* Loading spinner */
 .lp-spinner {
   display: inline-block;
@@ -327,32 +354,6 @@
 .lp-register-link:hover {
   opacity: 0.75;
   text-decoration: underline;
-}
-
-/* OTP input */
-.lp-input--otp {
-  letter-spacing: 0.15em;
-  font-size: 20px;
-  font-weight: 700;
-  text-align: center;
-}
-
-/* Change number link */
-.lp-change-number {
-  background: none;
-  border: none;
-  font-size: 13px;
-  color: #888;
-  cursor: pointer;
-  padding: 0;
-  text-align: center;
-  text-decoration: underline;
-  transition: color 0.2s;
-  margin-top: -8px;
-}
-
-.lp-change-number:hover:not(:disabled) {
-  color: #e8341a;
 }
 
 /* ── Mobile responsive ───────────────────────────── */

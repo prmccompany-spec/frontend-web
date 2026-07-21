@@ -17,13 +17,16 @@ export const AuthProvider = ({ children }) => {
       .catch(() => {});
   }, []);
 
-  const requestOtp = useCallback(async (phone) => {
+  const login = useCallback(async (phone) => {
     setLoading(true);
     setError(null);
     try {
-      return await authService.requestOtp(phone);
+      const data = await authService.login(phone);
+      setUser(data.user);
+      setIsAuthenticated(true);
+      return data;
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to send OTP';
+      const msg = err.response?.data?.message || 'Login failed';
       setError(msg);
       throw err;
     } finally {
@@ -31,16 +34,30 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const verifyOtp = useCallback(async (phone, otp) => {
+  const sendOtp = useCallback(async (phone) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authService.verifyOtp(phone, otp);
+      return await authService.sendOtp(phone);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not send OTP';
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const verifyOtp = useCallback(async (phone, code) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await authService.verifyOtp(phone, code);
       setUser(data.user);
       setIsAuthenticated(true);
       return data;
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid OTP';
+      const msg = err.response?.data?.message || 'Invalid or expired OTP';
       setError(msg);
       throw err;
     } finally {
@@ -74,7 +91,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, routePermissions, loading, error, requestOtp, verifyOtp, logout, canAccess }}
+      value={{ user, isAuthenticated, routePermissions, loading, error, login, sendOtp, verifyOtp, logout, canAccess }}
     >
       {children}
     </AuthContext.Provider>

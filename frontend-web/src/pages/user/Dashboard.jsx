@@ -29,6 +29,11 @@ function Dashboard() {
 
   const [member, setMember] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [pendingItems, setPendingItems] = useState([]);
+  const [showPending, setShowPending] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payNowClicked, setPayNowClicked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +41,27 @@ function Dashboard() {
     Promise.all([
       api.get(`/members/${user.id}`),
       api.get('/payments', { params: { member_id: user.id } }),
+      api.get('/pending-payments', { params: { member_id: user.id, status: 'pending' } }),
     ])
-      .then(([memRes, payRes]) => {
+      .then(([memRes, payRes, pendRes]) => {
         setMember(memRes.data.data ?? memRes.data);
         setPayments(payRes.data.data ?? []);
+        setPendingItems(pendRes.data.data ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [user?.id]);
+
+  const toggleSelect = (id) =>
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const toggleSelectAll = () =>
+    setSelectedIds((ids) =>
+      ids.length === pendingItems.length ? [] : pendingItems.map((p) => p.id)
+    );
+
+  const selectedItems = pendingItems.filter((p) => selectedIds.includes(p.id));
+  const selectedTotal = selectedItems.reduce((s, p) => s + Number(p.amount), 0);
 
   const handleLogout = () => {
     logout();
@@ -79,6 +97,7 @@ function Dashboard() {
         </div>
         <nav className="db-header-nav">
           <button className="db-nav-btn" onClick={() => navigate('/')}>Home</button>
+          <button className="db-nav-btn" onClick={() => navigate('/member-search')}>Member Search</button>
           <button className="db-nav-btn" onClick={() => navigate('/services')}>Offline Services</button>
           <button className="db-logout-btn" onClick={handleLogout}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -150,6 +169,186 @@ function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {/* ── Pending amount ── */}
+            <button className="db-pending-btn" onClick={() => setShowPending((s) => !s)}>
+              <span className="db-pending-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Pending Amount
+              </span>
+              <span className="db-pending-right">
+                <span className="db-pending-value">
+                  ₹{fmt(pendingItems.reduce((s, p) => s + Number(p.amount), 0))}
+                </span>
+                <svg className={`db-pending-chevron ${showPending ? 'db-pending-chevron--open' : ''}`}
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            </button>
+
+            {showPending && (
+              <div className="db-pending-panel">
+                {pendingItems.length === 0 ? (
+                  <p className="db-empty">No pending payments. You're all settled!</p>
+                ) : (
+                  <>
+                    <table className="db-table">
+                      <thead>
+                        <tr>
+                          <th className="db-td-check">
+                            <input
+                              type="checkbox"
+                              className="db-checkbox"
+                              checked={selectedIds.length === pendingItems.length && pendingItems.length > 0}
+                              onChange={toggleSelectAll}
+                              title="Select all"
+                            />
+                          </th>
+                          <th>Payment For</th>
+                          <th>Due Date</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingItems.map((p) => (
+                          <tr
+                            key={p.id}
+                            className={selectedIds.includes(p.id) ? 'db-row--selected' : ''}
+                            onClick={() => toggleSelect(p.id)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td className="db-td-check">
+                              <input
+                                type="checkbox"
+                                className="db-checkbox"
+                                checked={selectedIds.includes(p.id)}
+                                onChange={() => toggleSelect(p.id)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </td>
+                            <td>{p.title}</td>
+                            <td className="db-td-meta">{fmtDate(p.due_date)}</td>
+                            <td className="db-amount">₹{fmt(p.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div className="db-pending-footer">
+                      <div className="db-pending-total">
+                        <span className="db-pending-total-label">
+                          {selectedIds.length} of {pendingItems.length} selected
+                        </span>
+                        <span className="db-pending-total-value">Total: ₹{fmt(selectedTotal)}</span>
+                      </div>
+                      <button
+                        className="db-pay-btn"
+                        disabled={selectedIds.length === 0}
+                        onClick={() => {
+                          setPayNowClicked(false);
+                          setShowPayModal(true);
+                        }}
+                      >
+                        Pay ₹{fmt(selectedTotal)}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Payment details modal ── */}
+            {showPayModal && (
+              <div className="db-modal-overlay" onClick={() => setShowPayModal(false)}>
+                <div className="db-modal" onClick={(e) => e.stopPropagation()}>
+                  <button className="db-modal-close" onClick={() => setShowPayModal(false)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
+                  <div className="db-modal-header">
+                    <div className="db-modal-title">
+                      {selectedItems.length} Payment{selectedItems.length > 1 ? 's' : ''} Selected
+                    </div>
+                    <div className="db-modal-amount">₹{fmt(selectedTotal)}</div>
+                    <span className="db-modal-status">Pending</span>
+                  </div>
+
+                  <div className="db-modal-body">
+                    <h3 className="db-section-title">Payment Details</h3>
+                    <table className="db-table">
+                      <thead>
+                        <tr>
+                          <th>Payment For</th>
+                          <th>Due Date</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedItems.map((p) => (
+                          <tr key={p.id}>
+                            <td>{p.title}</td>
+                            <td className="db-td-meta">{fmtDate(p.due_date)}</td>
+                            <td className="db-amount">₹{fmt(p.amount)}</td>
+                          </tr>
+                        ))}
+                        <tr className="db-modal-total-row">
+                          <td colSpan={2}>Total Payment</td>
+                          <td className="db-amount">₹{fmt(selectedTotal)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <h3 className="db-section-title" style={{ marginTop: 20 }}>Member Details</h3>
+                    <div className="db-personal-grid">
+                      <div className="db-personal-item">
+                        <span className="db-personal-key">Name</span>
+                        <span className="db-personal-val">{user?.name}</span>
+                      </div>
+                      <div className="db-personal-item">
+                        <span className="db-personal-key">Member ID</span>
+                        <span className="db-personal-val">{member?.member_id || user?.member_id || '—'}</span>
+                      </div>
+                      {user?.phone && (
+                        <div className="db-personal-item">
+                          <span className="db-personal-key">Phone</span>
+                          <span className="db-personal-val">{user.phone}</span>
+                        </div>
+                      )}
+                      {member?.family_name && (
+                        <div className="db-personal-item">
+                          <span className="db-personal-key">Family</span>
+                          <span className="db-personal-val">{member.family_name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {payNowClicked && (
+                      <p className="db-modal-note">
+                        Online payment is coming soon. For now, please pay this amount at the
+                        office, or contact the committee for assistance.
+                      </p>
+                    )}
+
+                    <button className="db-paynow-btn" onClick={() => setPayNowClicked(true)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      Pay Now ₹{fmt(selectedTotal)}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── Stat cards ── */}
             <div className="db-stats-row">

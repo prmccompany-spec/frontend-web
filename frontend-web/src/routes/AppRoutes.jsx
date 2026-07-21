@@ -6,6 +6,7 @@ import EventsPage from '../pages/events/EventsPage';
 import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
 import Services from '../pages/user/Services';
+import MemberSearch from '../pages/user/MemberSearch';
 import AdminLayout from '../pages/admin/AdminLayout';
 import AdminPanel from '../pages/admin/AdminPanel';
 import RegisterMember from '../pages/admin/RegisterMember';
@@ -20,6 +21,9 @@ import AddEvent from '../pages/admin/events/AddEvent';
 import ServicesList from '../pages/admin/ServicesList';
 import ServiceForm from '../pages/admin/ServiceForm';
 import ServiceConfig from '../pages/admin/ServiceConfig';
+import RentalProducts from '../pages/admin/rentals/RentalProducts';
+import RentalEntry from '../pages/admin/rentals/RentalEntry';
+import RentalHistory from '../pages/admin/rentals/RentalHistory';
 
 const ProtectedRoute = ({ children, routeKey }) => {
   const { canAccess, isAuthenticated } = useAuth();
@@ -58,6 +62,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/member-search"
+        element={
+          <ProtectedRoute routeKey="member-search">
+            <MemberSearch />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/admin"
         element={
           <ProtectedRoute routeKey="admin">
@@ -78,6 +91,9 @@ function AppRoutes() {
         <Route path="services/new" element={<ServiceForm />} />
         <Route path="services/:id/edit" element={<ServiceForm />} />
         <Route path="services/:id/configure" element={<ServiceConfig />} />
+        <Route path="rentals/products" element={<RentalProducts />} />
+        <Route path="rentals/entry" element={<RentalEntry />} />
+        <Route path="rentals/history" element={<RentalHistory />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />

@@ -449,3 +449,79 @@
     justify-content: center;
   }
 }
+
+/* ── Pending payments (dues) ─────────────────────── */
+.rm-pending-hint {
+  font-size: 12.5px;
+  color: #888;
+  margin: 0 0 4px;
+}
+
+.rm-pending-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.rm-pending-remove {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid #f5e0e0;
+  border-radius: 9px;
+  background: #fff5f5;
+  color: #dc3545;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  margin-bottom: 1px;
+}
+
+.rm-pending-remove:hover {
+  background: #fde2e2;
+}
+
+.rm-pending-remove svg {
+  width: 16px;
+  height: 16px;
+}
+
+.rm-pending-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1.5px dashed #dc3545;
+  border-radius: 9px;
+  background: transparent;
+  color: #dc3545;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+
+.rm-pending-add:hover {
+  background: #fff5f5;
+}
+
+.rm-pending-add svg {
+  width: 15px;
+  height: 15px;
+}
+
+.rm-pending-total {
+  font-size: 14px;
+  font-weight: 800;
+  color: #dc3545;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .rm-pending-row {
+    grid-template-columns: 1fr;
+  }
+}

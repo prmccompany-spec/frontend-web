@@ -18,6 +18,9 @@ import Reports from '../pages/admin/Reports';
 import AssignDue from '../pages/admin/payments/AssignDue';
 import DueTracker from '../pages/admin/payments/DueTracker';
 import HomePage from '../pages/home/HomePage';
+import TermsPage from '../pages/legal/TermsPage';
+import PrivacyPage from '../pages/legal/PrivacyPage';
+import RefundPage from '../pages/legal/RefundPage';
 import AddEvent from '../pages/admin/events/AddEvent';
 import ServicesList from '../pages/admin/ServicesList';
 import ServiceForm from '../pages/admin/ServiceForm';
@@ -116,6 +119,9 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPage />} />
+      <Route path="/refund-policy" element={<RefundPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

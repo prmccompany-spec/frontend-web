@@ -17,6 +17,11 @@ export const getPendingApprovals = async () => {
   return res.data.data;
 };
 
+export const getAllRequests = async () => {
+  const res = await api.get('/service-requests/all');
+  return res.data.data;
+};
+
 export const getRequestDetail = async (id) => {
   const res = await api.get(`/service-requests/${id}`);
   return res.data.data;

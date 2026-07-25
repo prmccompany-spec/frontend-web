@@ -3,6 +3,7 @@ import {
   submitRequest,
   fetchMyRequests,
   fetchPendingApprovals,
+  fetchAllRequests,
   fetchRequestDetail,
   approveRequest,
   rejectRequest,
@@ -44,6 +45,11 @@ export const listMine = asyncHandler(async (req, res) => {
 
 export const listPending = asyncHandler(async (req, res) => {
   const requests = await fetchPendingApprovals(req.user.user_type_id);
+  res.json({ success: true, count: requests.length, data: requests });
+});
+
+export const listAll = asyncHandler(async (req, res) => {
+  const requests = await fetchAllRequests();
   res.json({ success: true, count: requests.length, data: requests });
 });
 

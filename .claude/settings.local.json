@@ -4,7 +4,12 @@
       "PowerShell(Get-ChildItem -Path \"d:\\\\projects\\\\frontend-web\\\\frontend-web\\\\src\" -Recurse -File | ForEach-Object { $_.FullName } | Sort-Object)",
       "Bash(Get-ChildItem -Path \"d:\\\\projects\\\\frontend-web\" -Directory)",
       "Bash(Select-Object Name)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(node --check src/config/database.js)",
+      "Bash(node --check src/models/pendingPaymentModel.js)",
+      "Bash(node --check src/services/pendingPaymentService.js)",
+      "Bash(node --check src/models/paymentModel.js)",
+      "Bash(node --check src/services/paymentService.js)"
     ]
   }
 }

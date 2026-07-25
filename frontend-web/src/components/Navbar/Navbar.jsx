@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ProfileMenu from '../ProfileMenu/ProfileMenu';
+import LoginModal from '../LoginModal/LoginModal';
 import logo from '../../assets/logo.png';
 import './Navbar.css';
 
@@ -13,14 +15,21 @@ const navLinks = [
   { label: 'Donate', path: '/donate' },
 ];
 
+const PORTAL_LINKS = [
+  { label: 'Member Portal', path: '/dashboard' },
+  { label: 'Member Search', path: '/member-search' },
+  { label: 'Offline Services', path: '/services' },
+];
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
     setMenuOpen(false);
   };
 
@@ -53,17 +62,21 @@ function Navbar() {
           <button className="navbar-donate-btn" onClick={() => goTo('/donate')}>
             Donate
           </button>
-          <button
-            className="navbar-user-btn"
-            aria-label="User account"
-            onClick={() => isAuthenticated ? goTo('/dashboard') : goTo('/login')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </button>
+          {isAuthenticated ? (
+            <ProfileMenu variant="icon" links={PORTAL_LINKS} />
+          ) : (
+            <button
+              className="navbar-user-btn"
+              aria-label="Sign in"
+              onClick={() => setShowLogin(true)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
+          )}
         </div>
       </nav>
 
@@ -120,12 +133,17 @@ function Navbar() {
               Logout
             </button>
           ) : (
-            <button className="nav-drawer-auth-btn nav-drawer-login" onClick={() => goTo('/login')}>
+            <button
+              className="nav-drawer-auth-btn nav-drawer-login"
+              onClick={() => { setMenuOpen(false); setShowLogin(true); }}
+            >
               Login
             </button>
           )}
         </div>
       </div>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </>
   );
 }

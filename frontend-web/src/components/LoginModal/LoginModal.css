@@ -1,0 +1,85 @@
+.lm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: lm-fade-in 0.2s ease;
+}
+
+@keyframes lm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lm-card {
+  position: relative;
+  background: white;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 36px 30px 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: lm-slide-up 0.2s ease;
+}
+
+@keyframes lm-slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.lm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.lm-close:hover {
+  background: #ebebeb;
+  color: #333;
+}
+
+.lm-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lm-logo {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+}
+
+/* The card header/title/subtitle come from LoginForm's own lp-* classes;
+   just tighten the spacing a little for the smaller popup context. */
+.lm-card .lp-card-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.lm-card .lp-title {
+  font-size: 22px;
+}
+
+@media (max-width: 480px) {
+  .lm-card {
+    padding: 30px 22px 24px;
+  }
+}

@@ -6,11 +6,13 @@ import {
   getRequestById,
   getRequestsByMember,
   getPendingForUserType,
+  getAllRequests,
   advanceRequest,
   completeRequest,
 } from '../models/serviceRequestModel.js';
 import { addRequestDocument, getDocumentsByRequestId } from '../models/requestDocumentModel.js';
 import { addHistoryEntry, getHistoryByRequestId } from '../models/requestWorkflowHistoryModel.js';
+import { uploadBuffer } from '../utils/cloudinaryUtils.js';
 
 const fail = (message, statusCode) => {
   const err = new Error(message);
@@ -43,22 +45,31 @@ export const submitRequest = async ({ memberId, serviceId, files, remarks }) => 
     remarks: remarks || null,
   });
 
+  const offlineFormUpload = await uploadBuffer(offlineFormFile.buffer, {
+    folder: 'org/service-requests',
+    public_id: `request_${requestId}_offline_form_${Date.now()}`,
+  });
+
   await addRequestDocument({
     request_id: requestId,
     service_document_id: null,
     document_type: 'OFFLINE_FORM',
-    file_path: `uploads/service-requests/${offlineFormFile.filename}`,
+    file_path: offlineFormUpload.secure_url,
     original_name: offlineFormFile.originalname,
   });
 
   for (const doc of requiredDocs) {
     const file = files?.[`document_${doc.id}`]?.[0];
     if (!file) continue;
+    const uploaded = await uploadBuffer(file.buffer, {
+      folder: 'org/service-requests',
+      public_id: `request_${requestId}_doc_${doc.id}_${Date.now()}`,
+    });
     await addRequestDocument({
       request_id: requestId,
       service_document_id: doc.id,
       document_type: doc.document_name,
-      file_path: `uploads/service-requests/${file.filename}`,
+      file_path: uploaded.secure_url,
       original_name: file.originalname,
     });
   }
@@ -80,6 +91,10 @@ export const fetchMyRequests = async (memberId) => {
 
 export const fetchPendingApprovals = async (userTypeId) => {
   return await getPendingForUserType(userTypeId);
+};
+
+export const fetchAllRequests = async () => {
+  return await getAllRequests();
 };
 
 export const fetchRequestDetail = async (requestId, requester) => {

@@ -7,16 +7,15 @@ import {
   createAddress,
   uploadMemberPhoto,
   getPendingPayments,
-  createPendingPayment,
-  updatePendingPayment,
-  deletePendingPayment,
+  resetMemberPassword,
 } from '../../services/memberService';
 import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
+import { getMemberStatuses } from '../../services/memberStatusService';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
+import { resolveFileUrl } from '../../utils/fileUrl';
+import AssignDueModal from './payments/AssignDueModal';
 import './MemberList.css';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 // ── View Modal ────────────────────────────────────────────────────────────────
 function ViewModal({ member, typeMap, onClose }) {
@@ -63,7 +62,7 @@ function ViewModal({ member, typeMap, onClose }) {
           </button>
           <div className="vm-profile-photo">
             {member.photo
-              ? <img src={`${BACKEND_BASE}/${member.photo}`} alt={member.name} className="vm-profile-img" />
+              ? <img src={resolveFileUrl(member.photo)} alt={member.name} className="vm-profile-img" />
               : <span className="vm-profile-initial">{(member.name || '?')[0].toUpperCase()}</span>}
           </div>
           <h2 className="vm-profile-name">{member.name}</h2>
@@ -110,7 +109,7 @@ function ViewModal({ member, typeMap, onClose }) {
 
           <div className="vm-section-label">Meta</div>
           {row('Member Table ID', member.member_table_id)}
-          {row('Status', member.is_active ? 'Active' : 'Inactive')}
+          {row('Status', member.status_name || (member.is_active ? 'Active' : 'Inactive'))}
           {row('Registered', member.created_at ? new Date(member.created_at).toLocaleDateString('en-IN') : null)}
 
           {member.qr_code && (
@@ -119,12 +118,12 @@ function ViewModal({ member, typeMap, onClose }) {
               <div className="vm-qr-wrap">
                 <img
                   className="vm-qr-img"
-                  src={`${BACKEND_BASE}/${member.qr_code}`}
+                  src={resolveFileUrl(member.qr_code)}
                   alt={`QR code for ${member.name}`}
                 />
                 <a
                   className="vm-qr-download"
-                  href={`${BACKEND_BASE}/${member.qr_code}`}
+                  href={resolveFileUrl(member.qr_code)}
                   download
                   target="_blank"
                   rel="noreferrer"
@@ -147,10 +146,11 @@ function ViewModal({ member, typeMap, onClose }) {
 }
 
 // ── Edit Modal ────────────────────────────────────────────────────────────────
-function EditModal({ member, userTypes, onClose, onSaved }) {
+function EditModal({ member, userTypes, statuses, onClose, onSaved }) {
   const [form, setForm] = useState({
     memberId: member.member_id ?? '',
     userTypeId: member.user_type_id ?? '',
+    statusId: member.status_id ?? '',
     name: member.name ?? '',
     gotra: member.gotra ?? '',
     familyName: member.family_name ?? '',
@@ -177,62 +177,27 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pendings, setPendings] = useState([]);
-  const [newPending, setNewPending] = useState({ title: '', amount: '', dueDate: '' });
-  const [pendingBusy, setPendingBusy] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [resettingPw, setResettingPw] = useState(false);
+  const [resetPwError, setResetPwError] = useState('');
+  const [resetPwSuccess, setResetPwSuccess] = useState('');
 
-  const loadPendings = useCallback(() => {
-    getPendingPayments(member.id)
-      .then((res) => setPendings(res.data.data ?? []))
-      .catch(() => setPendings([]));
-  }, [member.id]);
-
-  useEffect(() => { loadPendings(); }, [loadPendings]);
-
-  const handleAddPending = async () => {
-    if (!newPending.title.trim() || !(Number(newPending.amount) > 0)) return;
-    setPendingBusy(true);
+  const handleResetPassword = async () => {
+    setResetPwError('');
+    setResetPwSuccess('');
+    setResettingPw(true);
     try {
-      await createPendingPayment({
-        member_id: member.id,
-        title: newPending.title.trim(),
-        amount: Number(newPending.amount),
-        due_date: newPending.dueDate || null,
-      });
-      setNewPending({ title: '', amount: '', dueDate: '' });
-      loadPendings();
+      await resetMemberPassword(member.id, newPassword);
+      setResetPwSuccess('Password reset successfully.');
+      setNewPassword('');
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to add pending payment.');
+      setResetPwError(err.response?.data?.message ?? 'Failed to reset password.');
     } finally {
-      setPendingBusy(false);
+      setResettingPw(false);
     }
   };
 
-  const handleMarkPaid = async (id) => {
-    setPendingBusy(true);
-    try {
-      await updatePendingPayment(id, { status: 'paid' });
-      loadPendings();
-    } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to update pending payment.');
-    } finally {
-      setPendingBusy(false);
-    }
-  };
-
-  const handleDeletePending = async (id) => {
-    setPendingBusy(true);
-    try {
-      await deletePendingPayment(id);
-      loadPendings();
-    } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to delete pending payment.');
-    } finally {
-      setPendingBusy(false);
-    }
-  };
-
-  const currentPhotoUrl = member.photo ? `${BACKEND_BASE}/${member.photo}` : '';
+  const currentPhotoUrl = member.photo ? resolveFileUrl(member.photo) : '';
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -419,6 +384,33 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
               </p>
             </div>
 
+            {/* Reset Password */}
+            <div className="ml-form-section">Reset Password</div>
+            {resetPwError && <div className="ml-form-error ml-form-error--inline">{resetPwError}</div>}
+            {resetPwSuccess && <div className="ml-form-success">{resetPwSuccess}</div>}
+            <div className="ml-reset-pw-row">
+              <div className="ml-form-field">
+                <label className="ml-form-label">New Password (6 digits)</label>
+                <input
+                  className="ml-form-input"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="e.g. 543210"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                className="ml-reset-pw-btn"
+                disabled={resettingPw || !/^\d{6}$/.test(newPassword)}
+                onClick={handleResetPassword}
+              >
+                {resettingPw ? 'Resetting…' : 'Reset Password'}
+              </button>
+            </div>
+
             {/* Core */}
             <div className="ml-form-section">Core Details</div>
             <div className="ml-form-grid-3">
@@ -439,6 +431,18 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                   <option value="">Select</option>
                   {userTypes.map((ut) => (
                     <option key={ut.id} value={ut.id}>{ut.type_name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Status <span className="ml-required">*</span></label>
+                <select className="ml-form-input ml-form-select" name="statusId"
+                  value={form.statusId} onChange={handleChange} required>
+                  <option value="">Select</option>
+                  {statuses.map((s) => (
+                    <option key={s.id} value={s.id}>{s.status_name}</option>
                   ))}
                 </select>
               </div>
@@ -531,73 +535,6 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
                 <input className="ml-form-input" name="marriageDate" type="date"
                   value={form.marriageDate} onChange={handleChange} required />
               </div>
-            </div>
-
-            {/* Pending payments */}
-            <div className="ml-form-section">Pending Payments (Dues)</div>
-            {pendings.length === 0 ? (
-              <p className="ml-pp-empty">No pending payments recorded.</p>
-            ) : (
-              <div className="ml-pp-list">
-                {pendings.map((p) => (
-                  <div className={`ml-pp-item ${p.status === 'paid' ? 'ml-pp-item--paid' : ''}`} key={p.id}>
-                    <div className="ml-pp-info">
-                      <span className="ml-pp-title">{p.title}</span>
-                      <span className="ml-pp-meta">
-                        ₹{Number(p.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        {p.due_date && ` · due ${new Date(p.due_date).toLocaleDateString('en-IN')}`}
-                      </span>
-                    </div>
-                    <span className={`ml-pp-badge ml-pp-badge--${p.status}`}>{p.status}</span>
-                    {p.status === 'pending' && (
-                      <button type="button" className="ml-pp-btn ml-pp-btn--paid"
-                        disabled={pendingBusy} onClick={() => handleMarkPaid(p.id)}>
-                        Mark Paid
-                      </button>
-                    )}
-                    <button type="button" className="ml-pp-btn ml-pp-btn--delete"
-                      disabled={pendingBusy} onClick={() => handleDeletePending(p.id)} aria-label="Delete">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                        strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                <div className="ml-pp-total">
-                  Total pending: ₹
-                  {pendings
-                    .filter((p) => p.status === 'pending')
-                    .reduce((s, p) => s + Number(p.amount), 0)
-                    .toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            )}
-            <div className="ml-pp-addrow">
-              <div className="ml-form-field">
-                <label className="ml-form-label">Payment For</label>
-                <input className="ml-form-input" placeholder="e.g. Annual Fee"
-                  value={newPending.title}
-                  onChange={(e) => setNewPending((p) => ({ ...p, title: e.target.value }))} />
-              </div>
-              <div className="ml-form-field">
-                <label className="ml-form-label">Amount (₹)</label>
-                <input className="ml-form-input" type="number" min="1" step="0.01" placeholder="0.00"
-                  value={newPending.amount}
-                  onChange={(e) => setNewPending((p) => ({ ...p, amount: e.target.value }))} />
-              </div>
-              <div className="ml-form-field">
-                <label className="ml-form-label">Due Date</label>
-                <input className="ml-form-input" type="date"
-                  value={newPending.dueDate}
-                  onChange={(e) => setNewPending((p) => ({ ...p, dueDate: e.target.value }))} />
-              </div>
-              <button type="button" className="ml-pp-add"
-                disabled={pendingBusy || !newPending.title.trim() || !(Number(newPending.amount) > 0)}
-                onClick={handleAddPending}>
-                Add
-              </button>
             </div>
 
             <div className="ml-form-field">
@@ -694,11 +631,17 @@ function EditModal({ member, userTypes, onClose, onSaved }) {
 function MemberList() {
   const [members, setMembers] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [statusTab, setStatusTab] = useState('active');
+  const [filterUserType, setFilterUserType] = useState('');
+  const [filterBloodGroup, setFilterBloodGroup] = useState('');
+  const [filterOutside, setFilterOutside] = useState('');
   const [viewMember, setViewMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
+  const [assignDueMember, setAssignDueMember] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
   const handleDownloadId = async (member) => {
@@ -719,7 +662,11 @@ function MemberList() {
     setLoading(true);
     setError('');
     try {
-      const [membersRes, typesRes] = await Promise.all([getMembers(), getUserTypes()]);
+      const [membersRes, typesRes, statusesRes] = await Promise.all([
+        getMembers(),
+        getUserTypes(),
+        getMemberStatuses(),
+      ]);
       setMembers(membersRes.data.data ?? []);
       const apiTypes = typesRes.data.data ?? [];
       setUserTypes(
@@ -727,6 +674,7 @@ function MemberList() {
           ? apiTypes
           : USER_TYPES.map((t) => ({ id: t.id, type_name: t.label }))
       );
+      setStatuses(statusesRes.data.data ?? []);
     } catch {
       setError('Failed to load members. Is the backend running?');
     } finally {
@@ -738,14 +686,31 @@ function MemberList() {
     loadMembers();
   }, [loadMembers]);
 
-  const filtered = members.filter((m) => {
-    const q = search.toLowerCase();
-    return (
-      m.name?.toLowerCase().includes(q) ||
-      m.member_id?.toLowerCase().includes(q) ||
-      m.phone?.includes(q)
-    );
-  });
+  const isActiveMember = (m) => (m.status_name ? m.status_name.toLowerCase() === 'active' : !!m.is_active);
+
+  const tabMembers = members.filter((m) => (statusTab === 'active' ? isActiveMember(m) : !isActiveMember(m)));
+
+  const hasActiveFilters = !!(filterUserType || filterBloodGroup || filterOutside);
+
+  const filtered = tabMembers
+    .filter((m) => {
+      const q = search.toLowerCase();
+      return (
+        m.name?.toLowerCase().includes(q) ||
+        m.member_id?.toLowerCase().includes(q) ||
+        m.phone?.includes(q)
+      );
+    })
+    .filter((m) => !filterUserType || String(m.user_type_id) === filterUserType)
+    .filter((m) => !filterBloodGroup || m.blood_group === filterBloodGroup)
+    .filter((m) => !filterOutside || (filterOutside === 'yes' ? !!m.out_of_rajapalayam : !m.out_of_rajapalayam))
+    .sort((a, b) => (a.member_id || '').localeCompare(b.member_id || '', undefined, { numeric: true }));
+
+  const clearFilters = () => {
+    setFilterUserType('');
+    setFilterBloodGroup('');
+    setFilterOutside('');
+  };
 
   const handleEditSaved = () => {
     setEditMember(null);
@@ -767,7 +732,11 @@ function MemberList() {
           </div>
           <div>
             <h1 className="ml-page-title">Members</h1>
-            <p className="ml-page-subtitle">{members.length} registered member{members.length !== 1 ? 's' : ''}</p>
+            <p className="ml-page-subtitle">
+              {filtered.length === tabMembers.length
+                ? `${tabMembers.length} member${tabMembers.length !== 1 ? 's' : ''} in this tab`
+                : `${filtered.length} of ${tabMembers.length} member${tabMembers.length !== 1 ? 's' : ''} matching`}
+            </p>
           </div>
         </div>
 
@@ -784,6 +753,58 @@ function MemberList() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+      </div>
+
+      <div className="ml-tabs">
+        <button
+          className={`ml-tab-btn${statusTab === 'active' ? ' ml-tab-btn--active' : ''}`}
+          onClick={() => setStatusTab('active')}
+        >
+          Active
+        </button>
+        <button
+          className={`ml-tab-btn${statusTab === 'other' ? ' ml-tab-btn--active' : ''}`}
+          onClick={() => setStatusTab('other')}
+        >
+          Other Statuses
+        </button>
+      </div>
+
+      <div className="ml-filters">
+        <select
+          className="ml-filter-select"
+          value={filterUserType}
+          onChange={(e) => setFilterUserType(e.target.value)}
+        >
+          <option value="">All User Types</option>
+          {userTypes.map((t) => (
+            <option key={t.id} value={t.id}>{t.type_name}</option>
+          ))}
+        </select>
+        <select
+          className="ml-filter-select"
+          value={filterBloodGroup}
+          onChange={(e) => setFilterBloodGroup(e.target.value)}
+        >
+          <option value="">All Blood Groups</option>
+          {BLOOD_GROUPS.map((bg) => (
+            <option key={bg} value={bg}>{bg}</option>
+          ))}
+        </select>
+        <select
+          className="ml-filter-select"
+          value={filterOutside}
+          onChange={(e) => setFilterOutside(e.target.value)}
+        >
+          <option value="">All Locations</option>
+          <option value="no">In Rajapalayam</option>
+          <option value="yes">Outside Rajapalayam</option>
+        </select>
+        {hasActiveFilters && (
+          <button type="button" className="ml-filter-clear" onClick={clearFilters}>
+            Clear Filters
+          </button>
+        )}
       </div>
 
       {error && (
@@ -806,7 +827,11 @@ function MemberList() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="ml-empty">
-            {search ? 'No members match your search.' : 'No members registered yet.'}
+            {search || hasActiveFilters
+              ? 'No members match your search or filters.'
+              : statusTab === 'active'
+                ? 'No active members found.'
+                : 'No members with other statuses found.'}
           </div>
         ) : (
           <table className="ml-table">
@@ -829,7 +854,7 @@ function MemberList() {
                     <div className="ml-name-cell">
                       <div className="ml-avatar">
                         {m.photo
-                          ? <img src={`${BACKEND_BASE}/${m.photo}`} alt={m.name} className="ml-avatar-img" />
+                          ? <img src={resolveFileUrl(m.photo)} alt={m.name} className="ml-avatar-img" />
                           : (m.name || '?')[0].toUpperCase()}
                       </div>
                       <span>{m.name}</span>
@@ -841,9 +866,15 @@ function MemberList() {
                   <td className="ml-td-phone">{m.phone || <span className="ml-nil">—</span>}</td>
                   <td>{m.blood_group || <span className="ml-nil">—</span>}</td>
                   <td>
-                    <span className={`ml-status-badge ${m.is_active ? 'ml-status-badge--active' : 'ml-status-badge--inactive'}`}>
-                      {m.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    {(() => {
+                      const label = m.status_name || (m.is_active ? 'Active' : 'Inactive');
+                      const isActiveLabel = label.toLowerCase() === 'active';
+                      return (
+                        <span className={`ml-status-badge ${isActiveLabel ? 'ml-status-badge--active' : 'ml-status-badge--inactive'}`}>
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td>
                     <div className="ml-actions">
@@ -870,6 +901,20 @@ function MemberList() {
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
                         Edit
+                      </button>
+                      <button
+                        className="ml-action-btn ml-action-btn--assign-due"
+                        onClick={() => setAssignDueMember(m)}
+                        title="View and assign dues"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                          <rect x="8" y="2" width="8" height="4" rx="1" />
+                          <line x1="12" y1="11" x2="12" y2="17" />
+                          <line x1="9" y1="14" x2="15" y2="14" />
+                        </svg>
+                        Dues
                       </button>
                       <button
                         className="ml-action-btn ml-action-btn--download"
@@ -905,8 +950,15 @@ function MemberList() {
         <EditModal
           member={editMember}
           userTypes={userTypes}
+          statuses={statuses}
           onClose={() => setEditMember(null)}
           onSaved={handleEditSaved}
+        />
+      )}
+      {assignDueMember && (
+        <AssignDueModal
+          member={assignDueMember}
+          onClose={() => setAssignDueMember(null)}
         />
       )}
     </div>

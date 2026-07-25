@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import LoginPage from '../pages/auth/LoginPage';
 import AboutPage from '../pages/about/AboutPage';
 import EventsPage from '../pages/events/EventsPage';
 import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
@@ -15,33 +14,34 @@ import Settings from '../pages/admin/Settings';
 import AuthControl from '../pages/admin/AuthControl';
 import PaymentEntry from '../pages/admin/payments/PaymentEntry';
 import PaymentHistory from '../pages/admin/payments/PaymentHistory';
-import PaymentReports from '../pages/admin/payments/PaymentReports';
+import Reports from '../pages/admin/Reports';
+import AssignDue from '../pages/admin/payments/AssignDue';
+import DueTracker from '../pages/admin/payments/DueTracker';
 import HomePage from '../pages/home/HomePage';
 import AddEvent from '../pages/admin/events/AddEvent';
 import ServicesList from '../pages/admin/ServicesList';
 import ServiceForm from '../pages/admin/ServiceForm';
 import ServiceConfig from '../pages/admin/ServiceConfig';
+import ServiceRequestTracker from '../pages/admin/ServiceRequestTracker';
+import ExpenseBook from '../pages/admin/ExpenseBook';
 import RentalProducts from '../pages/admin/rentals/RentalProducts';
 import RentalEntry from '../pages/admin/rentals/RentalEntry';
 import RentalHistory from '../pages/admin/rentals/RentalHistory';
+import Scanner from '../pages/admin/attendance/Scanner';
+import AttendanceReport from '../pages/admin/attendance/AttendanceReport';
 
 const ProtectedRoute = ({ children, routeKey }) => {
-  const { canAccess, isAuthenticated } = useAuth();
+  const { canAccess } = useAuth();
   if (!canAccess(routeKey)) {
-    return <Navigate to={isAuthenticated ? '/' : '/login'} replace />;
+    return <Navigate to="/" replace />;
   }
   return children;
 };
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
-
   return (
     <Routes>
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/admin" replace /> : <LoginPage />}
-      />
+      <Route path="/login" element={<Navigate to="/" replace />} />
 
       <Route
         path="/dashboard"
@@ -85,15 +85,21 @@ function AppRoutes() {
         <Route path="auth-control" element={<AuthControl />} />
         <Route path="payments/entry" element={<PaymentEntry />} />
         <Route path="payments/history" element={<PaymentHistory />} />
-        <Route path="payments/reports" element={<PaymentReports />} />
+        <Route path="payments/assign-due" element={<AssignDue />} />
+        <Route path="payments/due-tracker" element={<DueTracker />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="events/add" element={<AddEvent />} />
         <Route path="services" element={<ServicesList />} />
         <Route path="services/new" element={<ServiceForm />} />
         <Route path="services/:id/edit" element={<ServiceForm />} />
         <Route path="services/:id/configure" element={<ServiceConfig />} />
+        <Route path="services/requests" element={<ServiceRequestTracker />} />
+        <Route path="expenses" element={<ExpenseBook />} />
         <Route path="rentals/products" element={<RentalProducts />} />
         <Route path="rentals/entry" element={<RentalEntry />} />
         <Route path="rentals/history" element={<RentalHistory />} />
+        <Route path="attendance/scan" element={<Scanner />} />
+        <Route path="attendance/report" element={<AttendanceReport />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />

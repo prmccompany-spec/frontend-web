@@ -1,0 +1,317 @@
+.dt-page {
+  max-width: 1100px;
+}
+
+/* ── Stat cards ─────────────────────────────────────── */
+.dt-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.dt-stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 20px 18px;
+  border-top: 3px solid transparent;
+}
+
+.dt-stat-card--accent {
+  border-top-color: #dc3545;
+}
+
+.dt-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.dt-stat-card--accent .dt-stat-value {
+  color: #dc3545;
+}
+
+.dt-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 6px;
+}
+
+.dt-stat-sub {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ── Toolbar: tabs + search ──────────────────────────── */
+.dt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.dt-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.dt-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.dt-tab-btn:hover {
+  color: #dc3545;
+}
+
+.dt-tab-btn--active {
+  color: #dc3545;
+  border-bottom-color: #dc3545;
+}
+
+.dt-search {
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 260px;
+  margin-bottom: 8px;
+}
+
+.dt-search:focus {
+  outline: none;
+  border-color: #dc3545;
+}
+
+/* ── Section / cards ─────────────────────────────────── */
+.dt-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 8px 20px 20px;
+  margin-bottom: 16px;
+}
+
+.dt-empty {
+  color: #bbb;
+  font-size: 13px;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.dt-loading {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 48px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.dt-table-wrap {
+  overflow-x: auto;
+}
+
+.dt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dt-table thead th {
+  padding: 12px 10px 8px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.dt-table tbody tr {
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.dt-table tbody tr:last-child { border-bottom: none; }
+
+.dt-table tbody tr:hover { background: #fafafa; }
+
+.dt-table td {
+  padding: 10px;
+  color: #333;
+  vertical-align: middle;
+}
+
+.dt-amount {
+  font-weight: 700;
+  color: #065f46;
+  white-space: nowrap;
+}
+
+.dt-bold {
+  font-weight: 600;
+  color: #111;
+}
+
+.dt-td-meta {
+  color: #999;
+  font-size: 12px;
+}
+
+/* ── Badges ──────────────────────────────────────────── */
+.dt-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dt-badge--overdue {
+  background: #fde8e8;
+  color: #dc2626;
+}
+
+.dt-badge--today {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.dt-badge--upcoming {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.dt-badge--neutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ── Member-wise list ─────────────────────────────────── */
+.dt-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.dt-member-group {
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dt-member-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dt-member-header:hover {
+  background: #f5f5f5;
+}
+
+.dt-chevron {
+  display: inline-block;
+  color: #aaa;
+  transition: transform 0.15s ease;
+  font-size: 12px;
+}
+
+.dt-chevron--open {
+  transform: rotate(90deg);
+}
+
+.dt-member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.dt-member-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dt-member-body {
+  padding: 4px 14px 14px;
+}
+
+.dt-record-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dt-record-btn:hover {
+  background: #c82333;
+}
+
+/* ── Date-wise list ───────────────────────────────────── */
+.dt-date-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 12px;
+}
+
+.dt-date-group {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 14px;
+}
+
+.dt-date-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.dt-date-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dt-date-header .dt-amount {
+  margin-left: auto;
+}
+
+@media (max-width: 800px) {
+  .dt-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .dt-search { min-width: 100%; }
+}

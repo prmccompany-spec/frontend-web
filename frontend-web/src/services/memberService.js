@@ -2,6 +2,8 @@ import api from './api';
 
 export const getMembers = () => api.get('/members');
 
+export const getNextMemberId = () => api.get('/members/next-id');
+
 export const getMemberById = (id) => api.get(`/members/${id}`);
 
 export const createMember = (memberData) => api.post('/members', memberData);
@@ -18,6 +20,9 @@ export const uploadMemberPhoto = (id, formData) =>
   api.patch(`/members/${id}/photo`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
+export const resetMemberPassword = (id, newPassword) =>
+  api.patch(`/members/${id}/reset-password`, { new_password: newPassword });
 
 // ── Pending payments ──────────────────────────────────────────────
 

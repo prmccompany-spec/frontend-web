@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { getServices, getServiceDocuments } from '../../services/serviceService';
 import {
   submitServiceRequest,
@@ -10,10 +9,10 @@ import {
   approveRequest,
   rejectRequest,
 } from '../../services/serviceRequestService';
+import ProfileMenu from '../../components/ProfileMenu/ProfileMenu';
 import logo from '../../assets/logo.png';
+import { resolveFileUrl } from '../../utils/fileUrl';
 import './Services.css';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -26,8 +25,24 @@ const STATUS_LABEL = {
   COMPLETED: 'Completed',
 };
 
+const ACTIVE_STATUSES = ['SUBMITTED', 'IN_PROGRESS'];
+
 function StatusBadge({ status }) {
   return <span className={`us-status us-status--${status.toLowerCase()}`}>{STATUS_LABEL[status] ?? status}</span>;
+}
+
+function RequestDot({ status }) {
+  return <span className={`us-request-dot us-request-dot--${status.toLowerCase()}`} />;
+}
+
+function EmptyState({ icon, title, sub }) {
+  return (
+    <div className="us-empty-state">
+      {icon}
+      <p className="us-empty-state-title">{title}</p>
+      {sub && <p className="us-empty-state-sub">{sub}</p>}
+    </div>
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -74,7 +89,7 @@ function Timeline({ requestId }) {
           <a
             key={d.id}
             className="us-doc-link"
-            href={`${BACKEND_BASE}/${d.file_path}`}
+            href={resolveFileUrl(d.file_path)}
             target="_blank"
             rel="noreferrer"
           >
@@ -89,6 +104,27 @@ function Timeline({ requestId }) {
 // ═══════════════════════════════════════════════════════════════
 // APPLY MODAL
 // ═══════════════════════════════════════════════════════════════
+function FileField({ label, required, hint, accept, onChange, file }) {
+  return (
+    <div className="us-field">
+      <label className="us-label">
+        {label} {required ? <span className="us-required">*</span> : <span className="us-optional">(optional)</span>}
+      </label>
+      <input type="file" accept={accept} onChange={onChange} />
+      {file ? (
+        <span className="us-file-picked">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          {file.name}
+        </span>
+      ) : hint ? (
+        <span className="us-file-hint">{hint}</span>
+      ) : null}
+    </div>
+  );
+}
+
 function ApplyModal({ service, onClose, onSubmitted }) {
   const [documents, setDocuments] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -152,29 +188,26 @@ function ApplyModal({ service, onClose, onSubmitted }) {
           <div className="us-modal-body">
             {error && <div className="us-error">{error}</div>}
 
-            <div className="us-field">
-              <label className="us-label">Filled Offline Form (PDF) <span className="us-required">*</span></label>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={(e) => setOfflineFormFile(e.target.files[0] ?? null)}
-              />
-            </div>
+            <FileField
+              label="Filled Offline Form (PDF)"
+              required
+              accept="application/pdf"
+              file={offlineFormFile}
+              onChange={(e) => setOfflineFormFile(e.target.files[0] ?? null)}
+            />
 
             {loadingDocs ? (
               <div className="us-state">Loading required documents…</div>
             ) : (
               documents.map((d) => (
-                <div className="us-field" key={d.id}>
-                  <label className="us-label">
-                    {d.document_name} {d.mandatory ? <span className="us-required">*</span> : <span className="us-optional">(optional)</span>}
-                  </label>
-                  <input
-                    type="file"
-                    accept={(d.allowed_extensions || '').split(',').map((e) => `.${e.trim()}`).join(',')}
-                    onChange={(e) => setDocFiles((f) => ({ ...f, [d.id]: e.target.files[0] ?? null }))}
-                  />
-                </div>
+                <FileField
+                  key={d.id}
+                  label={d.document_name}
+                  required={d.mandatory}
+                  accept={(d.allowed_extensions || '').split(',').map((e) => `.${e.trim()}`).join(',')}
+                  file={docFiles[d.id]}
+                  onChange={(e) => setDocFiles((f) => ({ ...f, [d.id]: e.target.files[0] ?? null }))}
+                />
               ))
             )}
 
@@ -204,7 +237,7 @@ function ApplyModal({ service, onClose, onSubmitted }) {
 // ═══════════════════════════════════════════════════════════════
 // AVAILABLE SERVICES TAB
 // ═══════════════════════════════════════════════════════════════
-function AvailableServicesTab({ onApplied }) {
+function AvailableServicesTab({ onApplied, onCount }) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [applyTarget, setApplyTarget] = useState(null);
@@ -212,10 +245,10 @@ function AvailableServicesTab({ onApplied }) {
 
   useEffect(() => {
     getServices({ published: true })
-      .then(setServices)
+      .then((list) => { setServices(list); onCount?.(list.length); })
       .catch(() => setServices([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [onCount]);
 
   const handleSubmitted = (requestNo) => {
     setApplyTarget(null);
@@ -235,18 +268,40 @@ function AvailableServicesTab({ onApplied }) {
       )}
 
       {services.length === 0 ? (
-        <div className="us-state">No services are available right now.</div>
+        <EmptyState
+          icon={(
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          )}
+          title="No services are available right now."
+          sub="Check back later or contact the committee."
+        />
       ) : (
         <div className="us-service-grid">
           {services.map((s) => (
             <div className="us-service-card" key={s.id}>
+              <div className="us-service-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
               <h3>{s.name}</h3>
               {s.description && <p>{s.description}</p>}
+              {Number(s.document_count) > 0 && (
+                <span className="us-service-doc-count">
+                  {s.document_count} document{Number(s.document_count) !== 1 ? 's' : ''} required
+                </span>
+              )}
               <div className="us-service-actions">
                 {s.offline_form_path && (
                   <a
                     className="us-btn us-btn--ghost"
-                    href={`${BACKEND_BASE}/${s.offline_form_path}`}
+                    href={resolveFileUrl(s.offline_form_path)}
                     target="_blank"
                     rel="noreferrer"
                     download
@@ -275,35 +330,77 @@ function AvailableServicesTab({ onApplied }) {
 // ═══════════════════════════════════════════════════════════════
 // MY REQUESTS TAB
 // ═══════════════════════════════════════════════════════════════
-function MyRequestsTab({ refreshKey }) {
+function MyRequestsTab({ refreshKey, onCount }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
     getMyRequests()
-      .then(setRequests)
+      .then((list) => { setRequests(list); onCount?.(list); })
       .catch(() => setRequests([]))
       .finally(() => setLoading(false));
-  }, [refreshKey]);
+  }, [refreshKey, onCount]);
 
   if (loading) return <div className="us-state">Loading your requests…</div>;
-  if (requests.length === 0) return <div className="us-state">You haven't submitted any requests yet.</div>;
+  if (requests.length === 0) {
+    return (
+      <EmptyState
+        icon={(
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        )}
+        title="You haven't submitted any requests yet."
+        sub="Apply for a service from the Available Services tab."
+      />
+    );
+  }
+
+  const statusCounts = requests.reduce((acc, r) => { acc[r.status] = (acc[r.status] || 0) + 1; return acc; }, {});
+  const filtered = statusFilter === 'ALL' ? requests : requests.filter((r) => r.status === statusFilter);
 
   return (
-    <div className="us-request-list">
-      {requests.map((r) => (
-        <div className="us-request-card" key={r.id}>
-          <div className="us-request-row" onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-            <div>
-              <div className="us-request-service">{r.service_name}</div>
-              <div className="us-request-no">{r.request_no} · {fmtDate(r.submitted_at)}</div>
+    <div>
+      <div className="us-filter-row">
+        <button className={`us-filter-pill${statusFilter === 'ALL' ? ' us-filter-pill--active' : ''}`} onClick={() => setStatusFilter('ALL')}>
+          All <span className="us-filter-count">{requests.length}</span>
+        </button>
+        {Object.entries(STATUS_LABEL).map(([key, label]) => statusCounts[key] ? (
+          <button
+            key={key}
+            className={`us-filter-pill${statusFilter === key ? ' us-filter-pill--active' : ''}`}
+            onClick={() => setStatusFilter(key)}
+          >
+            {label} <span className="us-filter-count">{statusCounts[key]}</span>
+          </button>
+        ) : null)}
+      </div>
+
+      <div className="us-request-list">
+        {filtered.map((r) => (
+          <div className="us-request-card" key={r.id}>
+            <div className="us-request-row" onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
+              <div className="us-request-main">
+                <RequestDot status={r.status} />
+                <div>
+                  <div className="us-request-service">{r.service_name}</div>
+                  <div className="us-request-no">{r.request_no} · {fmtDate(r.submitted_at)}</div>
+                </div>
+              </div>
+              <div className="us-request-row-right">
+                <StatusBadge status={r.status} />
+                <svg className={`us-request-chevron${expanded === r.id ? ' us-request-chevron--open' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
             </div>
-            <StatusBadge status={r.status} />
+            {expanded === r.id && <Timeline requestId={r.id} />}
           </div>
-          {expanded === r.id && <Timeline requestId={r.id} />}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -373,17 +470,31 @@ function ApprovalsTab({ pending, loading, onActed }) {
   const [actionTarget, setActionTarget] = useState(null);
 
   if (loading) return <div className="us-state">Loading approvals…</div>;
-  if (pending.length === 0) return <div className="us-state">No requests are waiting on your approval.</div>;
+  if (pending.length === 0) {
+    return (
+      <EmptyState
+        icon={(
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+        title="No requests are waiting on your approval."
+      />
+    );
+  }
 
   return (
     <div className="us-request-list">
       {pending.map((r) => (
         <div className="us-request-card" key={r.id}>
           <div className="us-request-row" onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-            <div>
-              <div className="us-request-service">{r.service_name}</div>
-              <div className="us-request-no">
-                {r.request_no} · {r.member_name} ({r.member_code}) · {fmtDate(r.submitted_at)}
+            <div className="us-request-main">
+              <RequestDot status={r.status} />
+              <div>
+                <div className="us-request-service">{r.service_name}</div>
+                <div className="us-request-no">
+                  {r.request_no} · {r.member_name} ({r.member_code}) · {fmtDate(r.submitted_at)}
+                </div>
               </div>
             </div>
             <div className="us-approval-actions" onClick={(e) => e.stopPropagation()}>
@@ -418,11 +529,12 @@ function ApprovalsTab({ pending, loading, onActed }) {
 // ═══════════════════════════════════════════════════════════════
 function Services() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('available');
   const [pending, setPending] = useState([]);
   const [pendingLoading, setPendingLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [servicesCount, setServicesCount] = useState(0);
+  const [myRequests, setMyRequests] = useState([]);
 
   const loadPending = useCallback(() => {
     setPendingLoading(true);
@@ -434,12 +546,8 @@ function Services() {
 
   useEffect(() => { loadPending(); }, [loadPending]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
   const bump = () => setRefreshKey((k) => k + 1);
+  const myRequestsPending = myRequests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length;
 
   return (
     <div className="us-root">
@@ -453,11 +561,54 @@ function Services() {
         </div>
         <nav className="us-header-nav">
           <button className="us-nav-btn" onClick={() => navigate('/dashboard')}>Dashboard</button>
-          <button className="us-logout-btn" onClick={handleLogout}>Logout</button>
+          <ProfileMenu />
         </nav>
       </header>
 
       <div className="us-content">
+        <div className="us-page-head">
+          <h1 className="us-page-title">Offline Services</h1>
+          <p className="us-page-subtitle">Apply for services, track your requests, and manage approvals</p>
+        </div>
+
+        <div className="us-stats-row">
+          <div className="us-stat-card us-stat-card--accent">
+            <div className="us-stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div className="us-stat-value">{servicesCount}</div>
+            <div className="us-stat-label">Available Services</div>
+          </div>
+
+          <div className="us-stat-card">
+            <div className="us-stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+            </div>
+            <div className="us-stat-value">{myRequests.length}</div>
+            <div className="us-stat-label">My Requests</div>
+            {myRequestsPending > 0 && <span className="us-stat-sub">{myRequestsPending} in progress</span>}
+          </div>
+
+          {pending.length > 0 && (
+            <div className="us-stat-card us-stat-card--warning">
+              <div className="us-stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div className="us-stat-value">{pending.length}</div>
+              <div className="us-stat-label">Pending My Approval</div>
+            </div>
+          )}
+        </div>
+
         <div className="us-tabs">
           <button className={`us-tab-btn${activeTab === 'available' ? ' us-tab-btn--active' : ''}`} onClick={() => setActiveTab('available')}>
             Available Services
@@ -472,8 +623,8 @@ function Services() {
           )}
         </div>
 
-        {activeTab === 'available' && <AvailableServicesTab onApplied={bump} />}
-        {activeTab === 'mine' && <MyRequestsTab refreshKey={refreshKey} />}
+        {activeTab === 'available' && <AvailableServicesTab onApplied={bump} onCount={setServicesCount} />}
+        {activeTab === 'mine' && <MyRequestsTab refreshKey={refreshKey} onCount={setMyRequests} />}
         {activeTab === 'approvals' && <ApprovalsTab pending={pending} loading={pendingLoading} onActed={loadPending} />}
       </div>
     </div>

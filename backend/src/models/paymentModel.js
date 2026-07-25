@@ -39,12 +39,25 @@ export const deactivateCategory = async (id) => {
 
 // ─── Payments ────────────────────────────────────────────────────
 
-export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null }) => {
+export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null, pending_payment_id = null }) => {
   const payment_ref = generatePaymentRef();
   const result = await query(
-    `INSERT INTO payments (payment_ref, member_id, category_id, amount, payment_date, collected_by, payment_type, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [payment_ref, member_id, category_id, amount, payment_date, collected_by, payment_type, notes]
+    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes]
+  );
+  return { id: result.insertId, payment_ref };
+};
+
+// Runs on a caller-supplied transaction connection — used by
+// paymentService.collectDues so that inserting the payment row and
+// marking its due 'paid' commit or roll back together.
+export const insertPaymentTx = async (connection, { member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null, pending_payment_id = null }) => {
+  const payment_ref = generatePaymentRef();
+  const [result] = await connection.execute(
+    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes]
   );
   return { id: result.insertId, payment_ref };
 };

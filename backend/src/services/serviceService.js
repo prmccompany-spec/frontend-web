@@ -10,6 +10,7 @@ import {
 } from '../models/serviceModel.js';
 import { getDocumentsByServiceId, replaceDocuments } from '../models/serviceDocumentModel.js';
 import { getStepsByServiceId, replaceSteps } from '../models/workflowStepModel.js';
+import { deleteByUrl } from '../utils/cloudinaryUtils.js';
 
 const requireService = async (id) => {
   const service = await getServiceById(id);
@@ -55,16 +56,16 @@ export const modifyService = async (id, { name, description }) => {
   await updateService(id, { name: name.trim(), description: description || null });
 };
 
-export const saveServiceForm = async (id, file) => {
-  await requireService(id);
-  if (!file) {
+export const saveServiceForm = async (id, formUrl, formName) => {
+  const service = await requireService(id);
+  if (!formUrl) {
     const err = new Error('No form file uploaded');
     err.statusCode = 400;
     throw err;
   }
-  const formPath = `uploads/services/${file.filename}`;
-  await updateServiceForm(id, formPath, file.originalname);
-  return formPath;
+  if (service.offline_form_path) await deleteByUrl(service.offline_form_path);
+  await updateServiceForm(id, formUrl, formName);
+  return formUrl;
 };
 
 export const togglePublish = async (id, publish) => {

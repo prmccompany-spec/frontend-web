@@ -96,11 +96,50 @@
 /* ── Content area ─────────────────────────────────── */
 .db-content {
   flex: 1;
-  max-width: 1060px;
+  max-width: 1520px;
   width: 100%;
   margin: 0 auto;
   padding: 28px 20px 48px;
   box-sizing: border-box;
+}
+
+/* ── Left/right shell ─────────────────────────────── */
+.db-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.db-side {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+.db-side .db-profile-card {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0;
+}
+
+.db-side .db-avatar {
+  margin-bottom: 4px;
+}
+
+.db-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.db-main > * {
+  margin-bottom: 0 !important;
 }
 
 /* ── Skeleton loader ──────────────────────────────── */
@@ -255,17 +294,32 @@
 .db-pending-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  text-align: left;
+}
+
+.db-pending-left svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.db-pending-title {
+  display: block;
   font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.db-pending-left svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
+.db-pending-sub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.85;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-top: 2px;
 }
 
 .db-pending-right {
@@ -297,6 +351,102 @@
   border-left: 4px solid #e8341a;
   padding: 18px 24px;
   margin-bottom: 20px;
+}
+
+/* ── Due list (redesigned rows, replaces plain table) ── */
+.db-due-list-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.db-due-selectall {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+}
+
+.db-due-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.db-due-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #f0f0f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.db-due-item:hover {
+  border-color: #fbd0cb;
+  background: #fffaf9;
+}
+
+.db-due-item--selected {
+  border-color: #e8341a;
+  background: #fff5f3;
+}
+
+.db-due-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.db-due-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111;
+}
+
+.db-due-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #999;
+}
+
+.db-due-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #f5f5f5;
+  color: #666;
+  font-weight: 600;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.db-due-cleared-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .db-td-check {
@@ -523,9 +673,8 @@
 /* ── Stat cards ───────────────────────────────────── */
 .db-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
-  margin-bottom: 20px;
 }
 
 .db-stat-card {
@@ -578,6 +727,22 @@
   color: #e8341a;
 }
 
+.db-stat-card--warning {
+  border-top-color: #d97706;
+}
+
+.db-stat-card--warning .db-stat-value {
+  color: #d97706;
+}
+
+.db-stat-card--warning .db-stat-icon {
+  background: #fffbeb;
+}
+
+.db-stat-card--warning .db-stat-icon svg {
+  color: #d97706;
+}
+
 .db-stat-value {
   font-size: 22px;
   font-weight: 800;
@@ -594,11 +759,46 @@
   letter-spacing: 0.04em;
 }
 
+.db-delta {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.db-delta--up {
+  color: #16a34a;
+}
+
+.db-delta--down {
+  color: #dc2626;
+}
+
+.db-stat-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e8341a;
+  cursor: pointer;
+  text-align: left;
+  width: fit-content;
+}
+
+.db-stat-link:hover {
+  text-decoration: underline;
+}
+
 /* ── Two-column layout ────────────────────────────── */
-.db-two-col {
+.db-grid-3 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1fr;
   gap: 16px;
+}
+
+@media (max-width: 1300px) {
+  .db-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* ── Section card ─────────────────────────────────── */
@@ -616,6 +816,51 @@
   margin: 0 0 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.db-title-count {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.db-scroll-table {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.db-rental-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.db-rental-badge--active {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.db-rental-badge--returned {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.db-rental-badge--cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 
 /* ── Payments table ───────────────────────────────── */
@@ -723,13 +968,315 @@
   white-space: nowrap;
 }
 
+/* ── Quick links ───────────────────────────────────── */
+.db-quicklinks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.db-quicklink-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.db-quicklink-item:hover:not(:disabled) {
+  background: #fff5f3;
+}
+
+.db-quicklink-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.db-quicklink-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #fff0ee;
+  color: #e8341a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.db-quicklink-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.db-quicklink-label {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #333;
+}
+
+.db-quicklink-chevron {
+  width: 14px;
+  height: 14px;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+/* ── Section header with action link ──────────────────*/
+.db-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.db-section-head .db-section-title {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.db-section-link {
+  background: none;
+  border: 1px solid #fbd0cb;
+  color: #e8341a;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.db-section-link:hover {
+  background: #fff5f3;
+}
+
+.db-select {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+/* ── Donut chart + legend ──────────────────────────── */
+.db-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.db-donut-box {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.db-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.db-donut-center-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+}
+
+.db-donut-center-label {
+  font-size: 10px;
+  color: #999;
+  font-weight: 600;
+}
+
+.db-legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.db-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.db-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.db-legend-label {
+  color: #666;
+  font-weight: 600;
+  flex: 1;
+}
+
+.db-legend-value {
+  color: #111;
+  font-weight: 700;
+}
+
+.db-view-btn {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  background: #fff0ee;
+  color: #e8341a;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.db-view-btn:hover {
+  background: #ffe1dc;
+}
+
+/* ── Trend chart footer ───────────────────────────── */
+.db-trend-footer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.db-trend-footer-label {
+  font-size: 11px;
+  color: #999;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.db-trend-footer-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111;
+}
+
+/* ── Status badge ──────────────────────────────────── */
+.db-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.db-status-badge--cleared {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+/* ── Empty state (illustration + message) ─────────── */
+.db-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 16px;
+  color: #ccc;
+}
+
+.db-empty-state svg {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  color: #ddd;
+}
+
+.db-empty-state-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #888;
+  margin: 0 0 4px;
+}
+
+.db-empty-state-sub {
+  font-size: 12px;
+  color: #bbb;
+  margin: 0;
+}
+
+/* ── Table popup modal ────────────────────────────── */
+.db-modal--table {
+  max-width: 760px;
+}
+
+.db-modal-body--table {
+  padding: 48px 24px 24px;
+}
+
+.db-scroll-table--tall {
+  max-height: 60vh;
+}
+
 /* ── Responsive ───────────────────────────────────── */
+@media (max-width: 1100px) {
+  .db-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 960px) {
+  .db-shell {
+    flex-direction: column;
+  }
+
+  .db-side {
+    width: 100%;
+    position: static;
+  }
+
+  .db-side .db-profile-card {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 800px) {
   .db-stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .db-two-col {
+  .db-grid-3 {
     grid-template-columns: 1fr;
   }
 
@@ -741,7 +1288,7 @@
     padding: 20px 12px 40px;
   }
 
-  .db-profile-card {
+  .db-side .db-profile-card {
     flex-direction: column;
     align-items: center;
     text-align: center;
@@ -754,6 +1301,15 @@
 
   .db-profile-fields {
     justify-content: center;
+  }
+
+  .db-donut-wrap {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .db-legend-list {
+    width: 100%;
   }
 }
 

@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { getMembers, getMemberAddresses } from '../../services/memberService';
 import { getUserTypes } from '../../services/userTypeService';
 import { USER_TYPES } from '../../types/member';
+import ProfileMenu from '../../components/ProfileMenu/ProfileMenu';
 import logo from '../../assets/logo.png';
+import { resolveFileUrl } from '../../utils/fileUrl';
 import './MemberSearch.css';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -49,7 +49,7 @@ function DetailsModal({ member, typeMap, onClose }) {
           </button>
           <div className="ms-profile-photo">
             {member.photo
-              ? <img src={`${BACKEND_BASE}/${member.photo}`} alt={member.name} className="ms-profile-img" />
+              ? <img src={resolveFileUrl(member.photo)} alt={member.name} className="ms-profile-img" />
               : <span className="ms-profile-initial">{(member.name || '?')[0].toUpperCase()}</span>}
           </div>
           <h2 className="ms-profile-name">{member.name}</h2>
@@ -94,7 +94,7 @@ function DetailsModal({ member, typeMap, onClose }) {
 // ── Main MemberSearch page ──────────────────────────────────────────────────
 function MemberSearch() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [members, setMembers] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
@@ -105,7 +105,7 @@ function MemberSearch() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -116,7 +116,8 @@ function MemberSearch() {
     setError('');
     try {
       const [membersRes, typesRes] = await Promise.all([getMembers(), getUserTypes()]);
-      setMembers(membersRes.data.data ?? []);
+      const allMembers = membersRes.data.data ?? [];
+      setMembers(allMembers.filter((m) => (m.status_name ? m.status_name.toLowerCase() === 'active' : m.is_active)));
       const apiTypes = typesRes.data.data ?? [];
       setUserTypes(
         apiTypes.length > 0
@@ -143,11 +144,6 @@ function MemberSearch() {
     );
   });
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
   return (
     <div className="ms-root">
       <header className="ms-header">
@@ -161,14 +157,7 @@ function MemberSearch() {
         <nav className="ms-header-nav">
           <button className="ms-nav-btn" onClick={() => navigate('/dashboard')}>Dashboard</button>
           <button className="ms-nav-btn" onClick={() => navigate('/services')}>Offline Services</button>
-          <button className="ms-logout-btn" onClick={handleLogout}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Logout
-          </button>
+          <ProfileMenu />
         </nav>
       </header>
 
@@ -222,7 +211,7 @@ function MemberSearch() {
               <div className="ms-card" key={m.id}>
                 <div className="ms-card-photo">
                   {m.photo
-                    ? <img src={`${BACKEND_BASE}/${m.photo}`} alt={m.name} className="ms-card-img" />
+                    ? <img src={resolveFileUrl(m.photo)} alt={m.name} className="ms-card-img" />
                     : <span className="ms-card-initial">{(m.name || '?')[0].toUpperCase()}</span>}
                 </div>
                 <div className="ms-card-body">

@@ -8,6 +8,7 @@ import {
   fetchPayments,
   fetchPaymentById,
   fetchSummary,
+  collectDues,
 } from '../services/paymentService.js';
 
 export const listCategories = asyncHandler(async (req, res) => {
@@ -67,4 +68,9 @@ export const getPayment = asyncHandler(async (req, res) => {
 export const getSummary = asyncHandler(async (req, res) => {
   const summary = await fetchSummary();
   res.json({ success: true, data: summary });
+});
+
+export const collectDuesForMember = asyncHandler(async (req, res) => {
+  const result = await collectDues(req.body);
+  res.status(201).json({ success: true, message: 'Dues cleared', ...result });
 });

@@ -12,6 +12,7 @@ import {
   fetchWorkflow,
   saveWorkflow,
 } from '../services/serviceService.js';
+import { uploadBuffer } from '../utils/cloudinaryUtils.js';
 
 const parseId = (req, res) => {
   const id = Number(req.params.id);
@@ -68,7 +69,11 @@ export const uploadForm = asyncHandler(async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No form file provided' });
   }
-  const offline_form_path = await saveServiceForm(id, req.file);
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'org/services',
+    public_id: `service_${id}_${Date.now()}`,
+  });
+  const offline_form_path = await saveServiceForm(id, result.secure_url, req.file.originalname);
   res.json({ success: true, message: 'Offline form uploaded', offline_form_path });
 });
 

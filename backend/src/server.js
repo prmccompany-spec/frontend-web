@@ -19,6 +19,9 @@ import serviceRequestRoutes from './routes/serviceRequestRoutes.js';
 import pendingPaymentRoutes from './routes/pendingPaymentRoutes.js';
 import rentalProductRoutes from './routes/rentalProductRoutes.js';
 import rentalRoutes from './routes/rentalRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
+import memberStatusRoutes from './routes/memberStatusRoutes.js';
+import expenseRoutes from './routes/expenseRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -51,6 +54,9 @@ app.use('/api/service-requests', serviceRequestRoutes);
 app.use('/api/pending-payments', pendingPaymentRoutes);
 app.use('/api/rental-products', rentalProductRoutes);
 app.use('/api/rentals', rentalRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/member-statuses', memberStatusRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

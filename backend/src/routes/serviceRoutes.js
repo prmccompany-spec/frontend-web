@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware, requireTypes } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 import { uploadServiceForm } from '../middleware/upload.js';
 import {
   listServices,
@@ -16,7 +16,6 @@ import {
 } from '../controllers/serviceController.js';
 
 const router = express.Router();
-const adminOnly = [authMiddleware, requireTypes(1)];
 
 // Reads are open — members need to browse/inspect services before logging
 // an application, and the config screens need to pre-fill from the same data.
@@ -25,13 +24,14 @@ router.get('/:id', getService);
 router.get('/:id/documents', listDocuments);
 router.get('/:id/workflow', listWorkflow);
 
-// Writes are admin-only.
-router.post('/', adminOnly, createService);
-router.put('/:id', adminOnly, updateService);
-router.delete('/:id', adminOnly, deleteService);
-router.patch('/:id/publish', adminOnly, publishService);
-router.post('/:id/form', adminOnly, uploadServiceForm.single('form'), uploadForm);
-router.put('/:id/documents', adminOnly, updateDocuments);
-router.put('/:id/workflow', adminOnly, updateWorkflow);
+// Writes need req.user (created_by on the service record). Role gating is
+// handled in the frontend nav, not enforced here.
+router.post('/', authMiddleware, createService);
+router.put('/:id', authMiddleware, updateService);
+router.delete('/:id', authMiddleware, deleteService);
+router.patch('/:id/publish', authMiddleware, publishService);
+router.post('/:id/form', authMiddleware, uploadServiceForm.single('form'), uploadForm);
+router.put('/:id/documents', authMiddleware, updateDocuments);
+router.put('/:id/workflow', authMiddleware, updateWorkflow);
 
 export default router;

@@ -39,3 +39,8 @@ export const getPaymentSummary = async () => {
   const res = await api.get('/payments/summary');
   return res.data.data;
 };
+
+export const collectDues = async (data) => {
+  const res = await api.post('/payments/collect-dues', data);
+  return res.data;
+};

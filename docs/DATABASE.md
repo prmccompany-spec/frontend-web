@@ -257,3 +257,121 @@ CREATE TABLE request_workflow_history (
 
 INSERT INTO route_permissions (route_key, route_label, description, require_login, allowed_type_ids) VALUES
 ('services', 'Offline Services', 'Browse services, submit requests, track status and approvals', 1, '[]');
+
+-- ============================================================
+-- PAYMENT ⇄ DUE SYNC ENHANCEMENT
+-- ============================================================
+-- No FOREIGN KEY / PRIMARY KEY constraints added, matching this table's
+-- own existing convention (payments/pending_payments columns like
+-- member_id, category_id, collected_by are plain INTs with app-level
+-- existence checks only, not DB-enforced FKs).
+
+-- Every due now belongs to a payment category (so due-creation UI reuses
+-- the same category list + default_amount as Record Payment). Backfill
+-- existing rows to "Other" (id 4 in the seed data) before tightening to
+-- NOT NULL.
+ALTER TABLE pending_payments ADD COLUMN category_id INT NULL AFTER member_id;
+UPDATE pending_payments SET category_id = 4 WHERE category_id IS NULL;
+ALTER TABLE pending_payments MODIFY COLUMN category_id INT NOT NULL;
+
+-- Links a payment back to the due it cleared. NULL = a standalone/ad-hoc
+-- payment not tied to any due (e.g. "collect new money").
+ALTER TABLE payments ADD COLUMN pending_payment_id INT NULL AFTER member_id;
+
+-- ============================================================
+-- ATTENDANCE FEATURE
+-- ============================================================
+-- Standard id AUTO_INCREMENT PRIMARY KEY (same as every other table —
+-- required for insertId). No FOREIGN KEY constraints, matching this
+-- schema's existing convention. Multiple rows per member per day are
+-- expected (one row per check-in/check-out session).
+
+CREATE TABLE attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  member_id INT NOT NULL,
+  attendance_date DATE NOT NULL,
+  check_in_time DATETIME NOT NULL,
+  check_out_time DATETIME NULL,
+  marked_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================================
+-- MEMBER STATUS FEATURE
+-- ============================================================
+-- Same shape/convention as user_types (id + unique name, admin-managed via
+-- Settings). No FOREIGN KEY on members.status_id, matching this schema's
+-- existing convention.
+
+CREATE TABLE member_status (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  status_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+INSERT INTO member_status (status_name) VALUES
+('Active'),
+('Inactive'),
+('Deceased');
+
+ALTER TABLE members ADD COLUMN status_id INT NULL AFTER is_active;
+
+-- Backfill existing members from their current is_active flag.
+UPDATE members m
+JOIN member_status s ON s.status_name = 'Active'
+SET m.status_id = s.id
+WHERE m.is_active = 1;
+
+UPDATE members m
+JOIN member_status s ON s.status_name = 'Inactive'
+SET m.status_id = s.id
+WHERE m.is_active = 0;
+
+-- ============================================================
+-- PASSWORD-BASED LOGIN (replaces OTP)
+-- ============================================================
+-- Hashing can't be done in raw SQL — after running this ALTER (or after any
+-- data migration that drops passwords), backfill existing members by
+-- running once from backend/:
+--   node scripts/backfillMemberPasswords.js
+-- (defaults every member without a password to their member_id, zero-padded
+-- to 6 digits, hashed — e.g. member_id 88 -> 000088). New members get the
+-- same default automatically going forward (see memberModel.createMember).
+
+ALTER TABLE members ADD COLUMN password VARCHAR(255) NULL AFTER phone;
+
+-- ============================================================
+-- EXPENSE BOOK FEATURE
+-- ============================================================
+-- Mirrors payment_categories/payments: no FOREIGN KEY constraints;
+-- category_id and created_by are plain INT columns with app-level
+-- existence checks only, matching this schema's existing convention.
+-- created_by/created_at are captured server-side from the authenticated
+-- admin's session (not client-supplied), so there is no separate
+-- "recorded by" input on the form — created_at doubles as both the
+-- entry timestamp and the expense date.
+
+CREATE TABLE expense_categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(255),
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO expense_categories (name, description) VALUES
+('Stationery', 'Office and printing supplies'),
+('Maintenance', 'Building and equipment upkeep'),
+('Event Expense', 'Costs incurred for organizing events'),
+('Utilities', 'Electricity, water, and other utility bills'),
+('Other', 'Other miscellaneous expenses');
+
+CREATE TABLE expenses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  reason VARCHAR(500) NOT NULL,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

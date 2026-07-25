@@ -8,13 +8,16 @@ import {
   hasLocalAddress,
   hasOutsideAddress,
 } from '../../types/member';
-import { createMember, createAddress, uploadMemberPhoto, createPendingPayment } from '../../services/memberService';
+import { createMember, createAddress, uploadMemberPhoto, createPendingPayment, getNextMemberId } from '../../services/memberService';
 import { getUserTypes } from '../../services/userTypeService';
+import { getCategories } from '../../services/paymentService';
+import { getMemberStatuses } from '../../services/memberStatusService';
 import './RegisterMember.css';
 
 const initialForm = {
   memberId: '',
   userTypeId: '',
+  statusId: '',
   name: '',
   gotra: '',
   familyName: '',
@@ -51,6 +54,8 @@ function RegisterMember() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [userTypes, setUserTypes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [statuses, setStatuses] = useState([]);
 
   useEffect(() => {
     getUserTypes()
@@ -66,6 +71,18 @@ function RegisterMember() {
       .catch(() => {
         setUserTypes(USER_TYPES.map((t) => ({ id: t.id, type_name: t.label })));
       });
+    getCategories().then(setCategories).catch(() => {});
+    getNextMemberId()
+      .then((res) => setForm((f) => ({ ...f, memberId: res.data?.data?.nextMemberId ?? '' })))
+      .catch(() => {});
+    getMemberStatuses()
+      .then((res) => {
+        const apiStatuses = res.data.data ?? [];
+        setStatuses(apiStatuses);
+        const active = apiStatuses.find((s) => s.status_name.toLowerCase() === 'active');
+        if (active) setForm((f) => ({ ...f, statusId: String(active.id) }));
+      })
+      .catch(() => {});
   }, []);
 
   const handlePhotoChange = (e) => {
@@ -96,13 +113,23 @@ function RegisterMember() {
   };
 
   const addPendingItem = () =>
-    setPendingItems((prev) => [...prev, { title: '', amount: '', dueDate: '' }]);
+    setPendingItems((prev) => [...prev, { categoryId: '', title: '', amount: '', dueDate: '' }]);
 
   const removePendingItem = (index) =>
     setPendingItems((prev) => prev.filter((_, i) => i !== index));
 
   const handlePendingChange = (index, field, value) =>
     setPendingItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+
+  const handlePendingCategoryChange = (index, categoryId) => {
+    const cat = categories.find((c) => String(c.id) === categoryId);
+    setPendingItems((prev) => prev.map((item, i) => (i === index ? {
+      ...item,
+      categoryId,
+      title: item.title || cat?.name || '',
+      amount: item.amount || (cat?.default_amount ? String(cat.default_amount) : ''),
+    } : item)));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,9 +161,10 @@ function RegisterMember() {
 
       // 5. Create pending payment entries
       for (const item of pendingItems) {
-        if (item.title.trim() && Number(item.amount) > 0) {
+        if (item.categoryId && item.title.trim() && Number(item.amount) > 0) {
           await createPendingPayment({
             member_id: memberId,
+            category_id: Number(item.categoryId),
             title: item.title.trim(),
             amount: Number(item.amount),
             due_date: item.dueDate || null,
@@ -206,7 +234,7 @@ function RegisterMember() {
               <input
                 className="rm-input"
                 name="memberId"
-                placeholder="e.g. PRMC-0001"
+                placeholder="Auto-generated…"
                 value={form.memberId}
                 onChange={handleChange}
                 required
@@ -242,6 +270,26 @@ function RegisterMember() {
                 {userTypes.map((ut) => (
                   <option key={ut.id} value={ut.id}>
                     {ut.type_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="rm-grid-2">
+            <div className="rm-field">
+              <label className="rm-label">Status <span className="rm-required">*</span></label>
+              <select
+                className="rm-input rm-select"
+                name="statusId"
+                value={form.statusId}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select status</option>
+                {statuses.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.status_name}
                   </option>
                 ))}
               </select>
@@ -648,6 +696,20 @@ function RegisterMember() {
 
           {pendingItems.map((item, index) => (
             <div className="rm-pending-row" key={index}>
+              <div className="rm-field">
+                <label className="rm-label">Category <span className="rm-required">*</span></label>
+                <select
+                  className="rm-input rm-select"
+                  value={item.categoryId}
+                  onChange={(e) => handlePendingCategoryChange(index, e.target.value)}
+                  required
+                >
+                  <option value="">Select category…</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="rm-field">
                 <label className="rm-label">Payment For <span className="rm-required">*</span></label>
                 <input

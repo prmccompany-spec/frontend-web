@@ -1,0 +1,298 @@
+.adm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.adm-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.adm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.adm-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+
+.adm-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 4px 0 0;
+}
+
+.adm-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 4px;
+  display: flex;
+  border-radius: 6px;
+}
+
+.adm-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.adm-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.adm-body {
+  padding: 20px 24px 24px;
+}
+
+.adm-error {
+  background: #fff5f5;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.adm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.adm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.adm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adm-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adm-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  color: #111;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #fafafa;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.adm-input:focus {
+  border-color: #dc3545;
+  background: white;
+}
+
+.adm-textarea {
+  resize: vertical;
+  min-height: 56px;
+}
+
+.adm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.adm-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.adm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.adm-btn--primary {
+  background: #dc3545;
+  color: white;
+}
+
+.adm-btn--primary:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.adm-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.adm-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.adm-success-banner {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+/* ── Section labels / divider ─────────────────────────── */
+.adm-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+.adm-divider {
+  border-top: 1px solid #f0f0f0;
+  margin: 20px 0;
+}
+
+.adm-empty {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Current dues list ────────────────────────────────── */
+.adm-pp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-pp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1.5px solid #ebebeb;
+  border-radius: 9px;
+}
+
+.adm-pp-item--paid {
+  opacity: 0.6;
+}
+
+.adm-pp-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adm-pp-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #222;
+}
+
+.adm-pp-meta {
+  font-size: 12px;
+  color: #888;
+}
+
+.adm-pp-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.adm-pp-badge--pending {
+  background: #fff0ee;
+  color: #dc3545;
+  border: 1px solid #fbd0cb;
+}
+
+.adm-pp-badge--paid {
+  background: #f0fdf4;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.adm-pp-delete {
+  border: 1px solid #fbd0cb;
+  background: #fff5f5;
+  color: #dc3545;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.adm-pp-delete:hover:not(:disabled) {
+  background: #fde2e2;
+}
+
+.adm-pp-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.adm-pp-delete svg {
+  width: 14px;
+  height: 14px;
+}
+
+.adm-pp-total {
+  font-size: 13px;
+  font-weight: 800;
+  color: #dc3545;
+  text-align: right;
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .adm-row {
+    grid-template-columns: 1fr;
+  }
+}

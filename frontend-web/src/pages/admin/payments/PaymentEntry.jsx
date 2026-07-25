@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
-import { getCategories, createPayment } from '../../../services/paymentService';
-import { getMembers } from '../../../services/memberService';
+import { useState, useEffect, useCallback } from 'react';
+import { getCategories, createPayment, collectDues, getPayments } from '../../../services/paymentService';
+import { getMembers, getPendingPayments } from '../../../services/memberService';
 import './PaymentEntry.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const fmt = (val) =>
+  Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 function PaymentEntry() {
   const [categories, setCategories] = useState([]);
@@ -27,10 +33,77 @@ function PaymentEntry() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
+  // ── Selected member's dues + payment history panel ──
+  const [memberDues, setMemberDues] = useState([]);
+  const [memberHistory, setMemberHistory] = useState([]);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [selectedDueIds, setSelectedDueIds] = useState([]);
+  const [collecting, setCollecting] = useState(false);
+  const [collectError, setCollectError] = useState('');
+
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
     getMembers().then((res) => setMembers(res.data?.data ?? [])).catch(() => {});
   }, []);
+
+  const loadMemberPanel = useCallback((memberId) => {
+    if (!memberId) {
+      setMemberDues([]);
+      setMemberHistory([]);
+      return;
+    }
+    setPanelLoading(true);
+    Promise.all([
+      getPendingPayments(memberId, 'pending'),
+      getPayments({ member_id: memberId }),
+    ])
+      .then(([duesRes, historyRes]) => {
+        setMemberDues(duesRes.data.data ?? []);
+        setMemberHistory(historyRes.data ?? []);
+      })
+      .catch(() => {
+        setMemberDues([]);
+        setMemberHistory([]);
+      })
+      .finally(() => setPanelLoading(false));
+  }, []);
+
+  useEffect(() => {
+    loadMemberPanel(form.member_id);
+    setSelectedDueIds([]);
+    setCollectError('');
+  }, [form.member_id, loadMemberPanel]);
+
+  const toggleDue = (id) =>
+    setSelectedDueIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const dueTotal = (ids) =>
+    memberDues.filter((d) => ids.includes(d.id)).reduce((s, d) => s + Number(d.amount), 0);
+
+  const handleCollectDues = async (ids) => {
+    setCollectError('');
+    if (!form.member_id) return setCollectError('Select a member first.');
+    if (!form.collected_by) return setCollectError('Select who is collecting before clearing dues.');
+    if (ids.length === 0) return;
+
+    setCollecting(true);
+    try {
+      await collectDues({
+        member_id: form.member_id,
+        pending_payment_ids: ids,
+        collected_by: form.collected_by,
+        payment_date: form.payment_date,
+        payment_type: form.payment_type,
+        notes: form.notes || null,
+      });
+      setSelectedDueIds([]);
+      loadMemberPanel(form.member_id);
+    } catch (err) {
+      setCollectError(err.response?.data?.message || 'Failed to clear due(s).');
+    } finally {
+      setCollecting(false);
+    }
+  };
 
   const filteredMembers = members.filter((m) => {
     const q = memberSearch.toLowerCase();
@@ -106,6 +179,7 @@ function PaymentEntry() {
         <p className="admin-page-subtitle">Enter details to record a cash payment collected from a member</p>
       </div>
 
+      <div className="pe-layout">
       <div className="pe-card">
         {result && (
           <div className="pe-success">
@@ -263,6 +337,107 @@ function PaymentEntry() {
             {submitting ? 'Recording…' : 'Record Payment'}
           </button>
         </form>
+      </div>
+
+      {form.member_id && (
+        <div className="pe-card pe-panel">
+          <h3 className="pe-panel-title">{form.memberDisplay || 'Member'}</h3>
+
+          {panelLoading ? (
+            <div className="pe-panel-loading">Loading…</div>
+          ) : (
+            <>
+              <div className="pe-panel-section">
+                <div className="pe-panel-section-head">
+                  <span>Pending Dues</span>
+                  {memberDues.length > 0 && (
+                    <span className="pe-panel-total">Total: ₹{fmt(memberDues.reduce((s, d) => s + Number(d.amount), 0))}</span>
+                  )}
+                </div>
+
+                {collectError && <div className="pe-error">{collectError}</div>}
+
+                {memberDues.length === 0 ? (
+                  <p className="pe-panel-empty">No pending dues. Fully settled!</p>
+                ) : (
+                  <>
+                    <ul className="pe-due-list">
+                      {memberDues.map((d) => (
+                        <li key={d.id} className="pe-due-item">
+                          <label className="pe-due-check">
+                            <input
+                              type="checkbox"
+                              checked={selectedDueIds.includes(d.id)}
+                              onChange={() => toggleDue(d.id)}
+                            />
+                          </label>
+                          <div className="pe-due-info">
+                            <span className="pe-due-title">{d.title}</span>
+                            <span className="pe-due-meta">
+                              {d.category_name}{d.due_date && ` · due ${fmtDate(d.due_date)}`}
+                            </span>
+                          </div>
+                          <div className="pe-due-actions">
+                            <span className="pe-due-amount">₹{fmt(d.amount)}</span>
+                            <button
+                              type="button"
+                              className="pe-due-clear"
+                              disabled={collecting}
+                              onClick={() => handleCollectDues([d.id])}
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="pe-panel-footer">
+                      <button
+                        type="button"
+                        className="pe-due-clear-selected"
+                        disabled={collecting || selectedDueIds.length === 0}
+                        onClick={() => handleCollectDues(selectedDueIds)}
+                      >
+                        {collecting ? 'Clearing…' : `Clear Selected (₹${fmt(dueTotal(selectedDueIds))})`}
+                      </button>
+                      <button
+                        type="button"
+                        className="pe-collect-all"
+                        disabled={collecting}
+                        onClick={() => handleCollectDues(memberDues.map((d) => d.id))}
+                      >
+                        {collecting ? 'Collecting…' : `Collect All Due (₹${fmt(memberDues.reduce((s, d) => s + Number(d.amount), 0))})`}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="pe-panel-section">
+                <div className="pe-panel-section-head"><span>Payment History</span></div>
+                {memberHistory.length === 0 ? (
+                  <p className="pe-panel-empty">No payments recorded yet.</p>
+                ) : (
+                  <ul className="pe-history-list">
+                    {memberHistory.map((p) => (
+                      <li key={p.id} className="pe-history-item">
+                        <div className="pe-due-info">
+                          <span className="pe-due-title">{p.category_name}</span>
+                          <span className="pe-due-meta">
+                            {fmtDate(p.payment_date)} · {p.payment_type === 'qr' ? 'QR' : 'Cash'} · {p.payment_ref}
+                          </span>
+                        </div>
+                        <span className="pe-due-amount">₹{fmt(p.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { findMemberByPhone } from '../models/authModel.js';
-import { sendOtp, checkOtp } from './otpService.js';
+import { getMemberById, updateMemberPassword } from '../models/memberModel.js';
+import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
 
 dotenv.config();
 
@@ -23,7 +24,7 @@ const issueTokenForMember = (member) => {
   return { access_token: token, user: payload };
 };
 
-export const loginWithPhone = async (phone) => {
+const requireActiveMember = async (phone) => {
   const member = await findMemberByPhone(phone);
   if (!member) {
     const err = new Error('Mobile number not registered');
@@ -31,34 +32,65 @@ export const loginWithPhone = async (phone) => {
     throw err;
   }
 
-  return issueTokenForMember(member);
-};
+  const isActiveStatus = member.status_name
+    ? member.status_name.toLowerCase() === 'active'
+    : !!member.is_active;
 
-export const requestLoginOtp = async (phone) => {
-  const member = await findMemberByPhone(phone);
-  if (!member) {
-    const err = new Error('Mobile number not registered');
-    err.statusCode = 404;
+  if (!member.is_active || !isActiveStatus) {
+    const err = new Error('Your membership is not active. Please contact the committee.');
+    err.statusCode = 403;
     throw err;
   }
 
-  await sendOtp(phone);
+  return member;
 };
 
-export const verifyLoginOtp = async (phone, code) => {
-  const approved = await checkOtp(phone, code);
-  if (!approved) {
-    const err = new Error('Invalid or expired OTP');
+export const loginWithPassword = async (phone, password) => {
+  const member = await requireActiveMember(phone);
+
+  if (!member.password) {
+    const err = new Error('Password not set. Please contact the committee.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const matches = await comparePassword(password, member.password);
+  if (!matches) {
+    const err = new Error('Invalid phone number or password');
     err.statusCode = 401;
     throw err;
   }
 
-  const member = await findMemberByPhone(phone);
+  return issueTokenForMember(member);
+};
+
+export const resetOwnPassword = async (memberId, oldPassword, newPassword) => {
+  const member = await getMemberById(memberId);
   if (!member) {
-    const err = new Error('Mobile number not registered');
+    const err = new Error('Member not found');
     err.statusCode = 404;
     throw err;
   }
 
-  return issueTokenForMember(member);
+  if (!member.password) {
+    const err = new Error('Password not set. Please contact the committee.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const matches = await comparePassword(oldPassword, member.password);
+  if (!matches) {
+    const err = new Error('Current password is incorrect');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  if (!/^\d{6}$/.test(newPassword || '')) {
+    const err = new Error('New password must be exactly 6 digits');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const hashed = await hashPassword(newPassword);
+  await updateMemberPassword(memberId, hashed);
 };

@@ -4,9 +4,8 @@ import EventDetailsModal from './EventDetailsModal';
 import LiveEventBanner from './LiveEvent/LiveEventBanner';
 import LiveEventModal from './LiveEvent/LiveEventModal';
 import { getEvents } from '../../services/eventService';
+import { resolveFileUrl } from '../../utils/fileUrl';
 import './EventsPage.css';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 const EVENTS_DATA = {
   completed: [
@@ -283,9 +282,7 @@ function EventsPage() {
               <div className="ev-event-card" key={event.id}>
                 <div className="ev-event-image">
                   <img
-                    src={event.image
-                      ? (event.image.startsWith('http') ? event.image : `${BACKEND_BASE}/${event.image}`)
-                      : eventImg}
+                    src={event.image ? resolveFileUrl(event.image) : eventImg}
                     alt={event.title}
                   />
                   <div className="ev-event-overlay" />

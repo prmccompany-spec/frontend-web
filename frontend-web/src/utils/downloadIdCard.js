@@ -1,8 +1,7 @@
 import { jsPDF } from 'jspdf';
 import idFront from '../assets/ID_front.png';
 import idBack from '../assets/ID_Back.png';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+import { resolveFileUrl } from './fileUrl';
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -34,7 +33,7 @@ export async function downloadMemberIdCard(member) {
   const qrPath = member.qr_code || member.qrCode;
   if (!qrPath) throw new Error('Member has no QR code');
 
-  const qrSrc = qrPath.startsWith('http') ? qrPath : `${BACKEND_BASE}/${qrPath}`;
+  const qrSrc = resolveFileUrl(qrPath);
 
   // Load all images in parallel
   const [frontImg, backImg, qrImg] = await Promise.all([

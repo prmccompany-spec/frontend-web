@@ -8,8 +8,11 @@ import {
   fetchMembersByStatusAndRole,
   fetchAllMembers,
   fetchMemberById,
+  fetchNextMemberId,
   saveMemberPhoto,
+  resetMemberPasswordByAdmin,
 } from '../services/memberService.js';
+import { uploadBuffer } from '../utils/cloudinaryUtils.js';
 
 const validateMemberPayload = (payload) => {
   if (!payload.member_id) {
@@ -112,6 +115,11 @@ export const getMembersByRole = asyncHandler(async (req, res) => {
   });
 });
 
+export const getNextMemberId = asyncHandler(async (req, res) => {
+  const nextMemberId = await fetchNextMemberId();
+  res.json({ success: true, data: { nextMemberId } });
+});
+
 export const listMembers = asyncHandler(async (req, res) => {
   const members = await fetchAllMembers();
   res.json({ success: true, count: members.length, data: members });
@@ -135,10 +143,27 @@ export const uploadMemberPhoto = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'No photo file provided' });
   }
 
-  const photoPath = `uploads/members/${req.file.filename}`;
-  await saveMemberPhoto(memberId, photoPath);
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'org/members',
+    public_id: `member_${memberId}_${Date.now()}`,
+  });
+  await saveMemberPhoto(memberId, result.secure_url);
 
-  res.json({ success: true, message: 'Photo uploaded successfully', photo: photoPath });
+  res.json({ success: true, message: 'Photo uploaded successfully', photo: result.secure_url });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const memberId = Number(req.params.id);
+  if (!memberId || Number.isNaN(memberId)) {
+    return res.status(400).json({ success: false, message: 'Invalid member ID' });
+  }
+  const { new_password } = req.body;
+  if (!new_password) {
+    return res.status(400).json({ success: false, message: 'new_password is required' });
+  }
+
+  await resetMemberPasswordByAdmin(memberId, new_password);
+  res.json({ success: true, message: 'Password reset successfully' });
 });
 
 export const getMembersByStatusAndRole = asyncHandler(async (req, res) => {

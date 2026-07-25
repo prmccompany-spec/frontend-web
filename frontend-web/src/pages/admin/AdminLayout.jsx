@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { useAuth } from '../../context/AuthContext';
+import ResetPasswordModal from '../../components/ProfileMenu/ResetPasswordModal';
 import './AdminLayout.css';
 
 const sidebarLinks = [
@@ -79,6 +81,17 @@ const sidebarLinks = [
       </svg>
     ),
   },
+  {
+    label: 'Request Tracker',
+    path: '/admin/services/requests',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+  },
   { divider: true, label: 'Events' },
   {
     label: 'Add Event',
@@ -110,6 +123,30 @@ const sidebarLinks = [
     ),
   },
   {
+    label: 'Assign Due',
+    path: '/admin/payments/assign-due',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+        <line x1="12" y1="11" x2="12" y2="17" />
+        <line x1="9" y1="14" x2="15" y2="14" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Due Tracker',
+    path: '/admin/payments/due-tracker',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+  },
+  {
     label: 'Payment History',
     path: '/admin/payments/history',
     end: false,
@@ -122,15 +159,57 @@ const sidebarLinks = [
       </svg>
     ),
   },
+  { divider: true, label: 'Expenses' },
+  {
+    label: 'Expense Book',
+    path: '/admin/expenses',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <line x1="9" y1="7" x2="15" y2="7" />
+        <line x1="9" y1="11" x2="15" y2="11" />
+      </svg>
+    ),
+  },
+  { divider: true, label: 'Reports' },
   {
     label: 'Reports',
-    path: '/admin/payments/reports',
+    path: '/admin/reports',
     end: false,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" />
         <line x1="12" y1="20" x2="12" y2="4" />
         <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+  },
+  { divider: true, label: 'Attendance' },
+  {
+    label: 'Scanner',
+    path: '/admin/attendance/scan',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+        <line x1="7" y1="12" x2="17" y2="12" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Attendance Report',
+    path: '/admin/attendance/report',
+    end: false,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <polyline points="9 15 11 17 15 12" />
       </svg>
     ),
   },
@@ -177,10 +256,11 @@ const sidebarLinks = [
 function AdminLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showReset, setShowReset] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
@@ -230,6 +310,13 @@ function AdminLayout() {
             </svg>
             Back to Site
           </button>
+          <button className="al-logout-btn" onClick={() => setShowReset(true)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Reset Password
+          </button>
           <button className="al-logout-btn" onClick={handleLogout}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -244,6 +331,8 @@ function AdminLayout() {
       <main className="al-main">
         <Outlet />
       </main>
+
+      {showReset && <ResetPasswordModal onClose={() => setShowReset(false)} />}
     </div>
   );
 }

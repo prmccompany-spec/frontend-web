@@ -5,6 +5,11 @@
   gap: 16px;
 }
 
+.sv-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .sv-add-btn {
   display: flex;
   align-items: center;
@@ -28,6 +33,15 @@
 .sv-add-btn svg {
   width: 15px;
   height: 15px;
+}
+
+.sv-add-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.sv-add-btn--ghost:hover {
+  background: #e5e7eb;
 }
 
 .sv-alert {

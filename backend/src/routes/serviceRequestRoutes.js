@@ -5,6 +5,7 @@ import {
   createRequest,
   listMine,
   listPending,
+  listAll,
   getRequest,
   approve,
   reject,
@@ -19,6 +20,7 @@ router.use(authMiddleware);
 router.post('/', uploadRequestDocuments, createRequest);
 router.get('/mine', listMine);
 router.get('/pending', listPending);
+router.get('/all', listAll);
 router.get('/:id', getRequest);
 router.post('/:id/approve', approve);
 router.post('/:id/reject', reject);

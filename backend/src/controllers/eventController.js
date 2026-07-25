@@ -7,6 +7,7 @@ import {
   saveEventImage,
   removeEvent,
 } from '../services/eventService.js';
+import { uploadBuffer, deleteByUrl } from '../utils/cloudinaryUtils.js';
 
 export const listEvents = asyncHandler(async (req, res) => {
   const { status } = req.query;
@@ -24,7 +25,7 @@ export const getEvent = asyncHandler(async (req, res) => {
 });
 
 // Normalise camelCase FormData keys → snake_case, empty strings → null
-const normaliseBody = (raw, file) => {
+const normaliseBody = (raw, imageUrl) => {
   const s = (v) => (v === '' || v === undefined ? null : v);
   const isLiveRaw = raw.isLive ?? raw.is_live;
 
@@ -49,12 +50,20 @@ const normaliseBody = (raw, file) => {
     phone:             s(raw.phone),
     is_live:           isLiveRaw === 'true' || isLiveRaw === true,
     video_link:        s(raw.videoLink ?? raw.video_link),
-    image:             file ? `uploads/events/${file.filename}` : s(raw.image),
+    image:             imageUrl ?? s(raw.image),
   };
 };
 
 export const createEvent = asyncHandler(async (req, res) => {
-  const body = normaliseBody(req.body, req.file);
+  let imageUrl = null;
+  if (req.file) {
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: 'org/events',
+      public_id: `event_new_${Date.now()}`,
+    });
+    imageUrl = result.secure_url;
+  }
+  const body = normaliseBody(req.body, imageUrl);
   const eventId = await addEvent(body);
   res.status(201).json({ success: true, message: 'Event created successfully', eventId });
 });
@@ -64,7 +73,19 @@ export const updateEvent = asyncHandler(async (req, res) => {
   if (!id || Number.isNaN(id)) {
     return res.status(400).json({ success: false, message: 'Invalid event ID' });
   }
-  const body = normaliseBody(req.body, req.file);
+
+  let imageUrl = null;
+  if (req.file) {
+    const existing = await fetchEventById(id);
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: 'org/events',
+      public_id: `event_${id}_${Date.now()}`,
+    });
+    if (existing.image) await deleteByUrl(existing.image);
+    imageUrl = result.secure_url;
+  }
+
+  const body = normaliseBody(req.body, imageUrl);
   await modifyEvent(id, body);
   res.json({ success: true, message: 'Event updated successfully' });
 });
@@ -78,9 +99,15 @@ export const uploadEventImage = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'No image file provided' });
   }
 
-  const imagePath = `uploads/events/${req.file.filename}`;
-  await saveEventImage(id, imagePath);
-  res.json({ success: true, message: 'Event image uploaded', image: imagePath });
+  const existing = await fetchEventById(id);
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'org/events',
+    public_id: `event_${id}_${Date.now()}`,
+  });
+  if (existing.image) await deleteByUrl(existing.image);
+
+  await saveEventImage(id, result.secure_url);
+  res.json({ success: true, message: 'Event image uploaded', image: result.secure_url });
 });
 
 export const deleteEvent = asyncHandler(async (req, res) => {

@@ -59,6 +59,7 @@ export function toMemberPayload(form) {
     aadhar_number: form.aadharNumber || null,
     engagement_date: form.engagementDate || null,
     marriage_date: form.marriageDate || null,
+    status_id: form.statusId ? Number(form.statusId) : null,
   };
 }
 

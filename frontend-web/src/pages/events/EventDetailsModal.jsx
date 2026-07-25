@@ -1,6 +1,5 @@
+import { resolveFileUrl } from '../../utils/fileUrl';
 import './EventDetailsModal.css';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
 
 const formatDate = (raw) => {
   if (!raw) return '';
@@ -18,11 +17,7 @@ const formatTime = (raw) => {
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 };
 
-const resolveImage = (src) => {
-  if (!src) return null;
-  if (src.startsWith('http')) return src;
-  return `${BACKEND_BASE}/${src}`;
-};
+const resolveImage = (src) => (src ? resolveFileUrl(src) : null);
 
 function EventDetailsModal({ event, onClose }) {
   if (!event) return null;

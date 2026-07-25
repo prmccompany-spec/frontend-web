@@ -1,0 +1,341 @@
+.rt-page {
+  max-width: 1150px;
+}
+
+/* ── Stat cards ─────────────────────────────────────── */
+.rt-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.rt-stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 20px 18px;
+  border-top: 3px solid transparent;
+}
+
+.rt-stat-card--accent {
+  border-top-color: #dc3545;
+}
+
+.rt-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.rt-stat-card--accent .rt-stat-value {
+  color: #dc3545;
+}
+
+.rt-stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 6px;
+}
+
+.rt-stat-sub {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ── Toolbar: tabs + search ──────────────────────────── */
+.rt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 2px solid #f0f0f0;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.rt-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.rt-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.rt-tab-btn:hover {
+  color: #dc3545;
+}
+
+.rt-tab-btn--active {
+  color: #dc3545;
+  border-bottom-color: #dc3545;
+}
+
+.rt-search {
+  padding: 8px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 280px;
+  margin-bottom: 8px;
+}
+
+.rt-search:focus {
+  outline: none;
+  border-color: #dc3545;
+}
+
+/* ── Section ─────────────────────────────────────────── */
+.rt-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 8px 20px 20px;
+  margin-bottom: 16px;
+}
+
+.rt-empty {
+  color: #bbb;
+  font-size: 13px;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.rt-loading {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 48px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ── Table ───────────────────────────────────────────── */
+.rt-table-wrap {
+  overflow-x: auto;
+}
+
+.rt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.rt-table thead th {
+  padding: 12px 10px 8px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.rt-row {
+  border-bottom: 1px solid #f7f7f7;
+  cursor: pointer;
+}
+
+.rt-row:hover { background: #fafafa; }
+
+.rt-table td {
+  padding: 10px;
+  color: #333;
+  vertical-align: middle;
+}
+
+.rt-bold {
+  font-weight: 600;
+  color: #111;
+}
+
+.rt-td-meta {
+  color: #999;
+  font-size: 12px;
+}
+
+.rt-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rt-step-chip {
+  display: inline-block;
+  width: fit-content;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #888;
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.rt-step-chip--current {
+  color: #b45309;
+  background: #fffbeb;
+  font-weight: 700;
+}
+
+.rt-step-role {
+  font-weight: 500;
+}
+
+.rt-chevron {
+  display: inline-block;
+  color: #aaa;
+  transition: transform 0.15s ease;
+  font-size: 12px;
+}
+
+.rt-chevron--open {
+  transform: rotate(90deg);
+}
+
+/* ── Status badges ───────────────────────────────────── */
+.rt-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rt-status--submitted { background: #eff6ff; color: #2563eb; }
+.rt-status--in_progress { background: #fffbeb; color: #d97706; }
+.rt-status--approved { background: #ecfdf5; color: #059669; }
+.rt-status--completed { background: #ecfdf5; color: #059669; }
+.rt-status--rejected { background: #fff2f0; color: #dc3545; }
+
+/* ── Expanded row / timeline ─────────────────────────── */
+.rt-expand-row td {
+  padding: 0;
+  background: #fcfcfc;
+}
+
+.rt-timeline-wrap {
+  padding: 18px 24px 20px;
+}
+
+.rt-applicant-remarks {
+  font-size: 12.5px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 14px;
+}
+
+.rt-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.rt-timeline-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.rt-timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.rt-timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d1d5db;
+  margin-top: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.rt-timeline-item--approved .rt-timeline-dot,
+.rt-timeline-item--completed .rt-timeline-dot,
+.rt-timeline-item--submitted .rt-timeline-dot { background: #059669; }
+.rt-timeline-item--rejected .rt-timeline-dot { background: #dc3545; }
+
+.rt-timeline-line {
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: -18px;
+  width: 1.5px;
+  background: #e5e7eb;
+}
+
+.rt-timeline-body {
+  flex: 1;
+}
+
+.rt-timeline-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+}
+
+.rt-timeline-meta {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.rt-timeline-remarks {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.rt-timeline-loading {
+  padding: 16px 24px;
+  color: #999;
+  font-size: 13px;
+}
+
+.rt-doc-list {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.rt-doc-list-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.rt-doc-link {
+  display: inline-block;
+  font-size: 12px;
+  color: #2563eb;
+  margin: 0 12px 6px 0;
+  text-decoration: underline;
+}
+
+@media (max-width: 800px) {
+  .rt-stats-row { grid-template-columns: repeat(2, 1fr); }
+  .rt-search { min-width: 100%; }
+}

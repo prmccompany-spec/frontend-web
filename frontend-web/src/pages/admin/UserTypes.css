@@ -1,0 +1,443 @@
+/* ── Page ─────────────────────────────────────────── */
+.ut-page {
+  padding: 32px 36px 48px;
+  max-width: 700px;
+}
+
+.ut-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ut-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ut-page-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #fff0eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ut-page-icon svg {
+  width: 22px;
+  height: 22px;
+  color: #dc3545;
+}
+
+.ut-page-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+  margin: 0 0 3px;
+}
+
+.ut-page-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Add button ───────────────────────────────────── */
+.ut-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(220, 53, 69, 0.28);
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.ut-add-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ut-add-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(220, 53, 69, 0.35);
+}
+
+/* ── Alert ────────────────────────────────────────── */
+.ut-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+
+.ut-alert svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+/* ── Table container ──────────────────────────────── */
+.ut-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.ut-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 56px 20px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.ut-loading-spinner {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #ebebeb;
+  border-top-color: #dc3545;
+  border-radius: 50%;
+  animation: ut-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ut-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ut-inline-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ut-inline-btn:hover { text-decoration: underline; }
+
+/* ── Table ────────────────────────────────────────── */
+.ut-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.ut-table thead tr {
+  background: #fafafa;
+  border-bottom: 1.5px solid #ebebeb;
+}
+
+.ut-table th {
+  padding: 11px 18px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #bbb;
+  white-space: nowrap;
+}
+
+.ut-table tbody tr {
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.12s;
+}
+
+.ut-table tbody tr:last-child { border-bottom: none; }
+
+.ut-table tbody tr:hover { background: #fafafa; }
+
+.ut-table td {
+  padding: 13px 18px;
+  vertical-align: middle;
+}
+
+.ut-td-num {
+  color: #ccc;
+  font-size: 12.5px;
+  width: 40px;
+}
+
+.ut-td-meta {
+  color: #bbb;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+/* ── Type pill ────────────────────────────────────── */
+.ut-type-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #fde8e4;
+  color: #c0392b;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+/* ── Edit button ──────────────────────────────────── */
+.ut-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: #fff8ec;
+  color: #b45309;
+  border: 1px solid #fde3a7;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ut-edit-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ut-edit-btn:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+/* ── Modal backdrop ───────────────────────────────── */
+.ut-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: ut-fade 0.17s ease;
+}
+
+@keyframes ut-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Modal ────────────────────────────────────────── */
+.ut-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  animation: ut-up 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+@keyframes ut-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.ut-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 22px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ut-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+  margin: 0 0 3px;
+  letter-spacing: -0.01em;
+}
+
+.ut-modal-subtitle {
+  font-size: 12px;
+  color: #aaa;
+  margin: 0;
+}
+
+.ut-modal-close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #f5f5f5;
+  border-radius: 7px;
+  cursor: pointer;
+  color: #666;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ut-modal-close svg { width: 15px; height: 15px; }
+
+.ut-modal-close:hover {
+  background: #fde8e4;
+  color: #dc3545;
+}
+
+/* Modal body */
+.ut-modal-body {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Modal footer */
+.ut-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ── Form inside modal ────────────────────────────── */
+.ut-form-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  padding: 10px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ut-form-error svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.ut-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ut-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+}
+
+.ut-required { color: #dc3545; }
+
+.ut-input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 9px;
+  font-size: 13.5px;
+  color: #111;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.ut-input:focus {
+  border-color: #dc3545;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.ut-input::placeholder { color: #ccc; }
+
+.ut-hint {
+  font-size: 11.5px;
+  color: #bbb;
+  margin: 0;
+}
+
+/* ── Buttons ──────────────────────────────────────── */
+.ut-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 0.15s, transform 0.12s;
+}
+
+.ut-btn--ghost {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.ut-btn--ghost:hover { background: #e5e5e5; }
+
+.ut-btn--primary {
+  background: #dc3545;
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(220, 53, 69, 0.28);
+}
+
+.ut-btn--primary:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.ut-btn--primary:disabled {
+  background: #e89099;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.ut-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ut-spin 0.7s linear infinite;
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .ut-page { padding: 20px 16px 40px; }
+  .ut-page-header { flex-wrap: wrap; }
+  .ut-add-btn { width: 100%; justify-content: center; }
+}

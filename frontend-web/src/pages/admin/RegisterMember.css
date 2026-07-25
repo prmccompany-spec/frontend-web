@@ -1,0 +1,527 @@
+.rm-page {
+  padding: 32px 36px 60px;
+  max-width: 900px;
+}
+
+/* ── Page header ──────────────────────────────────── */
+.rm-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.rm-page-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fff0eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rm-page-header-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #dc3545;
+}
+
+.rm-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+  margin: 0 0 3px;
+}
+
+.rm-page-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ── Alert banners ────────────────────────────────── */
+.rm-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.rm-alert svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.rm-alert--error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+}
+
+.rm-alert--success {
+  background: #f0fff4;
+  border: 1px solid #b7ebc7;
+  color: #1a6b35;
+}
+
+/* ── Form layout ──────────────────────────────────── */
+.rm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Card ─────────────────────────────────────────── */
+.rm-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rm-card--outside {
+  border: 1.5px solid #fde0da;
+}
+
+/* ── Section label ────────────────────────────────── */
+.rm-section-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #dc3545;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid #f5e0e0;
+  margin-bottom: 2px;
+}
+
+.rm-section-label--outside {
+  color: #e8341a;
+  border-bottom-color: #fde0da;
+}
+
+/* ── Grid layouts ─────────────────────────────────── */
+.rm-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.rm-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Field ────────────────────────────────────────── */
+.rm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rm-field--checkbox {
+  margin-top: 4px;
+}
+
+.rm-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rm-required {
+  color: #dc3545;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── Input ────────────────────────────────────────── */
+.rm-input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 9px;
+  font-size: 13.5px;
+  color: #111;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.rm-input:focus {
+  border-color: #dc3545;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.rm-input:disabled {
+  background: #f3f3f3;
+  color: #bbb;
+  cursor: not-allowed;
+}
+
+.rm-input::placeholder {
+  color: #ccc;
+}
+
+.rm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 15px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* ── Checkbox row ─────────────────────────────────── */
+.rm-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rm-checkbox {
+  accent-color: #dc3545;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.rm-checkbox-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* Same-as-phone inline checkbox */
+.rm-same-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.rm-same-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+}
+
+/* ── Action buttons ───────────────────────────────── */
+.rm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.rm-btn {
+  padding: 11px 28px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+
+.rm-btn--secondary {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.rm-btn--secondary:hover {
+  background: #e4e4e4;
+}
+
+.rm-btn--primary {
+  background: #dc3545;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(220, 53, 69, 0.3);
+}
+
+.rm-btn--primary:hover:not(:disabled) {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(220, 53, 69, 0.4);
+}
+
+.rm-btn--primary:disabled {
+  background: #e89099;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Spinner ──────────────────────────────────────── */
+.rm-spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: rm-spin 0.7s linear infinite;
+}
+
+@keyframes rm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Photo upload ─────────────────────────────────── */
+.rm-card--photo {
+  border: 1.5px dashed #e0e0e0;
+  background: #fafafa;
+}
+
+.rm-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.rm-photo-zone {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 2px dashed #ddd;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-photo-zone:hover {
+  border-color: #dc3545;
+}
+
+.rm-photo-zone--filled {
+  border-style: solid;
+  border-color: #dc3545;
+}
+
+.rm-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rm-photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  text-align: center;
+}
+
+.rm-photo-placeholder svg {
+  width: 28px;
+  height: 28px;
+  color: #ccc;
+}
+
+.rm-photo-placeholder span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+}
+
+.rm-photo-hint {
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  color: #bbb !important;
+}
+
+.rm-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.rm-photo-zone:hover .rm-photo-overlay {
+  opacity: 1;
+}
+
+.rm-photo-overlay svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rm-photo-info {
+  flex: 1;
+}
+
+.rm-photo-info-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.rm-photo-info-sub {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.5;
+}
+
+.rm-photo-remove {
+  margin-top: 10px;
+  padding: 5px 14px;
+  border: 1.5px solid #ffcdd2;
+  border-radius: 6px;
+  background: #fff5f5;
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.rm-photo-remove:hover {
+  background: #ffebee;
+}
+
+/* ── Mobile ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  .rm-page {
+    padding: 20px 16px 48px;
+  }
+
+  .rm-card {
+    padding: 18px 16px;
+  }
+
+  .rm-grid-2,
+  .rm-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .rm-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Pending payments (dues) ─────────────────────── */
+.rm-pending-hint {
+  font-size: 12.5px;
+  color: #888;
+  margin: 0 0 4px;
+}
+
+.rm-pending-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.rm-pending-remove {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid #f5e0e0;
+  border-radius: 9px;
+  background: #fff5f5;
+  color: #dc3545;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  margin-bottom: 1px;
+}
+
+.rm-pending-remove:hover {
+  background: #fde2e2;
+}
+
+.rm-pending-remove svg {
+  width: 16px;
+  height: 16px;
+}
+
+.rm-pending-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1.5px dashed #dc3545;
+  border-radius: 9px;
+  background: transparent;
+  color: #dc3545;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+
+.rm-pending-add:hover {
+  background: #fff5f5;
+}
+
+.rm-pending-add svg {
+  width: 15px;
+  height: 15px;
+}
+
+.rm-pending-total {
+  font-size: 14px;
+  font-weight: 800;
+  color: #dc3545;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .rm-pending-row {
+    grid-template-columns: 1fr;
+  }
+}

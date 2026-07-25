@@ -1,0 +1,549 @@
+.ac-page {
+  max-width: 1000px;
+}
+
+.ac-page .admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* ── Add button ───────────────────────────────────── */
+.ac-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.ac-add-btn:hover {
+  background: #b02030;
+}
+
+.ac-add-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ── Loading / empty ──────────────────────────────── */
+.ac-loading,
+.ac-empty {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 56px 24px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ac-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.ac-empty-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #ccc;
+}
+
+.ac-empty p {
+  margin: 0;
+}
+
+/* ── Table ────────────────────────────────────────── */
+.ac-table-wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  overflow-x: auto;
+}
+
+.ac-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ac-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.ac-th-center {
+  text-align: center !important;
+}
+
+.ac-th-actions {
+  text-align: right !important;
+}
+
+.ac-table tbody tr {
+  border-bottom: 1px solid #f7f7f7;
+  transition: background 0.1s;
+}
+
+.ac-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ac-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.ac-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  color: #333;
+}
+
+.ac-key {
+  font-family: monospace;
+  font-size: 12px;
+  background: #f3f4f6;
+  border-radius: 5px;
+  padding: 3px 8px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.ac-td-label {
+  font-weight: 600;
+  color: #111;
+}
+
+.ac-td-desc {
+  color: #777;
+  max-width: 220px;
+}
+
+.ac-none {
+  color: #ccc;
+}
+
+.ac-td-center {
+  text-align: center;
+}
+
+/* Login required badge */
+.ac-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.ac-status svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ac-status--yes {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.ac-status--no {
+  background: #f3f4f6;
+  color: #999;
+}
+
+/* Type tags */
+.ac-td-types {
+  min-width: 120px;
+}
+
+.ac-type-tag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  text-transform: capitalize;
+  margin: 2px 3px 2px 0;
+}
+
+.ac-all-badge {
+  font-size: 12px;
+  color: #aaa;
+  font-style: italic;
+}
+
+/* Row action buttons */
+.ac-td-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ac-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  margin-left: 6px;
+}
+
+.ac-row-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ac-row-btn--edit {
+  background: white;
+  border-color: #e5e7eb;
+  color: #555;
+}
+
+.ac-row-btn--edit:hover {
+  background: #f0f9ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.ac-row-btn--delete {
+  background: white;
+  border-color: #e5e7eb;
+  color: #999;
+}
+
+.ac-row-btn--delete:hover {
+  background: #fff5f5;
+  border-color: #fca5a5;
+  color: #dc3545;
+}
+
+/* ── Modal overlay ────────────────────────────────── */
+.ac-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.ac-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.ac-modal--sm {
+  max-width: 420px;
+}
+
+.ac-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ac-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+
+.ac-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.ac-modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.ac-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ac-modal-error {
+  margin: 12px 24px 0;
+  padding: 10px 14px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+.ac-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ac-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+/* ── Form fields ──────────────────────────────────── */
+.ac-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ac-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ac-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ac-label-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: #aaa;
+  margin-left: 4px;
+}
+
+.ac-required {
+  color: #dc3545;
+}
+
+.ac-hint {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.ac-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #111;
+  outline: none;
+  background: white;
+  transition: border-color 0.15s;
+}
+
+.ac-input:focus {
+  border-color: #dc3545;
+}
+
+.ac-input:disabled {
+  background: #f9fafb;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Toggle */
+.ac-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ac-toggle {
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.ac-toggle--on {
+  background: #059669;
+}
+
+.ac-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.ac-toggle--on .ac-toggle-knob {
+  transform: translateX(20px);
+}
+
+.ac-toggle-text {
+  font-size: 13px;
+  color: #555;
+}
+
+/* Type chips */
+.ac-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ac-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.ac-chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ac-chip:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.ac-chip--on {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.ac-chip--on:hover {
+  background: #b02030;
+  border-color: #b02030;
+}
+
+/* ── Shared buttons ───────────────────────────────── */
+.ac-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.ac-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ac-btn--primary {
+  background: #dc3545;
+  color: white;
+}
+
+.ac-btn--primary:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.ac-btn--danger {
+  background: #dc3545;
+  color: white;
+}
+
+.ac-btn--danger:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.ac-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.ac-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+/* Delete modal text */
+.ac-delete-msg {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.ac-delete-msg strong {
+  color: #111;
+}
+
+.ac-delete-msg code {
+  font-family: monospace;
+  font-size: 12px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  padding: 1px 6px;
+}

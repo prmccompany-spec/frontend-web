@@ -1,0 +1,349 @@
+.rp-page .admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rp-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.rp-add-btn:hover {
+  background: #b02030;
+}
+
+.rp-add-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.rp-alert {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.rp-state {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 48px 24px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.rp-inline-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+.rp-table-wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  overflow-x: auto;
+}
+
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.rp-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.rp-th-actions {
+  text-align: right !important;
+}
+
+.rp-table tbody tr {
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.rp-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.rp-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.rp-table td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  color: #333;
+}
+
+.rp-td-name {
+  font-weight: 700;
+  color: #111;
+}
+
+.rp-td-desc {
+  color: #999;
+  font-size: 12px;
+  margin-top: 2px;
+  max-width: 320px;
+}
+
+.rp-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rp-status--active {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.rp-status--inactive {
+  background: #f3f4f6;
+  color: #888;
+}
+
+.rp-td-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.rp-row-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  margin-left: 6px;
+}
+
+.rp-row-btn:hover:not(:disabled) {
+  background: #f0f9ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.rp-row-btn--danger {
+  color: #999;
+}
+
+.rp-row-btn--danger:hover:not(:disabled) {
+  background: #fff5f5;
+  border-color: #fca5a5;
+  color: #dc3545;
+}
+
+/* ── Modal ── */
+.rp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.rp-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.rp-modal--sm {
+  max-width: 420px;
+}
+
+.rp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.rp-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+  margin: 0;
+}
+
+.rp-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  padding: 4px;
+  display: flex;
+  border-radius: 6px;
+}
+
+.rp-modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.rp-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.rp-modal-error {
+  padding: 10px 14px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  color: #c0392b;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.rp-modal-body {
+  padding: 20px 24px;
+}
+
+.rp-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 24px 20px;
+}
+
+.rp-delete-msg {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.rp-delete-msg strong {
+  color: #111;
+}
+
+.rp-field {
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.rp-row {
+  display: flex;
+  gap: 14px;
+}
+
+.rp-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.rp-input {
+  width: 100%;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #111;
+  outline: none;
+  background: white;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.rp-input:focus {
+  border-color: #dc3545;
+}
+
+.rp-textarea {
+  resize: vertical;
+}
+
+.rp-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.rp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rp-btn--primary {
+  background: #dc3545;
+  color: white;
+}
+
+.rp-btn--primary:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.rp-btn--danger {
+  background: #dc3545;
+  color: white;
+}
+
+.rp-btn--danger:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.rp-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.rp-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}

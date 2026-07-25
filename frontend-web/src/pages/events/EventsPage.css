@@ -132,6 +132,14 @@
   border-bottom-color: #e8341a;
 }
 
+.ev-loading,
+.ev-empty {
+  text-align: center;
+  padding: 48px 0;
+  font-size: 15px;
+  color: #aaa;
+}
+
 /* Events List */
 .ev-events-list {
   display: grid;

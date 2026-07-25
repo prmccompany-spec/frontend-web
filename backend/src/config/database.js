@@ -10,7 +10,7 @@ export const initializePool = async () => {
     pool = await mysql.createPool({
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
+      password: process.env.DB_PASSWORD ?? 'root',
       database: process.env.DB_NAME || 'prmcf_db',
       port: process.env.DB_PORT || 3306,
       waitForConnections: true,
@@ -38,6 +38,21 @@ export const query = async (sql, values) => {
   try {
     const [results] = await connection.execute(sql, values);
     return results;
+  } finally {
+    connection.release();
+  }
+};
+
+export const withTransaction = async (fn) => {
+  const connection = await getPool().getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await fn(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
   } finally {
     connection.release();
   }

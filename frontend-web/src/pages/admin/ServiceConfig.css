@@ -1,0 +1,270 @@
+.cf-page .admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cf-back-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cf-back-btn:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.cf-state {
+  color: #999;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.cf-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.cf-tab-btn {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: #888;
+  cursor: pointer;
+}
+
+.cf-tab-btn--active {
+  color: #dc3545;
+  border-bottom-color: #dc3545;
+}
+
+.cf-tab-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 22px 24px;
+}
+
+.cf-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.cf-success {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.cf-hint {
+  font-size: 12px;
+  color: #999;
+  margin: 0 0 16px;
+}
+
+.cf-empty {
+  color: #999;
+  font-size: 13px;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.cf-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #111;
+  outline: none;
+  font-family: inherit;
+}
+
+.cf-input:focus {
+  border-color: #dc3545;
+}
+
+.cf-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.cf-remove-btn {
+  background: none;
+  border: none;
+  color: #bbb;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.cf-remove-btn:hover {
+  background: #fff5f5;
+  color: #dc3545;
+}
+
+.cf-remove-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Documents */
+.cf-doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cf-doc-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 90px auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.cf-doc-size {
+  width: 100%;
+}
+
+/* Workflow */
+.cf-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cf-step-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 1.4fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.cf-step-order {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cf-step-no {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #555;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cf-step-order-btns {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-step-order-btns button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 9px;
+  line-height: 1;
+  padding: 2px;
+}
+
+.cf-step-order-btns button:hover:not(:disabled) {
+  color: #333;
+}
+
+.cf-step-order-btns button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cf-final-badge {
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.cf-tab-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cf-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.cf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cf-btn--primary {
+  background: #dc3545;
+  color: white;
+}
+
+.cf-btn--primary:hover:not(:disabled) {
+  background: #b02030;
+}
+
+.cf-btn--ghost {
+  background: #f3f4f6;
+  color: #555;
+}
+
+.cf-btn--ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+@media (max-width: 900px) {
+  .cf-doc-row,
+  .cf-step-row {
+    grid-template-columns: 1fr;
+  }
+}

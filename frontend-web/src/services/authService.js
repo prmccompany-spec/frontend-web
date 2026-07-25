@@ -1,8 +1,8 @@
 import api from './api';
 
 const authService = {
-  login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+  login: async (phone, password) => {
+    const response = await api.post('/auth/login', { phone, password });
     if (response.data.access_token) {
       localStorage.setItem('access_token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -10,8 +10,11 @@ const authService = {
     return response.data;
   },
 
-  register: async (userData) => {
-    const response = await api.post('/auth/register', userData);
+  resetPassword: async (oldPassword, newPassword) => {
+    const response = await api.post('/auth/reset-password', {
+      old_password: oldPassword,
+      new_password: newPassword,
+    });
     return response.data;
   },
 

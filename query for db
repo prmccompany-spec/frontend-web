@@ -1,0 +1,72 @@
+ALTER TABLE `members` ADD `photo` TEXT NULL AFTER `qr_code`;
+
+
+ `CREATE TABLE events (
+      id               INT AUTO_INCREMENT PRIMARY KEY,
+      title            VARCHAR(500)  NOT NULL,
+      status           ENUM('upcoming','ongoing','completed') NOT NULL DEFAULT 'upcoming',
+      date             DATE          NOT NULL,
+      start_time       VARCHAR(20)   NULL,
+      end_time         VARCHAR(20)   NULL,
+      location         VARCHAR(500)  NULL,
+      attendees        VARCHAR(50)   NULL,
+      short_description TEXT         NULL,
+      full_description  TEXT         NULL,
+      highlights       JSON          NULL,
+      organizer        VARCHAR(300)  NULL,
+      contact_person   VARCHAR(300)  NULL,
+      phone            VARCHAR(30)   NULL,
+      is_live          TINYINT(1)    NOT NULL DEFAULT 0,
+      video_link       VARCHAR(1000) NULL,
+      image            VARCHAR(500)  NULL,
+      is_active        TINYINT(1)    NOT NULL DEFAULT 1,
+      created_at       DATETIME      NOT NULL
+    )`
+
+CREATE TABLE pending_payments (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  member_id   INT           NOT NULL,
+  title       VARCHAR(300)  NOT NULL,
+  amount      DECIMAL(10,2) NOT NULL,
+  due_date    DATE          NULL,
+  notes       TEXT          NULL,
+  status      ENUM('pending','paid') NOT NULL DEFAULT 'pending',
+  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME      NULL,
+  CONSTRAINT fk_pending_payments_member
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+);
+
+CREATE TABLE rental_products (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  name          VARCHAR(300)  NOT NULL,
+  description   TEXT          NULL,
+  per_day_rate  DECIMAL(10,2) NULL,
+  per_hour_rate DECIMAL(10,2) NULL,
+  is_active     TINYINT(1)    NOT NULL DEFAULT 1,
+  created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE rentals (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  product_id    INT           NOT NULL,
+  member_id     INT           NOT NULL,
+  rate_type     ENUM('day','hour') NOT NULL,
+  rate_amount   DECIMAL(10,2) NOT NULL,
+  start_date    DATETIME      NOT NULL,
+  end_date      DATETIME      NOT NULL,
+  amount        DECIMAL(10,2) NOT NULL,
+  payment_type  ENUM('cash','qr') NOT NULL DEFAULT 'cash',
+  collected_by  INT           NULL,
+  status        ENUM('active','returned','cancelled') NOT NULL DEFAULT 'active',
+  notes         TEXT          NULL,
+  returned_at   DATETIME      NULL,
+  created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME      NULL,
+  CONSTRAINT fk_rentals_product
+    FOREIGN KEY (product_id) REFERENCES rental_products(id),
+  CONSTRAINT fk_rentals_member
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rentals_collected_by
+    FOREIGN KEY (collected_by) REFERENCES members(id)
+);

@@ -1,61 +1,24 @@
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { loginUser, registerUser } from '../services/authService.js';
+import { loginWithPassword, resetOwnPassword } from '../services/authService.js';
 
-export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: 'Email and password are required',
-    });
+export const handleLogin = asyncHandler(async (req, res) => {
+  const { phone, password } = req.body;
+  if (!phone || !password) {
+    return res.status(400).json({ success: false, message: 'Phone number and password are required' });
   }
-
-  const result = await loginUser(email, password);
-
-  res.json({
-    success: true,
-    message: 'Login successful',
-    ...result,
-  });
+  const result = await loginWithPassword(phone.trim(), password.trim());
+  res.json({ success: true, message: 'Login successful', ...result });
 });
 
-export const register = asyncHandler(async (req, res) => {
-  const { name, email, password, confirmPassword } = req.body;
-
-  if (!name || !email || !password || !confirmPassword) {
-    return res.status(400).json({
-      success: false,
-      message: 'All fields are required',
-    });
+export const handleResetPassword = asyncHandler(async (req, res) => {
+  const { old_password, new_password } = req.body;
+  if (!old_password || !new_password) {
+    return res.status(400).json({ success: false, message: 'old_password and new_password are required' });
   }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({
-      success: false,
-      message: 'Passwords do not match',
-    });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: 'Password must be at least 6 characters',
-    });
-  }
-
-  const result = await registerUser({ name, email, password });
-
-  res.status(201).json({
-    success: true,
-    message: 'Registration successful',
-    ...result,
-  });
+  await resetOwnPassword(req.user.id, old_password.trim(), new_password.trim());
+  res.json({ success: true, message: 'Password reset successfully' });
 });
 
 export const profile = asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    user: req.user,
-  });
+  res.json({ success: true, user: req.user });
 });

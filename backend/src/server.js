@@ -22,6 +22,7 @@ import rentalRoutes from './routes/rentalRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import memberStatusRoutes from './routes/memberStatusRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
+import branchRoutes from './routes/branchRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -57,6 +58,7 @@ app.use('/api/rentals', rentalRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/member-statuses', memberStatusRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/branches', branchRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -10,6 +10,7 @@ const sidebarLinks = [
     label: 'Dashboard',
     path: '/admin',
     end: true,
+    tourId: 'admin-nav-dashboard',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" />
@@ -23,6 +24,7 @@ const sidebarLinks = [
     label: 'Members',
     path: '/admin/members',
     end: false,
+    tourId: 'admin-nav-members',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -36,6 +38,7 @@ const sidebarLinks = [
     label: 'Register Member',
     path: '/admin/register-member',
     end: false,
+    tourId: 'admin-nav-register',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -49,6 +52,7 @@ const sidebarLinks = [
     label: 'Settings',
     path: '/admin/settings',
     end: false,
+    tourId: 'admin-nav-settings',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -285,6 +289,7 @@ function AdminLayout() {
                 key={link.path}
                 to={link.path}
                 end={link.end}
+                data-tour={link.tourId}
                 className={({ isActive }) =>
                   `al-nav-item${isActive ? ' al-nav-item--active' : ''}`
                 }

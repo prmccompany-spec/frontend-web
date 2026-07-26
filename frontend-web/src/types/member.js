@@ -60,6 +60,7 @@ export function toMemberPayload(form) {
     engagement_date: form.engagementDate || null,
     marriage_date: form.marriageDate || null,
     status_id: form.statusId ? Number(form.statusId) : null,
+    branch_id: form.branchId ? Number(form.branchId) : null,
   };
 }
 

@@ -12,12 +12,14 @@ import { createMember, createAddress, uploadMemberPhoto, createPendingPayment, g
 import { getUserTypes } from '../../services/userTypeService';
 import { getCategories } from '../../services/paymentService';
 import { getMemberStatuses } from '../../services/memberStatusService';
+import { getBranches } from '../../services/branchService';
 import './RegisterMember.css';
 
 const initialForm = {
   memberId: '',
   userTypeId: '',
   statusId: '',
+  branchId: '',
   name: '',
   gotra: '',
   familyName: '',
@@ -56,6 +58,7 @@ function RegisterMember() {
   const [userTypes, setUserTypes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     getUserTypes()
@@ -82,6 +85,9 @@ function RegisterMember() {
         const active = apiStatuses.find((s) => s.status_name.toLowerCase() === 'active');
         if (active) setForm((f) => ({ ...f, statusId: String(active.id) }));
       })
+      .catch(() => {});
+    getBranches()
+      .then((res) => setBranches(res.data.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -290,6 +296,22 @@ function RegisterMember() {
                 {statuses.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.status_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="rm-field">
+              <label className="rm-label">Branch</label>
+              <select
+                className="rm-input rm-select"
+                name="branchId"
+                value={form.branchId}
+                onChange={handleChange}
+              >
+                <option value="">Select branch</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
                   </option>
                 ))}
               </select>

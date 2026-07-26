@@ -3,9 +3,10 @@ import { generateMemberQR } from '../utils/qrUtils.js';
 import { hashPassword } from '../utils/passwordUtils.js';
 
 const MEMBER_SELECT = `
-  SELECT m.*, ms.status_name
+  SELECT m.*, ms.status_name, b.name AS branch_name
   FROM members m
   LEFT JOIN member_status ms ON ms.id = m.status_id
+  LEFT JOIN branches b ON b.id = m.branch_id
 `;
 
 export const getMemberById = async (memberId) => {
@@ -53,6 +54,7 @@ export const createMember = async (memberData) => {
     engagement_date = null,
     marriage_date = null,
     status_id = null,
+    branch_id = null,
     password = null,
   } = memberData;
 
@@ -64,8 +66,8 @@ export const createMember = async (memberData) => {
 
   const results = await query(
     `INSERT INTO members
-      (member_id, user_type_id, gotra, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      (member_id, user_type_id, gotra, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, branch_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       member_id,
       user_type_id,
@@ -88,6 +90,7 @@ export const createMember = async (memberData) => {
       engagement_date,
       marriage_date,
       status_id,
+      branch_id,
     ]
   );
 

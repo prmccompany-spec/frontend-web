@@ -375,3 +375,25 @@ CREATE TABLE expenses (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+-- BRANCH FEATURE
+-- ============================================================
+-- The legacy members_source table has a free-text `branch` VARCHAR column.
+-- This normalizes it into its own table. No FOREIGN KEY constraint on
+-- members.branch_id, matching this schema's existing convention (plain INT
+-- columns with app-level checks only, e.g. members.status_id).
+--
+-- After running these two statements, backfill branches + members.branch_id
+-- from members_source by running once from backend/:
+--   node scripts/createBranchesFromSource.js          (dry run, no writes)
+--   node scripts/createBranchesFromSource.js --apply   (writes the data)
+
+CREATE TABLE branches (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER TABLE members ADD COLUMN branch_id INT NULL AFTER status_id;

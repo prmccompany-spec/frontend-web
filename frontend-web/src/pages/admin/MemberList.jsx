@@ -12,6 +12,7 @@ import {
 import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import { getMemberStatuses } from '../../services/memberStatusService';
+import { getBranches } from '../../services/branchService';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
 import { resolveFileUrl } from '../../utils/fileUrl';
 import AssignDueModal from './payments/AssignDueModal';
@@ -78,6 +79,7 @@ function ViewModal({ member, typeMap, onClose }) {
           {row('Family Name', member.family_name)}
           {row("Father's Name", member.father_name)}
           {row('Aadhar Number', member.aadhar_number)}
+          {row('Branch', member.branch_name)}
 
           <div className="vm-section-label">Contact</div>
           {row('Phone', member.phone)}
@@ -146,11 +148,12 @@ function ViewModal({ member, typeMap, onClose }) {
 }
 
 // ── Edit Modal ────────────────────────────────────────────────────────────────
-function EditModal({ member, userTypes, statuses, onClose, onSaved }) {
+function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) {
   const [form, setForm] = useState({
     memberId: member.member_id ?? '',
     userTypeId: member.user_type_id ?? '',
     statusId: member.status_id ?? '',
+    branchId: member.branch_id ?? '',
     name: member.name ?? '',
     gotra: member.gotra ?? '',
     familyName: member.family_name ?? '',
@@ -446,6 +449,16 @@ function EditModal({ member, userTypes, statuses, onClose, onSaved }) {
                   ))}
                 </select>
               </div>
+              <div className="ml-form-field">
+                <label className="ml-form-label">Branch</label>
+                <select className="ml-form-input ml-form-select" name="branchId"
+                  value={form.branchId} onChange={handleChange}>
+                  <option value="">Select</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Identity */}
@@ -632,6 +645,7 @@ function MemberList() {
   const [members, setMembers] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -662,10 +676,11 @@ function MemberList() {
     setLoading(true);
     setError('');
     try {
-      const [membersRes, typesRes, statusesRes] = await Promise.all([
+      const [membersRes, typesRes, statusesRes, branchesRes] = await Promise.all([
         getMembers(),
         getUserTypes(),
         getMemberStatuses(),
+        getBranches(),
       ]);
       setMembers(membersRes.data.data ?? []);
       const apiTypes = typesRes.data.data ?? [];
@@ -675,6 +690,7 @@ function MemberList() {
           : USER_TYPES.map((t) => ({ id: t.id, type_name: t.label }))
       );
       setStatuses(statusesRes.data.data ?? []);
+      setBranches(branchesRes.data.data ?? []);
     } catch {
       setError('Failed to load members. Is the backend running?');
     } finally {
@@ -951,6 +967,7 @@ function MemberList() {
           member={editMember}
           userTypes={userTypes}
           statuses={statuses}
+          branches={branches}
           onClose={() => setEditMember(null)}
           onSaved={handleEditSaved}
         />

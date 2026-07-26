@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { getRentals } from '../../services/rentalService';
 import { getAttendance } from '../../services/attendanceService';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
+import SiteTour from '../../components/SiteTour/SiteTour';
 import ProfileMenu from '../../components/ProfileMenu/ProfileMenu';
 import ResetPasswordModal from '../../components/ProfileMenu/ResetPasswordModal';
 import EditProfileModal from './EditProfileModal';
@@ -47,6 +48,64 @@ const pctChange = (curr, prev) => (prev ? ((curr - prev) / prev) * 100 : null);
 
 const RENTAL_STATUS_LABEL = { active: 'Active', returned: 'Returned', cancelled: 'Cancelled' };
 
+const MEMBER_TOUR_STEPS = [
+  {
+    target: '[data-tour="member-profile"]',
+    title: 'Welcome to your Member Portal',
+    content: 'This is your profile card — your name, member ID, role and key personal details at a glance.',
+    icon: 'idCard',
+    disableBeacon: true,
+  },
+  {
+    target: '[data-tour="member-details"]',
+    title: 'My Details',
+    content: 'Your gotra, family, contact and identity details, including your assigned branch.',
+    icon: 'idCard',
+  },
+  {
+    target: '[data-tour="member-quicklinks"]',
+    title: 'Quick Links',
+    content: 'Edit your profile, change your password, download your ID card, or search the member directory — all from here.',
+    icon: 'link',
+  },
+  {
+    target: '[data-tour="member-stats"]',
+    title: 'Your Contribution Summary',
+    content: 'Total contributed, outstanding dues, transaction count, and this month/year totals at a glance.',
+    icon: 'barChart',
+  },
+  {
+    target: '[data-tour="member-pending"]',
+    title: 'Pending Amount',
+    content: 'Any dues you owe show up here — select one or more and pay directly.',
+    icon: 'alertCircle',
+  },
+  {
+    target: '[data-tour="member-payment-overview"]',
+    title: 'Payment Overview',
+    content: 'A breakdown of what you\'ve paid, what\'s pending, and dues cleared — plus your full payment history.',
+    icon: 'rupee',
+  },
+  {
+    target: '[data-tour="member-attendance"]',
+    title: 'My Attendance',
+    content: 'Your check-in record for the month, with recent activity listed alongside it.',
+    icon: 'calendarCheck',
+  },
+  {
+    target: '[data-tour="member-rentals"]',
+    title: 'My Rentals',
+    content: 'Any assets you\'ve rented from the organization, with status and amount.',
+    icon: 'package',
+  },
+  {
+    target: '[data-tour="member-tour-btn"]',
+    title: 'Replay Anytime',
+    content: 'Come back to this tour anytime by clicking this button again.',
+    icon: 'compass',
+  },
+];
+
 function initials(name = '') {
   return name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
@@ -82,6 +141,8 @@ function Dashboard() {
   const [payNowClicked, setPayNowClicked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [trendRange, setTrendRange] = useState('year');
+  const [runTour, setRunTour] = useState(false);
+  const [tourRestartToken, setTourRestartToken] = useState(0);
 
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -112,6 +173,11 @@ function Dashboard() {
   }, [user?.id]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  const startTour = () => {
+    setTourRestartToken((t) => t + 1);
+    setRunTour(true);
+  };
 
   const toggleSelect = (id) =>
     setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
@@ -208,9 +274,24 @@ function Dashboard() {
           <button className="db-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="db-nav-btn" onClick={() => navigate('/member-search')}>Member Search</button>
           <button className="db-nav-btn" onClick={() => navigate('/services')}>Offline Services</button>
+          <button className="tour-btn tour-btn--onred" data-tour="member-tour-btn" onClick={startTour}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+            Take a Tour
+          </button>
           <ProfileMenu />
         </nav>
       </header>
+
+      <SiteTour
+        tourKey="member"
+        steps={MEMBER_TOUR_STEPS}
+        run={runTour}
+        restartToken={tourRestartToken}
+        onClose={() => setRunTour(false)}
+      />
 
       <div className="db-content">
         {loading ? (
@@ -224,7 +305,7 @@ function Dashboard() {
           <div className="db-shell">
             {/* ══════════ LEFT SIDEBAR ══════════ */}
             <aside className="db-side">
-              <div className="db-profile-card">
+              <div className="db-profile-card" data-tour="member-profile">
                 <div className="db-avatar">{initials(user?.name)}</div>
                 <div className="db-profile-info">
                   <div className="db-profile-name">{user?.name}</div>
@@ -273,7 +354,7 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="db-section">
+              <div className="db-section" data-tour="member-details">
                 <h2 className="db-section-title">My Details</h2>
                 {member ? (
                   <div className="db-personal-grid">
@@ -287,6 +368,12 @@ function Dashboard() {
                       <div className="db-personal-item">
                         <span className="db-personal-key">Family</span>
                         <span className="db-personal-val">{member.family_name}</span>
+                      </div>
+                    )}
+                    {member.branch_name && (
+                      <div className="db-personal-item">
+                        <span className="db-personal-key">Branch</span>
+                        <span className="db-personal-val">{member.branch_name}</span>
                       </div>
                     )}
                     {member.father_name && (
@@ -340,7 +427,7 @@ function Dashboard() {
               </div>
 
               {/* ── Quick Links ── */}
-              <div className="db-section">
+              <div className="db-section" data-tour="member-quicklinks">
                 <h2 className="db-section-title">Quick Links</h2>
                 <div className="db-quicklinks">
                   <button className="db-quicklink-item" onClick={() => setShowEditProfile(true)}>
@@ -401,7 +488,7 @@ function Dashboard() {
             {/* ══════════ RIGHT MAIN ══════════ */}
             <div className="db-main">
               {/* ── Stat cards ── */}
-              <div className="db-stats-row">
+              <div className="db-stats-row" data-tour="member-stats">
                 <div className="db-stat-card db-stat-card--accent">
                   <div className="db-stat-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,7 +560,7 @@ function Dashboard() {
               </div>
 
               {/* ── Pending amount (unpaid dues only) ── */}
-              <button className="db-pending-btn" onClick={() => setShowPending((s) => !s)}>
+              <button className="db-pending-btn" data-tour="member-pending" onClick={() => setShowPending((s) => !s)}>
                 <span className="db-pending-left">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -651,7 +738,7 @@ function Dashboard() {
               <ThemeProvider theme={chartTheme}>
                 {/* ── Row: Payment Overview | Payment History | Monthly Trend ── */}
                 <div className="db-grid-3">
-                  <div className="db-section">
+                  <div className="db-section" data-tour="member-payment-overview">
                     <h2 className="db-section-title">Payment Overview</h2>
                     {paymentOverviewData.length === 0 ? (
                       <p className="db-empty">No payment data yet.</p>
@@ -756,7 +843,7 @@ function Dashboard() {
 
                 {/* ── Row: My Attendance | Recent Attendance | My Rentals ── */}
                 <div className="db-grid-3">
-                  <div className="db-section">
+                  <div className="db-section" data-tour="member-attendance">
                     <div className="db-section-head">
                       <h2 className="db-section-title">My Attendance</h2>
                       <button className="db-section-link" onClick={() => setShowAttendanceModal(true)}>View All</button>
@@ -829,7 +916,7 @@ function Dashboard() {
                     )}
                   </div>
 
-                  <div className="db-section">
+                  <div className="db-section" data-tour="member-rentals">
                     <div className="db-section-head">
                       <h2 className="db-section-title">
                         My Rentals {activeRentals > 0 && <span className="db-title-count">{activeRentals} active</span>}

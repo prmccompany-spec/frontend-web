@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SiteTour from '../../components/SiteTour/SiteTour';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { BarChart } from '@mui/x-charts/BarChart';
@@ -59,6 +60,74 @@ const chartTheme = createTheme({
   palette: { primary: { main: '#dc3545' } },
 });
 
+const ADMIN_TOUR_STEPS = [
+  {
+    target: '[data-tour="admin-nav-dashboard"]',
+    title: 'Welcome to the Admin Panel',
+    content: 'This is your Dashboard — a live overview of members, payments, dues, expenses and attendance. Let\'s walk through the key areas.',
+    icon: 'grid',
+    disableBeacon: true,
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="admin-nav-members"]',
+    title: 'Members',
+    content: 'View, search, filter, edit and manage every member from here — including their branch, status and QR code.',
+    icon: 'users',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="admin-nav-register"]',
+    title: 'Register Member',
+    content: 'Add a brand new member to the registry, complete with address, photo and any pending dues.',
+    icon: 'userPlus',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="admin-nav-settings"]',
+    title: 'Settings',
+    content: 'Configure the lookup lists used across the app — user types, member statuses, branches, payment and expense categories.',
+    icon: 'settings',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="admin-kpi-members"]',
+    title: 'Total Members',
+    content: 'Total member count with this month\'s growth and a quick status breakdown (Active / Inactive / etc).',
+    icon: 'users',
+  },
+  {
+    target: '[data-tour="admin-kpi-payments"]',
+    title: 'Payments',
+    content: 'Money received this month vs. what\'s still pending, with a 6-month trend at a glance.',
+    icon: 'rupee',
+  },
+  {
+    target: '[data-tour="admin-kpi-dues"]',
+    title: 'Due Clearance',
+    content: 'Tracks outstanding dues and how many members are overdue — click through to the full Due Tracker.',
+    icon: 'alertCircle',
+  },
+  {
+    target: '[data-tour="admin-chart-status"]',
+    title: 'Member Status Overview',
+    content: 'A breakdown of your membership by status, so you can see active vs. inactive at a glance.',
+    icon: 'pieChart',
+  },
+  {
+    target: '[data-tour="admin-chart-branch"]',
+    title: 'Members by Branch',
+    content: 'Ranked member counts per branch — the newest addition, so you can see how membership is distributed geographically.',
+    icon: 'barChart',
+  },
+  {
+    target: '[data-tour="admin-tour-btn"]',
+    title: 'Replay Anytime',
+    content: 'You can restart this tour anytime by clicking this button again.',
+    icon: 'compass',
+  },
+];
+
 function Delta({ value, suffixCount }) {
   if (value === null || Number.isNaN(value)) return null;
   const up = value >= 0;
@@ -99,6 +168,8 @@ function AdminPanel() {
   const [rentals, setRentals] = useState([]);
   const [rentalProducts, setRentalProducts] = useState([]);
   const [attendanceRange, setAttendanceRange] = useState([]);
+  const [runTour, setRunTour] = useState(false);
+  const [tourRestartToken, setTourRestartToken] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -124,6 +195,11 @@ function AdminPanel() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const startTour = () => {
+    setTourRestartToken((t) => t + 1);
+    setRunTour(true);
+  };
 
   const now = new Date();
   const thisMonth = monthKey(now);
@@ -167,6 +243,18 @@ function AdminPanel() {
     .map(([category, total]) => ({ category, total }))
     .sort((a, b) => b.total - a.total);
   const expenseCatMax = expensesByCategory.length > 0 ? expensesByCategory[0].total : 1;
+
+  // ── Members by Branch ──
+  const branchCounts = Object.entries(
+    members.reduce((acc, m) => {
+      const label = m.branch_name || 'Unassigned';
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .map(([branch, total]) => ({ branch, total }))
+    .sort((a, b) => b.total - a.total);
+  const branchMax = branchCounts.length > 0 ? branchCounts[0].total : 1;
 
   // ── Dues ──
   const pendingOnly = allDues.filter((d) => d.status === 'pending');
@@ -227,10 +315,27 @@ function AdminPanel() {
           <h1 className="admin-page-title">Dashboard</h1>
           <p className="admin-page-subtitle">Overview of members, payments, dues, expenses, rentals and attendance</p>
         </div>
-        <div className="ap-date-chip">
-          {now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+        <div className="ap-dash-header-right">
+          <button className="tour-btn" data-tour="admin-tour-btn" onClick={startTour}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+            Take a Tour
+          </button>
+          <div className="ap-date-chip">
+            {now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+          </div>
         </div>
       </div>
+
+      <SiteTour
+        tourKey="admin"
+        steps={ADMIN_TOUR_STEPS}
+        run={runTour}
+        restartToken={tourRestartToken}
+        onClose={() => setRunTour(false)}
+      />
 
       {loading ? (
         <div className="ap-skeleton-row">
@@ -240,7 +345,7 @@ function AdminPanel() {
         <ThemeProvider theme={chartTheme}>
           {/* ══════════ KPI ROW ══════════ */}
           <div className="ap-kpi-grid">
-            <div className="ap-kpi-card" onClick={() => navigate('/admin/members')}>
+            <div className="ap-kpi-card" data-tour="admin-kpi-members" onClick={() => navigate('/admin/members')}>
               <div className="ap-kpi-top">
                 <div>
                   <div className="ap-kpi-icon ap-kpi-icon--blue">
@@ -265,7 +370,7 @@ function AdminPanel() {
               </div>
             </div>
 
-            <div className="ap-kpi-card" onClick={() => navigate('/admin/reports')}>
+            <div className="ap-kpi-card" data-tour="admin-kpi-payments" onClick={() => navigate('/admin/reports')}>
               <div className="ap-kpi-top">
                 <div>
                   <div className="ap-kpi-icon ap-kpi-icon--green">
@@ -322,7 +427,7 @@ function AdminPanel() {
               </div>
             </div>
 
-            <div className="ap-kpi-card" onClick={() => navigate('/admin/payments/due-tracker')}>
+            <div className="ap-kpi-card" data-tour="admin-kpi-dues" onClick={() => navigate('/admin/payments/due-tracker')}>
               <div className="ap-kpi-top">
                 <div>
                   <div className="ap-kpi-icon ap-kpi-icon--amber">
@@ -378,7 +483,7 @@ function AdminPanel() {
 
           {/* ══════════ ROW 2 ══════════ */}
           <div className="ap-row-3">
-            <div className="ap-chart-card">
+            <div className="ap-chart-card" data-tour="admin-chart-status">
               <div className="ap-panel-header"><span>Member Status Overview</span></div>
               <div className="ap-donut-wrap">
                 <div className="ap-donut-box">
@@ -509,6 +614,34 @@ function AdminPanel() {
                 Net {netThisMonth >= 0 ? 'surplus' : 'deficit'} this month: ₹{fmt(Math.abs(netThisMonth))} (received minus spent)
               </div>
             </div>
+          </div>
+
+          {/* ══════════ MEMBERS BY BRANCH ══════════ */}
+          <div className="ap-chart-card ap-full-row" data-tour="admin-chart-branch">
+            <div className="ap-panel-header">
+              <span>Members by Branch</span>
+              <button className="ap-panel-link" onClick={() => navigate('/admin/members')}>View Members</button>
+            </div>
+            {branchCounts.length === 0 ? (
+              <div className="ap-chart-empty ap-chart-empty--sm">No branch data available.</div>
+            ) : (
+              <div className="ap-cat-list ap-cat-list--scroll">
+                {branchCounts.map((row, i) => (
+                  <div key={row.branch} className="ap-cat-row">
+                    <div className="ap-cat-top">
+                      <span className="ap-cat-name">{row.branch}</span>
+                      <span className="ap-cat-amount">{fmtInt(row.total)}</span>
+                    </div>
+                    <div className="ap-bar-track">
+                      <div
+                        className="ap-bar-fill"
+                        style={{ width: `${(row.total / branchMax) * 100}%`, background: EXPENSE_CAT_COLORS[i % EXPENSE_CAT_COLORS.length] }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ══════════ ROW 3 ══════════ */}

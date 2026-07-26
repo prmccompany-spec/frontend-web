@@ -17,6 +17,11 @@ import {
   createMemberStatus,
   updateMemberStatus,
 } from '../../services/memberStatusService';
+import {
+  getBranches,
+  createBranch,
+  updateBranch,
+} from '../../services/branchService';
 import './Settings.css';
 
 // ─── Shared helpers ───────────────────────────────────────────────
@@ -792,12 +797,168 @@ function MemberStatusTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// BRANCHES TAB
+// ═══════════════════════════════════════════════════════════════════
+
+function AddBranchModal({ onClose, onSaved }) {
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await createBranch(name.trim());
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to create branch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title="Add Branch" subtitle="New branch will be available in the member branch dropdown" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="st-modal-body">
+          {error && <ErrorBanner msg={error} />}
+          <div className="st-field">
+            <label className="st-label">Branch Name <span className="st-required">*</span></label>
+            <input className="st-input" placeholder="e.g. kottumukkalu" value={name}
+              onChange={(e) => setName(e.target.value)} autoFocus required />
+            <p className="st-hint">Must be unique.</p>
+          </div>
+        </div>
+        <div className="st-modal-footer">
+          <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
+            {loading ? 'Adding…' : 'Add Branch'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function EditBranchModal({ branch, onClose, onSaved }) {
+  const [name, setName] = useState(branch.name);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await updateBranch(branch.id, name.trim());
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to update branch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title="Edit Branch" subtitle={`Editing: ${branch.name}`} onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="st-modal-body">
+          {error && <ErrorBanner msg={error} />}
+          <div className="st-field">
+            <label className="st-label">Branch Name <span className="st-required">*</span></label>
+            <input className="st-input" value={name}
+              onChange={(e) => setName(e.target.value)} autoFocus required />
+          </div>
+        </div>
+        <div className="st-modal-footer">
+          <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
+            {loading ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function BranchesTab() {
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [editBranchItem, setEditBranchItem] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getBranches();
+      setBranches(res.data.data ?? []);
+    } catch {
+      setError('Failed to load branches.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSaved = () => { setShowAdd(false); setEditBranchItem(null); load(); };
+
+  return (
+    <div className="st-tab-content">
+      <div className="st-section-header">
+        <div>
+          <h2 className="st-section-title">Branches</h2>
+          <p className="st-section-sub">Define branches selectable when registering or editing members</p>
+        </div>
+        <button className="st-add-btn" onClick={() => setShowAdd(true)}>+ Add Branch</button>
+      </div>
+
+      {error && <ErrorBanner msg={error} />}
+
+      <div className="st-table-wrap">
+        {loading ? (
+          <div className="st-state">Loading…</div>
+        ) : branches.length === 0 ? (
+          <div className="st-state">No branches found. <button className="st-inline-btn" onClick={() => setShowAdd(true)}>Add the first one</button></div>
+        ) : (
+          <table className="st-table">
+            <thead>
+              <tr><th>#</th><th>Branch Name</th><th>ID</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {branches.map((b, i) => (
+                <tr key={b.id}>
+                  <td className="st-td-num">{i + 1}</td>
+                  <td><span className="st-pill st-pill--type">{b.name}</span></td>
+                  <td className="st-td-meta">{b.id}</td>
+                  <td>
+                    <button className="st-row-btn" onClick={() => setEditBranchItem(b)}>Edit</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showAdd && <AddBranchModal onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
+      {editBranchItem && <EditBranchModal branch={editBranchItem} onClose={() => setEditBranchItem(null)} onSaved={handleSaved} />}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // SETTINGS PAGE
 // ═══════════════════════════════════════════════════════════════════
 
 const TABS = [
   { key: 'user-types', label: 'User Types' },
   { key: 'member-status', label: 'Member Status' },
+  { key: 'branches', label: 'Branches' },
   { key: 'payment-gateway', label: 'Payment Gateway' },
   { key: 'expense-categories', label: 'Expense Categories' },
 ];
@@ -826,6 +987,7 @@ function Settings() {
 
       {activeTab === 'user-types' && <UserTypesTab />}
       {activeTab === 'member-status' && <MemberStatusTab />}
+      {activeTab === 'branches' && <BranchesTab />}
       {activeTab === 'payment-gateway' && <PaymentGatewayTab />}
       {activeTab === 'expense-categories' && <ExpenseCategoriesTab />}
     </div>

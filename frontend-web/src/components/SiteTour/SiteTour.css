@@ -1,0 +1,226 @@
+/* Shared "Take a Tour" trigger button — used on both the admin dashboard and
+   the member dashboard. Deliberately a different hue (violet) from every
+   other button/accent on either page, so it reads as its own affordance
+   rather than blending into the KPI/status colors. */
+.tour-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: tour-btn-pulse 2.4s ease-in-out infinite;
+}
+
+.tour-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(109, 40, 217, 0.45);
+}
+
+.tour-btn:active {
+  transform: translateY(0);
+}
+
+.tour-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+@keyframes tour-btn-pulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35); }
+  50% { box-shadow: 0 4px 20px rgba(139, 92, 246, 0.6); }
+}
+
+/* Member portal header is solid brand red (#e8341a) — the violet gradient
+   clashes against it, so flip to a white pill with red text instead. Same
+   shape/icon/motion, just recolored to sit on a red background. */
+.tour-btn--onred {
+  background: #fff;
+  color: #e8341a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  animation-name: tour-btn-pulse-onred;
+}
+
+.tour-btn--onred:hover {
+  background: #fff5f4;
+}
+
+@keyframes tour-btn-pulse-onred {
+  0%, 100% { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 0 4px 18px rgba(255, 255, 255, 0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-btn {
+    animation: none;
+  }
+}
+
+/* ── Tour tooltip card ──────────────────────────────────────────── */
+.tour-card {
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(31, 12, 74, 0.28);
+  font-family: inherit;
+  text-align: left;
+}
+
+.tour-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 44px 16px 16px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  position: relative;
+}
+
+.tour-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.tour-card-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.tour-card-step {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.tour-card-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tour-card-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tour-card-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.tour-card-progress {
+  height: 3px;
+  background: rgba(109, 40, 217, 0.15);
+}
+
+.tour-card-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #6d28d9);
+  transition: width 0.3s ease;
+}
+
+.tour-card-body {
+  padding: 18px 18px 6px;
+}
+
+.tour-card-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1f1533;
+}
+
+.tour-card-content {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #4b4560;
+}
+
+.tour-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 18px 18px;
+}
+
+.tour-card-skip {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #9691a4;
+  cursor: pointer;
+}
+
+.tour-card-skip:hover {
+  color: #6d28d9;
+}
+
+.tour-card-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour-card-back {
+  border: 1px solid #e3ddf0;
+  background: #fff;
+  color: #6d28d9;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tour-card-back:hover {
+  background: #f5f2fc;
+}
+
+.tour-card-next {
+  border: none;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(109, 40, 217, 0.35);
+}
+
+.tour-card-next:hover {
+  filter: brightness(1.06);
+}

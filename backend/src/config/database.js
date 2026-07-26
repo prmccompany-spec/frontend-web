@@ -12,15 +12,20 @@ export const initializePool = async () => {
       user: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD ?? 'root',
       database: process.env.DB_NAME || 'prmcf_db',
-      port: process.env.DB_PORT || 3306,
+      port: Number(process.env.DB_PORT) || 3306,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+
+      // TiDB Cloud SSL
+      ssl: {
+        rejectUnauthorized: false,
+      },
     });
 
     console.log('✓ Database connected successfully');
     return pool;
-  } catch (error) {
+  } catch (error: any) {
     console.error('✗ Database connection failed:', error.message);
     process.exit(1);
   }
@@ -33,7 +38,7 @@ export const getPool = () => {
   return pool;
 };
 
-export const query = async (sql, values) => {
+export const query = async (sql: string, values?: any[]) => {
   const connection = await getPool().getConnection();
   try {
     const [results] = await connection.execute(sql, values);
@@ -43,7 +48,7 @@ export const query = async (sql, values) => {
   }
 };
 
-export const withTransaction = async (fn) => {
+export const withTransaction = async (fn: any) => {
   const connection = await getPool().getConnection();
   try {
     await connection.beginTransaction();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPendingPayments, getMembers } from '../../../services/memberService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
 import './DueTracker.css';
 
 const fmt = (val) =>
@@ -143,16 +144,10 @@ function DueTracker() {
       });
   }, [dues, phoneByMember]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return withMeta;
-    return withMeta.filter(
-      (d) =>
-        d.member_name?.toLowerCase().includes(q) ||
-        d.member_code?.toLowerCase().includes(q) ||
-        d.title?.toLowerCase().includes(q)
-    );
-  }, [withMeta, search]);
+  const filtered = useMemo(
+    () => withMeta.filter((d) => matchesIdOrText(d.member_code, [d.member_name, d.title], search)),
+    [withMeta, search]
+  );
 
   const overdueDues = useMemo(
     () => filtered.filter((d) => d.isOverdue).sort((a, b) => b.daysOverdue - a.daysOverdue),

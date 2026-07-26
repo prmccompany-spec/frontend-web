@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRentalProducts, createRental } from '../../../services/rentalService';
 import { getMembers } from '../../../services/memberService';
+import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
 import './RentalEntry.css';
 
 const nowLocal = () => {
@@ -67,10 +68,9 @@ function RentalEntry() {
     setForm((f) => ({ ...f, amount: (Math.max(units, 1) * Number(rate)).toFixed(2) }));
   }, [rate, form.start_date, form.end_date, form.rate_type, amountTouched]);
 
-  const filteredMembers = members.filter((m) => {
-    const q = memberSearch.toLowerCase();
-    return m.name?.toLowerCase().includes(q) || m.member_id?.toLowerCase().includes(q);
-  }).slice(0, 8);
+  const filteredMembers = sortByMemberId(
+    members.filter((m) => matchesIdOrText(m.member_id, [m.name], memberSearch))
+  ).slice(0, 8);
 
   const selectMember = (m, field) => {
     if (field === 'member_id') {
@@ -258,7 +258,7 @@ function RentalEntry() {
                   }}
                 >
                   <option value="">Select collector…</option>
-                  {members.map((m) => (
+                  {sortByMemberId(members).map((m) => (
                     <option key={m.id} value={m.id}>{m.name} ({m.member_id})</option>
                   ))}
                 </select>

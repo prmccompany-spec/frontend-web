@@ -13,6 +13,7 @@ import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import { getMemberStatuses } from '../../services/memberStatusService';
 import { getBranches } from '../../services/branchService';
+import { matchesIdOrText, sortByMemberId } from '../../utils/memberSearch';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
 import { resolveFileUrl } from '../../utils/fileUrl';
 import AssignDueModal from './payments/AssignDueModal';
@@ -708,19 +709,13 @@ function MemberList() {
 
   const hasActiveFilters = !!(filterUserType || filterBloodGroup || filterOutside);
 
-  const filtered = tabMembers
-    .filter((m) => {
-      const q = search.toLowerCase();
-      return (
-        m.name?.toLowerCase().includes(q) ||
-        m.member_id?.toLowerCase().includes(q) ||
-        m.phone?.includes(q)
-      );
-    })
-    .filter((m) => !filterUserType || String(m.user_type_id) === filterUserType)
-    .filter((m) => !filterBloodGroup || m.blood_group === filterBloodGroup)
-    .filter((m) => !filterOutside || (filterOutside === 'yes' ? !!m.out_of_rajapalayam : !m.out_of_rajapalayam))
-    .sort((a, b) => (a.member_id || '').localeCompare(b.member_id || '', undefined, { numeric: true }));
+  const filtered = sortByMemberId(
+    tabMembers
+      .filter((m) => matchesIdOrText(m.member_id, [m.name, m.phone], search))
+      .filter((m) => !filterUserType || String(m.user_type_id) === filterUserType)
+      .filter((m) => !filterBloodGroup || m.blood_group === filterBloodGroup)
+      .filter((m) => !filterOutside || (filterOutside === 'yes' ? !!m.out_of_rajapalayam : !m.out_of_rajapalayam))
+  );
 
   const clearFilters = () => {
     setFilterUserType('');

@@ -7,6 +7,7 @@ import { USER_TYPES } from '../../types/member';
 import ProfileMenu from '../../components/ProfileMenu/ProfileMenu';
 import logo from '../../assets/logo.png';
 import { resolveFileUrl } from '../../utils/fileUrl';
+import { matchesIdOrText, sortByMemberId } from '../../utils/memberSearch';
 import './MemberSearch.css';
 
 const fmtDate = (d) =>
@@ -135,14 +136,9 @@ function MemberSearch() {
     loadMembers();
   }, [loadMembers]);
 
-  const filtered = members.filter((m) => {
-    const q = search.toLowerCase();
-    return (
-      m.name?.toLowerCase().includes(q) ||
-      m.member_id?.toLowerCase().includes(q) ||
-      m.phone?.includes(q)
-    );
-  });
+  const filtered = sortByMemberId(
+    members.filter((m) => matchesIdOrText(m.member_id, [m.name, m.phone], search))
+  );
 
   return (
     <div className="ms-root">

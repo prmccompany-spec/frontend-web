@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { getAttendance } from '../../../services/attendanceService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
 import './AttendanceReport.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -83,10 +84,9 @@ function AttendanceReport() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filteredRecords = records.filter((r) => {
-    const q = filters.search.toLowerCase();
-    return !q || r.member_name?.toLowerCase().includes(q) || r.member_code?.toLowerCase().includes(q);
-  });
+  const filteredRecords = records.filter((r) =>
+    matchesIdOrText(r.member_code, [r.member_name], filters.search)
+  );
 
   const groups = groupByMemberDay(filteredRecords);
   const presentCount = new Set(groups.map((g) => g.memberCode)).size;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getRentals, getRentalProducts, updateRentalStatus } from '../../../services/rentalService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
 import './RentalHistory.css';
 
 const fmt = (val) =>
@@ -50,15 +51,9 @@ function RentalHistory() {
     }
   };
 
-  const displayed = rentals.filter((r) => {
-    const q = filters.search.toLowerCase();
-    return (
-      !q ||
-      r.member_name?.toLowerCase().includes(q) ||
-      r.member_code?.toLowerCase().includes(q) ||
-      r.product_name?.toLowerCase().includes(q)
-    );
-  });
+  const displayed = rentals.filter((r) =>
+    matchesIdOrText(r.member_code, [r.member_name, r.product_name], filters.search)
+  );
 
   const total = displayed.reduce((s, r) => s + Number(r.amount), 0);
 

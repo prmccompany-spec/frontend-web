@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getPayments, getCategories } from '../../../services/paymentService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
 import './PaymentHistory.css';
 
 const fmt = (val) =>
@@ -39,15 +40,9 @@ function PaymentHistory() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { getCategories().then(setCategories).catch(() => {}); }, []);
 
-  const displayed = payments.filter((p) => {
-    const q = filters.search.toLowerCase();
-    return (
-      !q ||
-      p.member_name?.toLowerCase().includes(q) ||
-      p.member_code?.toLowerCase().includes(q) ||
-      p.payment_ref?.toLowerCase().includes(q)
-    );
-  });
+  const displayed = payments.filter((p) =>
+    matchesIdOrText(p.member_code, [p.member_name, p.payment_ref], filters.search)
+  );
 
   const total = displayed.reduce((s, p) => s + Number(p.amount), 0);
 

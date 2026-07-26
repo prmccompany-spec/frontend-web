@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCategories } from '../../../services/paymentService';
 import { getMembers, createPendingPayment } from '../../../services/memberService';
+import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
 import './AssignDue.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -28,13 +29,9 @@ function AssignDue() {
     getMembers().then((res) => setMembers(res.data?.data ?? [])).catch(() => {});
   }, []);
 
-  const filteredMembers = members.filter((m) => {
-    const q = memberSearch.toLowerCase();
-    return (
-      m.name?.toLowerCase().includes(q) ||
-      m.member_id?.toLowerCase().includes(q)
-    );
-  });
+  const filteredMembers = sortByMemberId(
+    members.filter((m) => matchesIdOrText(m.member_id, [m.name], memberSearch))
+  );
 
   const handleCategoryChange = (e) => {
     const cat = categories.find((c) => String(c.id) === e.target.value);

@@ -8,16 +8,14 @@ let pool;
 export const initializePool = async () => {
   try {
     pool = await mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD ?? 'root',
-      database: process.env.DB_NAME || 'prmcf_db',
-      port: Number(process.env.DB_PORT) || 3306,
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: Number(process.env.DB_PORT),
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
-
-      // TiDB Cloud SSL
       ssl: {
         rejectUnauthorized: false,
       },
@@ -25,7 +23,7 @@ export const initializePool = async () => {
 
     console.log('✓ Database connected successfully');
     return pool;
-  } catch (error: any) {
+  } catch (error) {
     console.error('✗ Database connection failed:', error.message);
     process.exit(1);
   }
@@ -38,7 +36,7 @@ export const getPool = () => {
   return pool;
 };
 
-export const query = async (sql: string, values?: any[]) => {
+export const query = async (sql, values) => {
   const connection = await getPool().getConnection();
   try {
     const [results] = await connection.execute(sql, values);
@@ -48,7 +46,7 @@ export const query = async (sql: string, values?: any[]) => {
   }
 };
 
-export const withTransaction = async (fn: any) => {
+export const withTransaction = async (fn) => {
   const connection = await getPool().getConnection();
   try {
     await connection.beginTransaction();

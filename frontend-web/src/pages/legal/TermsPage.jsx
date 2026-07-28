@@ -15,7 +15,7 @@ function TermsPage() {
           <section className="legal-section">
             <h2>1. Acceptance of Terms</h2>
             <p>
-              By accessing or using the PRMCF (Palayapalayam Raja Mudaliar Common Fund) website
+              By accessing or using the PRMCF (Palayapalayam Raju's Mahumai Common Fund) website
               and its services, you agree to be bound by these Terms &amp; Conditions. If you do
               not agree to any part of these terms, please do not use our website.
             </p>

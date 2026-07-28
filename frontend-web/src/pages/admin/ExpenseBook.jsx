@@ -6,6 +6,9 @@ import {
   updateExpense,
   getExpenseSummary,
 } from '../../services/expenseService';
+import { showToast } from '../../components/Toast/toastBus';
+import { exportTableToPdf } from '../../utils/pdfExport';
+import ExportPdfButton from '../../components/ExportPdfButton/ExportPdfButton';
 import './ExpenseBook.css';
 
 const fmt = (val) =>
@@ -54,9 +57,12 @@ function ExpenseModal({ categories, expense, onClose, onSaved }) {
       } else {
         await createExpense(payload);
       }
+      showToast(`Expense ${isEdit ? 'updated' : 'recorded'} successfully.`, 'success');
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.message ?? `Failed to ${isEdit ? 'update' : 'record'} expense.`);
+      const msg = err.response?.data?.message ?? `Failed to ${isEdit ? 'update' : 'record'} expense.`;
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -173,6 +179,36 @@ function ExpenseBook() {
 
   const clearFilters = () => setFilters({ category_id: '', date_from: '', date_to: '', search: '' });
 
+  const activeFilterParts = [];
+  if (filters.category_id) activeFilterParts.push(categories.find((c) => String(c.id) === filters.category_id)?.name || 'Category');
+  if (filters.date_from) activeFilterParts.push(`From ${filters.date_from}`);
+  if (filters.date_to) activeFilterParts.push(`To ${filters.date_to}`);
+  if (filters.search) activeFilterParts.push(`Search "${filters.search}"`);
+
+  const handleExport = () => exportTableToPdf({
+    title: 'Expense Book',
+    subtitle: activeFilterParts.length ? activeFilterParts.join(' · ') : 'All records',
+    summary: [
+      { label: 'Expenses', value: displayed.length },
+      { label: 'Total', value: `Rs. ${fmt(displayedTotal)}` },
+    ],
+    columns: [
+      { header: 'Date & Time', key: 'date' },
+      { header: 'Category', key: 'category' },
+      { header: 'Reason', key: 'reason' },
+      { header: 'Amount', key: 'amount', align: 'right' },
+      { header: 'Recorded By', key: 'recordedBy' },
+    ],
+    rows: displayed.map((e) => ({
+      date: fmtDateTime(e.created_at),
+      category: e.category_name,
+      reason: e.reason,
+      amount: `Rs. ${fmt(e.amount)}`,
+      recordedBy: e.created_by_name,
+    })),
+    filename: 'expense-book',
+  });
+
   return (
     <div className="admin-content eb-page">
       <div className="admin-page-header">
@@ -231,6 +267,7 @@ function ExpenseBook() {
         {hasActiveFilters && (
           <button className="eb-filter-clear" onClick={clearFilters}>Clear</button>
         )}
+        <ExportPdfButton onExport={handleExport} disabled={displayed.length === 0} />
       </div>
 
       {loading ? (

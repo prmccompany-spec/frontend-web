@@ -9,7 +9,11 @@
       "Bash(node --check src/models/pendingPaymentModel.js)",
       "Bash(node --check src/services/pendingPaymentService.js)",
       "Bash(node --check src/models/paymentModel.js)",
-      "Bash(node --check src/services/paymentService.js)"
+      "Bash(node --check src/services/paymentService.js)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/api/members)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X PATCH http://localhost:3000/api/members/999999999/reset-password -H \"Content-Type: application/json\" -d '{\"new_password\":\"000000\"}')",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/api/payments)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/api/expenses)"
     ]
   }
 }

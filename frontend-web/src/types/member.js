@@ -14,7 +14,7 @@ export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
  * @property {string} memberId        - Unique member identifier (e.g. PRMC-0001)
  * @property {string} userTypeId      - FK to user_types.id
  * @property {string} name            - Full name
- * @property {string} gotra           - Gotra
+ * @property {string} gotraId         - FK to gotras.id
  * @property {string} familyName      - Family / clan name
  * @property {string} fatherName      - Father's full name
  * @property {string} phone           - Phone number
@@ -46,7 +46,6 @@ export function toMemberPayload(form) {
     member_id: form.memberId,
     user_type_id: Number(form.userTypeId),
     name: form.name,
-    gotra: form.gotra || null,
     family_name: form.familyName || null,
     father_name: form.fatherName || null,
     phone: form.phone || null,
@@ -60,6 +59,7 @@ export function toMemberPayload(form) {
     engagement_date: form.engagementDate || null,
     marriage_date: form.marriageDate || null,
     status_id: form.statusId ? Number(form.statusId) : null,
+    gotra_id: form.gotraId ? Number(form.gotraId) : null,
     branch_id: form.branchId ? Number(form.branchId) : null,
   };
 }

@@ -208,27 +208,6 @@
   margin-top: 8px;
 }
 
-.welcome-donate-btn {
-  background-color: #e8341a;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 14px 40px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-  width: auto;
-  transition: background-color 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 16px rgba(232, 52, 26, 0.3);
-}
-
-.welcome-donate-btn:hover {
-  background-color: #c42a14;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(232, 52, 26, 0.4);
-}
-
 .welcome-learn-btn {
   background: transparent;
   color: #e8341a;
@@ -295,7 +274,6 @@
     gap: 12px;
   }
 
-  .welcome-donate-btn,
   .welcome-learn-btn {
     width: 100%;
     text-align: center;

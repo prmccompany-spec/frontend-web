@@ -26,3 +26,37 @@ html, body {
   flex-direction: column;
   min-height: 100vh;
 }
+
+/* ── Shared "Export PDF" button, used across every admin table/report ── */
+.pdf-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #dc3545;
+  background: #fff;
+  color: #dc3545;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.pdf-export-btn:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+
+.pdf-export-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pdf-export-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}

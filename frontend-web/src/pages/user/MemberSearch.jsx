@@ -67,7 +67,12 @@ function DetailsModal({ member, typeMap, onClose }) {
           {row("Father's Name", member.father_name)}
 
           <div className="ms-section-label">Contact</div>
-          {row('Phone', member.phone)}
+          {member.phone && (
+            <div className="ms-row">
+              <span className="ms-row-label">Phone</span>
+              <a className="ms-row-value ms-row-link" href={`tel:${member.phone}`}>{member.phone}</a>
+            </div>
+          )}
           {row('WhatsApp', member.whatsapp)}
           {row('Email', member.email)}
 
@@ -137,7 +142,7 @@ function MemberSearch() {
   }, [loadMembers]);
 
   const filtered = sortByMemberId(
-    members.filter((m) => matchesIdOrText(m.member_id, [m.name, m.phone], search))
+    members.filter((m) => matchesIdOrText(m.member_id, [m.name], search, m.phone))
   );
 
   return (
@@ -218,7 +223,15 @@ function MemberSearch() {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.69h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                       </svg>
-                      {m.phone || '—'}
+                      {m.phone ? (
+                        <a
+                          className="ms-phone-link"
+                          href={`tel:${m.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {m.phone}
+                        </a>
+                      ) : '—'}
                     </span>
                     <span className="ms-card-meta-row">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { getCategories } from '../../../services/paymentService';
 import { getMembers, createPendingPayment } from '../../../services/memberService';
 import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
+import { showToast } from '../../../components/Toast/toastBus';
 import './AssignDue.css';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local calendar date, not UTC — toISOString() converts to UTC first, so
+// for IST (UTC+5:30) it still shows "yesterday" for the first 5.5 hours
+// after local midnight.
+const today = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 function AssignDue() {
   const [categories, setCategories] = useState([]);
@@ -82,12 +90,13 @@ function AssignDue() {
         succeeded += 1;
       }
       setResult({ count: succeeded, amount: Number(form.amount) });
+      showToast(`Due assigned to ${succeeded} member${succeeded !== 1 ? 's' : ''} successfully.`, 'success');
       setForm({ category_id: '', title: '', amount: '', due_date: '', notes: '' });
       setSelectedIds([]);
     } catch (err) {
-      setError(
-        `${err.response?.data?.message ?? 'Failed to assign due.'} (${succeeded} of ${selectedIds.length} members were assigned before this failed.)`
-      );
+      const msg = `${err.response?.data?.message ?? 'Failed to assign due.'} (${succeeded} of ${selectedIds.length} members were assigned before this failed.)`;
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }

@@ -38,3 +38,8 @@ export const updateRentalStatus = async (id, status) => {
   const res = await api.patch(`/rentals/${id}/status`, { status });
   return res.data;
 };
+
+export const returnRental = async (id, data) => {
+  const res = await api.patch(`/rentals/${id}/return`, data);
+  return res.data;
+};

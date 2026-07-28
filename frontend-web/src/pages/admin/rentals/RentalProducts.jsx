@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getRentalProducts, createRentalProduct, updateRentalProduct, deleteRentalProduct } from '../../../services/rentalService';
 import './RentalProducts.css';
 
-const emptyForm = { name: '', description: '', per_day_rate: '', per_hour_rate: '' };
+const emptyForm = { name: '', description: '', day_rate: '', month_rate: '', year_rate: '' };
 
 function ProductModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
@@ -11,8 +11,9 @@ function ProductModal({ product, onClose, onSaved }) {
       ? {
           name: product.name,
           description: product.description ?? '',
-          per_day_rate: product.per_day_rate ?? '',
-          per_hour_rate: product.per_hour_rate ?? '',
+          day_rate: product.day_rate ?? '',
+          month_rate: product.month_rate ?? '',
+          year_rate: product.year_rate ?? '',
         }
       : emptyForm
   );
@@ -24,15 +25,16 @@ function ProductModal({ product, onClose, onSaved }) {
     setError('');
 
     if (!form.name.trim()) return setError('Product name is required.');
-    if (!form.per_day_rate && !form.per_hour_rate) {
-      return setError('Enter at least one of per-day or per-hour rate.');
+    if (!form.day_rate || Number(form.day_rate) <= 0) {
+      return setError('Day rate is required — it is the minimum charge for any rental of this product.');
     }
 
     const payload = {
       name: form.name.trim(),
       description: form.description || null,
-      per_day_rate: form.per_day_rate ? Number(form.per_day_rate) : null,
-      per_hour_rate: form.per_hour_rate ? Number(form.per_hour_rate) : null,
+      day_rate: Number(form.day_rate),
+      month_rate: form.month_rate ? Number(form.month_rate) : null,
+      year_rate: form.year_rate ? Number(form.year_rate) : null,
     };
 
     setSaving(true);
@@ -88,27 +90,40 @@ function ProductModal({ product, onClose, onSaved }) {
 
             <div className="rp-row">
               <div className="rp-field">
-                <label className="rp-label">Per Day Rate (₹)</label>
+                <label className="rp-label">Day Rate (₹) *</label>
                 <input
                   type="number"
                   className="rp-input"
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  value={form.per_day_rate}
-                  onChange={(e) => setForm((f) => ({ ...f, per_day_rate: e.target.value }))}
+                  value={form.day_rate}
+                  onChange={(e) => setForm((f) => ({ ...f, day_rate: e.target.value }))}
+                />
+                <p className="rp-hint">Minimum charge for any rental of this product.</p>
+              </div>
+              <div className="rp-field">
+                <label className="rp-label">Month Rate (₹)</label>
+                <input
+                  type="number"
+                  className="rp-input"
+                  min="0"
+                  step="0.01"
+                  placeholder="Optional"
+                  value={form.month_rate}
+                  onChange={(e) => setForm((f) => ({ ...f, month_rate: e.target.value }))}
                 />
               </div>
               <div className="rp-field">
-                <label className="rp-label">Per Hour Rate (₹)</label>
+                <label className="rp-label">Year Rate (₹)</label>
                 <input
                   type="number"
                   className="rp-input"
                   min="0"
                   step="0.01"
-                  placeholder="0.00"
-                  value={form.per_hour_rate}
-                  onChange={(e) => setForm((f) => ({ ...f, per_hour_rate: e.target.value }))}
+                  placeholder="Optional"
+                  value={form.year_rate}
+                  onChange={(e) => setForm((f) => ({ ...f, year_rate: e.target.value }))}
                 />
               </div>
             </div>
@@ -199,7 +214,7 @@ function RentalProducts() {
       <div className="admin-page-header">
         <div>
           <h1 className="admin-page-title">Rental Products</h1>
-          <p className="admin-page-subtitle">Manage items available for rental, with per-day / per-hour rates</p>
+          <p className="admin-page-subtitle">Manage items available for rental, with day / month / year rates</p>
         </div>
         <button className="rp-add-btn" onClick={() => setCreating(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -223,8 +238,9 @@ function RentalProducts() {
             <thead>
               <tr>
                 <th>Product</th>
-                <th>Per Day</th>
-                <th>Per Hour</th>
+                <th>Day</th>
+                <th>Month</th>
+                <th>Year</th>
                 <th>Status</th>
                 <th className="rp-th-actions">Actions</th>
               </tr>
@@ -236,8 +252,9 @@ function RentalProducts() {
                     <div className="rp-td-name">{p.name}</div>
                     {p.description && <div className="rp-td-desc">{p.description}</div>}
                   </td>
-                  <td>{fmt(p.per_day_rate)}</td>
-                  <td>{fmt(p.per_hour_rate)}</td>
+                  <td>{fmt(p.day_rate)}</td>
+                  <td>{fmt(p.month_rate)}</td>
+                  <td>{fmt(p.year_rate)}</td>
                   <td>
                     <span className={`rp-status ${p.is_active ? 'rp-status--active' : 'rp-status--inactive'}`}>
                       {p.is_active ? 'Active' : 'Inactive'}

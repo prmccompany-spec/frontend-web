@@ -911,6 +911,16 @@
   white-space: nowrap;
 }
 
+.db-ref {
+  font-family: monospace;
+  font-size: 12px;
+  background: #f3f4f6;
+  border-radius: 5px;
+  padding: 2px 7px;
+  color: #555;
+  white-space: nowrap;
+}
+
 .db-type-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -1203,6 +1213,12 @@
 .db-status-badge--cleared {
   background: #ecfdf5;
   color: #059669;
+}
+
+.db-status-badge--auto {
+  background: #fef3c7;
+  color: #92400e;
+  cursor: help;
 }
 
 /* ── Empty state (illustration + message) ─────────── */

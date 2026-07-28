@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getPayments, getCategories } from '../../../services/paymentService';
 import { matchesIdOrText } from '../../../utils/memberSearch';
+import { exportTableToPdf } from '../../../utils/pdfExport';
+import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
 import './PaymentHistory.css';
 
 const fmt = (val) =>
@@ -45,6 +47,42 @@ function PaymentHistory() {
   );
 
   const total = displayed.reduce((s, p) => s + Number(p.amount), 0);
+
+  const activeFilterParts = [];
+  if (filters.category_id) activeFilterParts.push(categories.find((c) => String(c.id) === filters.category_id)?.name || 'Category');
+  if (filters.date_from) activeFilterParts.push(`From ${filters.date_from}`);
+  if (filters.date_to) activeFilterParts.push(`To ${filters.date_to}`);
+  if (filters.search) activeFilterParts.push(`Search "${filters.search}"`);
+
+  const handleExport = () => exportTableToPdf({
+    title: 'Payment History',
+    subtitle: activeFilterParts.length ? activeFilterParts.join(' · ') : 'All records',
+    summary: [
+      { label: 'Payments', value: displayed.length },
+      { label: 'Total', value: `Rs. ${fmt(total)}` },
+    ],
+    columns: [
+      { header: 'Ref', key: 'ref' },
+      { header: 'Member', key: 'member' },
+      { header: 'Category', key: 'category' },
+      { header: 'Type', key: 'type' },
+      { header: 'Amount', key: 'amount', align: 'right' },
+      { header: 'Date', key: 'date' },
+      { header: 'Collected By', key: 'collectedBy' },
+      { header: 'Notes', key: 'notes' },
+    ],
+    rows: displayed.map((p) => ({
+      ref: p.payment_ref,
+      member: `${p.member_name}${p.member_code ? ` (${p.member_code})` : ''}`,
+      category: p.category_name,
+      type: p.payment_type === 'qr' ? 'QR' : 'Cash',
+      amount: `Rs. ${fmt(p.amount)}`,
+      date: fmtDate(p.payment_date),
+      collectedBy: p.collected_by_name,
+      notes: p.notes || '—',
+    })),
+    filename: 'payment-history',
+  });
 
   return (
     <div className="admin-content ph-page">
@@ -92,6 +130,7 @@ function PaymentHistory() {
             Clear
           </button>
         )}
+        <ExportPdfButton onExport={handleExport} disabled={displayed.length === 0} />
       </div>
 
       {loading ? (

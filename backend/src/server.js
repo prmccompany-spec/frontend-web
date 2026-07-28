@@ -23,6 +23,8 @@ import attendanceRoutes from './routes/attendanceRoutes.js';
 import memberStatusRoutes from './routes/memberStatusRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
+import gotraRoutes from './routes/gotraRoutes.js';
+import loginHistoryRoutes from './routes/loginHistoryRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -30,6 +32,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Without this, req.ip always resolves to the reverse proxy's own address
+// (or ::1/127.0.0.1 behind a load balancer) instead of the real client IP,
+// since Express ignores X-Forwarded-For unless proxy hops are trusted.
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(cors({
@@ -59,6 +66,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/member-statuses', memberStatusRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/branches', branchRoutes);
+app.use('/api/gotras', gotraRoutes);
+app.use('/api/login-history', loginHistoryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

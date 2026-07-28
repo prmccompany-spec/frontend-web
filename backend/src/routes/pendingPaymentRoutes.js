@@ -5,8 +5,11 @@ import {
   updatePendingPayment,
   deletePendingPayment,
 } from '../controllers/pendingPaymentController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 // GET    /api/pending-payments?member_id=X&status=pending — list (all, or per member)
 // POST   /api/pending-payments      — create { member_id, title, amount, due_date?, notes? }

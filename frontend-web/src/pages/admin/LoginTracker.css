@@ -1,0 +1,168 @@
+.lt-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.lt-stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 16px 18px;
+}
+
+.lt-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111;
+  letter-spacing: -0.01em;
+}
+
+.lt-stat-label {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.lt-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.lt-input {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #111;
+  outline: none;
+  background: #fafafa;
+  transition: border-color 0.15s;
+}
+
+.lt-input:focus {
+  border-color: #dc3545;
+  background: white;
+}
+
+.lt-input--grow {
+  flex: 1;
+  min-width: 220px;
+}
+
+.lt-clear {
+  background: none;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.lt-clear:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.lt-loading,
+.lt-empty {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  padding: 48px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+.lt-table-wrap {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+  overflow-x: auto;
+}
+
+.lt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.lt-table thead th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+.lt-table tbody tr {
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.lt-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.lt-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.lt-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  color: #333;
+  white-space: nowrap;
+}
+
+.lt-td-meta {
+  color: #888;
+  font-size: 12.5px;
+}
+
+.lt-member-name {
+  font-weight: 600;
+  color: #111;
+}
+
+.lt-member-code {
+  font-size: 11px;
+  color: #999;
+  margin-top: 1px;
+}
+
+.lt-status-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lt-status-badge--success {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.lt-status-badge--failed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+@media (max-width: 700px) {
+  .lt-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

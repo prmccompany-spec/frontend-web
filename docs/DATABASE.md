@@ -397,3 +397,138 @@ CREATE TABLE branches (
 );
 
 ALTER TABLE members ADD COLUMN branch_id INT NULL AFTER status_id;
+
+-- ============================================================
+-- GOTRA FEATURE
+-- ============================================================
+-- Gotra becomes a managed lookup (like branches/member_status), and each
+-- branch now belongs to exactly one gotra — selecting a gotra on the member
+-- form filters the branch dropdown to that gotra's branches. No FOREIGN KEY
+-- constraints, matching this schema's existing convention. members.gotra
+-- (free text) was never actually populated (0 rows), so there's no legacy
+-- data to migrate — gotras/branch associations are entered fresh via
+-- Settings.
+
+CREATE TABLE gotras (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER TABLE branches ADD COLUMN gotra_id INT NULL AFTER name;
+
+ALTER TABLE members ADD COLUMN gotra_id INT NULL AFTER branch_id;
+
+-- Superseded by gotra_id above — drop the old free-text column (0 rows had
+-- it set, so nothing is lost).
+ALTER TABLE members DROP COLUMN gotra;
+
+-- ============================================================
+-- SESSIONS FEATURE (auth hardening)
+-- ============================================================
+-- Access tokens are short-lived JWTs (JWT_ACCESS_EXPIRE, default 1h),
+-- verified by signature only — no DB lookup per request. Refresh tokens are
+-- long-lived random opaque strings; only their SHA-256 hash is stored here
+-- (never the raw token), so a DB leak alone can't be replayed. This is what
+-- makes logout and "revoke on password change" actually work — a stateless
+-- JWT alone can't be revoked before it expires. No FOREIGN KEY constraint,
+-- matching this schema's existing convention.
+
+CREATE TABLE sessions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  member_id INT NOT NULL,
+  refresh_token_hash CHAR(64) NOT NULL UNIQUE,
+  user_agent VARCHAR(255) NULL,
+  expires_at DATETIME NOT NULL,
+  revoked_at DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_sessions_member (member_id)
+);
+
+-- ============================================================
+-- RENTAL FEATURE ENHANCEMENTS
+-- ============================================================
+-- 1. Rentals can now go to a non-member — renter_name is used whenever
+--    member_id is NULL (exactly one of the two is required, enforced in
+--    rentalService.js, not the DB — matching this schema's convention of
+--    no CHECK constraints).
+-- 2. Rate tiers become day/month/year (was day/hour). day_rate is now
+--    required on every product — it's the floor: no rental, regardless of
+--    tier, is ever billed below one day's rate.
+-- 3. Payment splits into an optional advance collected at booking
+--    (advance_amount / advance_payment_type) and a balance settled when
+--    the item is returned (settlement_payment_type), instead of one
+--    lump payment_type at booking.
+--
+-- The 50 rentals currently in the table are dummy test data (seeded via
+-- backend/scripts/seedDummyData.js), not real records, so this clears them
+-- rather than trying to migrate day/hour rentals into a day/month/year
+-- shape. No FOREIGN KEY constraints, matching this schema's convention.
+
+TRUNCATE TABLE rentals;
+
+ALTER TABLE rental_products CHANGE COLUMN per_day_rate day_rate DECIMAL(10,2) NOT NULL;
+ALTER TABLE rental_products DROP COLUMN per_hour_rate;
+ALTER TABLE rental_products ADD COLUMN month_rate DECIMAL(10,2) NULL AFTER day_rate;
+ALTER TABLE rental_products ADD COLUMN year_rate DECIMAL(10,2) NULL AFTER month_rate;
+
+ALTER TABLE rentals MODIFY COLUMN member_id INT NULL;
+ALTER TABLE rentals ADD COLUMN renter_name VARCHAR(200) NULL AFTER member_id;
+ALTER TABLE rentals MODIFY COLUMN rate_type ENUM('day','month','year') NOT NULL;
+ALTER TABLE rentals ADD COLUMN advance_amount DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER amount;
+ALTER TABLE rentals CHANGE COLUMN payment_type advance_payment_type ENUM('cash','qr') NULL AFTER advance_amount;
+ALTER TABLE rentals ADD COLUMN settlement_payment_type ENUM('cash','qr') NULL AFTER advance_payment_type;
+
+-- ============================================================
+-- LOGIN TRACKER FEATURE
+-- ============================================================
+-- A dedicated audit log of every login attempt — separate from `sessions`
+-- (which only tracks active/revocable refresh tokens for already-successful
+-- logins, and gets a new row on every hourly token refresh, not just on
+-- login). This table gets exactly one row per actual login attempt,
+-- success or failure, which is what a login tracker/security page needs.
+-- member_id is NULL when the phone didn't match any member at all (still
+-- worth recording — e.g. repeated attempts against a nonexistent number).
+-- No FOREIGN KEY constraint, matching this schema's convention.
+
+CREATE TABLE login_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  member_id INT NULL,
+  phone VARCHAR(20) NULL,
+  status ENUM('success','failed') NOT NULL,
+  failure_reason VARCHAR(255) NULL,
+  ip_address VARCHAR(45) NULL,
+  user_agent VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_login_history_member (member_id)
+);
+
+-- ============================================================
+-- RENTAL REFERENCE ID
+-- ============================================================
+-- payments already gets a unique, human-shareable payment_ref
+-- (PAY-YYYYMMDD-NNNN) on every row for future lookup/reconciliation.
+-- rentals was the one other income source with no equivalent — a rental's
+-- advance (at booking) and balance (at return) are both collected against
+-- the same row, so one rental_ref per rental (not per collection event) is
+-- the right granularity, generated at booking time the same way
+-- payment_ref is (see backend/src/models/rentalModel.js generateRentalRef).
+-- NULL/UNIQUE so existing rows aren't broken; a one-off script backfills
+-- rental_ref for any pre-existing rows.
+
+ALTER TABLE rentals ADD COLUMN rental_ref VARCHAR(30) UNIQUE NULL AFTER id;
+
+-- ============================================================
+-- USER GUIDE FEATURE
+-- ============================================================
+-- Member-portal route /user-guide needs the same gate as /dashboard,
+-- /services and /member-search (any logged-in member, no role
+-- restriction) — otherwise canAccess() defaults an unlisted route_key to
+-- publicly allowed (see AuthContext.jsx canAccess). The admin-side guide
+-- lives at /admin/user-guide, nested inside the existing 'admin'
+-- ProtectedRoute like every other admin sub-page, so it needs no row here.
+
+INSERT INTO route_permissions (route_key, route_label, description, require_login, allowed_type_ids) VALUES
+('user-guide', 'Member User Guide', 'Member portal help/user guide page — any logged-in member can access', 1, '[]');

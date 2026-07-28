@@ -10,9 +10,6 @@ const navLinks = [
   { label: 'Home', path: '/' },
   { label: 'About Us', path: '/about' },
   { label: 'Events', path: '/events' },
-  { label: 'News & Articles', path: '/news' },
-  { label: 'Awards', path: '/awards' },
-  { label: 'Donate', path: '/donate' },
 ];
 
 const PORTAL_LINKS = [
@@ -24,7 +21,7 @@ const PORTAL_LINKS = [
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, canAccess } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -59,9 +56,6 @@ function Navbar() {
 
         {/* Right side actions */}
         <div className="navbar-actions">
-          <button className="navbar-donate-btn" onClick={() => goTo('/donate')}>
-            Donate
-          </button>
           {isAuthenticated ? (
             <ProfileMenu variant="icon" links={PORTAL_LINKS} />
           ) : (
@@ -111,19 +105,21 @@ function Navbar() {
             </li>
           ))}
           {isAuthenticated && (
-            <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
-              <button onClick={() => goTo('/services')}>
-                <span className="nav-drawer-dot" />
-                Offline Services
-              </button>
-            </li>
+            <>
+              <li className="nav-drawer-item" style={{ '--i': navLinks.length }}>
+                <button onClick={() => goTo('/services')}>
+                  <span className="nav-drawer-dot" />
+                  Offline Services
+                </button>
+              </li>
+              <li className="nav-drawer-item" style={{ '--i': navLinks.length + 1 }}>
+                <button onClick={() => goTo(canAccess('admin') ? '/admin' : '/dashboard')}>
+                  <span className="nav-drawer-dot" />
+                  {canAccess('admin') ? 'Admin Panel' : 'Member Portal'}
+                </button>
+              </li>
+            </>
           )}
-          <li className="nav-drawer-item" style={{ '--i': navLinks.length + 1 }}>
-            <button onClick={() => goTo('/admin')}>
-              <span className="nav-drawer-dot" />
-              Admin Panel
-            </button>
-          </li>
         </ul>
 
         {/* Drawer footer */}

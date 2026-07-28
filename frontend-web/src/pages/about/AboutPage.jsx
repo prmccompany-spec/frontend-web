@@ -30,7 +30,7 @@ const ACCORDION_ITEMS = [
     icon: '🏛️',
     content: null,
     points: [
-      "The roots of the Common Fund date back to the early 20th century, when visionary leaders from Palayapalayam and Rajapalayam realized the need for a shared financial system to support families during important milestones.",
+      "The roots of the Common Fund date back to the early 20th century, when visionary leaders of the Raju family in Palayapalayam realized the need for a shared financial system (Mahumai) to support families during important milestones.",
       "Starting with small pooled contributions, the Fund evolved into a trusted institution, focusing on education support, marriage assistance, healthcare aid, and community welfare.",
     ],
   },
@@ -182,7 +182,7 @@ function AboutPage() {
                 About <span className="ab-red">PRMCF</span>
               </h1>
               <p className="ab-hero-desc">
-                Palayapalayam Rajapalayam Raju's Common Fund — uniting families,
+                Palayapalayam Raju's Mahumai Common Fund — uniting families,
                 preserving traditions, and building a stronger community together.
               </p>
               <div className="ab-hero-badges">
@@ -200,7 +200,7 @@ function AboutPage() {
               &ldquo;Your passion fuels our purpose. Your commitment creates our strength.&rdquo;
             </p>
             <div className="ab-hero-card-divider" />
-            <p className="ab-hero-card-name">Palayapalayam Rajapalayam Raju's<br/>Common Fund</p>
+            <p className="ab-hero-card-name">Palayapalayam Raju's Mahumai<br/>Common Fund</p>
           </div>
         </div>
       </section>
@@ -224,13 +224,13 @@ function AboutPage() {
             <div className="ab-about-title-block">
               <span className="ab-section-eyebrow">Who We Are</span>
               <h2 className="ab-about-heading">About <span className="ab-red">PRMCF</span></h2>
-              <p className="ab-about-fullname">Palayapalayam Rajapalayam Raju's Common Fund</p>
+              <p className="ab-about-fullname">Palayapalayam Raju's Mahumai Common Fund</p>
             </div>
             <p className="ab-about-desc">
-              At Palayapalayam Rajapalayam Raju's Common Fund (PRMCF), we believe in the power of
+              At Palayapalayam Raju's Mahumai Common Fund (PRMCF), we believe in the power of
               community, tradition, and collective growth. Our Fund serves as a financial and social
               backbone for our members, offering support across major life events and fostering unity
-              among families of Palayapalayam and Rajapalayam origins. With trust and transparency at
+              among Raju families of Palayapalayam. With trust and transparency at
               our core, we continue to work towards strengthening our community for today's generation
               and the many generations to come.
             </p>

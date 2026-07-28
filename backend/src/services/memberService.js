@@ -2,6 +2,7 @@ import {
   createMember,
   updateMember,
   updateMemberPhoto,
+  updateMemberQR,
   updateMemberPassword,
   deactivateMember,
   getMemberById,
@@ -14,6 +15,7 @@ import {
 } from '../models/memberModel.js';
 import { deleteByUrl } from '../utils/cloudinaryUtils.js';
 import { hashPassword } from '../utils/passwordUtils.js';
+import { revokeAllSessionsForMember } from '../models/sessionModel.js';
 
 // The password hash must never reach an API response — every member row
 // handed back to the frontend goes through this first.
@@ -26,6 +28,11 @@ const omitPasswordFromList = (members) => members.map(omitPassword);
 
 export const fetchNextMemberId = async () => {
   return await getNextMemberId();
+};
+
+export const checkMemberIdAvailability = async (memberId) => {
+  const existing = await getMemberByMemberId(memberId);
+  return { available: !existing };
 };
 
 export const createNewMember = async (memberData) => {
@@ -110,6 +117,20 @@ export const saveMemberPhoto = async (memberId, photoUrl) => {
   return await updateMemberPhoto(memberId, photoUrl);
 };
 
+// Replaces whatever QR is currently on file — the auto-generated one from
+// registration, or a previously uploaded custom one — with a newly uploaded
+// image, deleting the old Cloudinary asset so it doesn't linger orphaned.
+export const saveMemberQR = async (memberId, qrUrl) => {
+  const member = await getMemberById(memberId);
+  if (!member) {
+    const error = new Error('Member not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  if (member.qr_code) await deleteByUrl(member.qr_code);
+  return await updateMemberQR(memberId, qrUrl);
+};
+
 export const fetchMemberById = async (memberId) => {
   const member = await getMemberById(memberId);
   if (!member) {
@@ -134,5 +155,7 @@ export const resetMemberPasswordByAdmin = async (memberId, newPassword) => {
   }
 
   const hashed = await hashPassword(newPassword);
-  return await updateMemberPassword(memberId, hashed);
+  const result = await updateMemberPassword(memberId, hashed);
+  await revokeAllSessionsForMember(memberId);
+  return result;
 };

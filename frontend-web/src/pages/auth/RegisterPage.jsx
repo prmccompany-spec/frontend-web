@@ -72,7 +72,7 @@ function RegisterPage() {
         <img src={logo} alt="PRMCF" className="rp-topbar-logo" onClick={() => navigate('/')} />
         <div className="rp-topbar-text">
           <span className="rp-topbar-brand">PRMCF</span>
-          <span className="rp-topbar-sub">Palayapalayam Rajapalayam Raju's Common Fund</span>
+          <span className="rp-topbar-sub">Palayapalayam Raju's Mahumai Common Fund</span>
         </div>
       </div>
 

@@ -58,8 +58,26 @@ export const getAttendance = async (filters = {}) => {
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  // A session left open on a past day can never be closed by a real scan —
+  // getOpenSession only ever looks for today's open row (see attendanceModel
+  // getOpenSession), so a forgotten checkout from an earlier day would show
+  // as "Still In" forever. For display purposes only (the underlying row is
+  // untouched), report reads synthesize a checkout at the end of that day
+  // and flag it via auto_checked_out so the UI can label it distinctly.
   return await query(
-    `SELECT a.*, m.name AS member_name, m.member_id AS member_code
+    `SELECT
+       a.id, a.member_id, a.attendance_date, a.check_in_time,
+       CASE
+         WHEN a.check_out_time IS NULL AND a.attendance_date < CURDATE()
+           THEN TIMESTAMP(a.attendance_date, '23:59:59')
+         ELSE a.check_out_time
+       END AS check_out_time,
+       CASE
+         WHEN a.check_out_time IS NULL AND a.attendance_date < CURDATE() THEN 1
+         ELSE 0
+       END AS auto_checked_out,
+       a.marked_by, a.created_at, a.updated_at,
+       m.name AS member_name, m.member_id AS member_code
      FROM attendance a
      JOIN members m ON m.id = a.member_id
      ${where}

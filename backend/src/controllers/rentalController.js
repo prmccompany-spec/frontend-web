@@ -1,5 +1,11 @@
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { bookRental, fetchRentals, fetchRentalDetail, changeRentalStatus } from '../services/rentalService.js';
+import {
+  bookRental,
+  fetchRentals,
+  fetchRentalDetail,
+  changeRentalStatus,
+  returnRental as settleReturn,
+} from '../services/rentalService.js';
 
 const parseId = (req, res) => {
   const id = Number(req.params.id);
@@ -24,8 +30,8 @@ export const getRental = asyncHandler(async (req, res) => {
 });
 
 export const createRental = asyncHandler(async (req, res) => {
-  const id = await bookRental(req.body);
-  res.status(201).json({ success: true, message: 'Rental recorded', id });
+  const { id, rental_ref } = await bookRental(req.body);
+  res.status(201).json({ success: true, message: 'Rental recorded', id, rental_ref });
 });
 
 export const updateRentalStatus = asyncHandler(async (req, res) => {
@@ -33,4 +39,11 @@ export const updateRentalStatus = asyncHandler(async (req, res) => {
   if (id === null) return;
   await changeRentalStatus(id, req.body.status);
   res.json({ success: true, message: 'Rental status updated' });
+});
+
+export const returnRental = asyncHandler(async (req, res) => {
+  const id = parseId(req, res);
+  if (id === null) return;
+  await settleReturn(id, req.body);
+  res.json({ success: true, message: 'Rental returned and settled' });
 });

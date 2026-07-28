@@ -5,7 +5,6 @@ import '../../components/ProfileMenu/ProfileMenu.css';
 
 function EditProfileModal({ member, onClose, onSaved }) {
   const [form, setForm] = useState({
-    gotra: member.gotra ?? '',
     familyName: member.family_name ?? '',
     fatherName: member.father_name ?? '',
     phone: member.phone ?? '',
@@ -32,7 +31,6 @@ function EditProfileModal({ member, onClose, onSaved }) {
     setLoading(true);
     try {
       await updateMember(member.id, {
-        gotra: form.gotra || null,
         family_name: form.familyName || null,
         father_name: form.fatherName || null,
         phone: form.phone || null,
@@ -69,10 +67,6 @@ function EditProfileModal({ member, onClose, onSaved }) {
           {error && <div className="pm-alert pm-alert--error">{error}</div>}
 
           <div className="pm-field-grid">
-            <div className="pm-field">
-              <label className="pm-label">Gotra</label>
-              <input className="pm-input pm-input--text" name="gotra" value={form.gotra} onChange={handleChange} disabled={loading} />
-            </div>
             <div className="pm-field">
               <label className="pm-label">Family Name</label>
               <input className="pm-input pm-input--text" name="familyName" value={form.familyName} onChange={handleChange} disabled={loading} />

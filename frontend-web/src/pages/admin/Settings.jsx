@@ -22,6 +22,11 @@ import {
   createBranch,
   updateBranch,
 } from '../../services/branchService';
+import {
+  getGotras,
+  createGotra,
+  updateGotra,
+} from '../../services/gotraService';
 import './Settings.css';
 
 // ─── Shared helpers ───────────────────────────────────────────────
@@ -797,10 +802,10 @@ function MemberStatusTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// BRANCHES TAB
+// GOTRA TAB
 // ═══════════════════════════════════════════════════════════════════
 
-function AddBranchModal({ onClose, onSaved }) {
+function AddGotraModal({ onClose, onSaved }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -810,23 +815,23 @@ function AddBranchModal({ onClose, onSaved }) {
     setError('');
     setLoading(true);
     try {
-      await createBranch(name.trim());
+      await createGotra(name.trim());
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to create branch.');
+      setError(err.response?.data?.message ?? 'Failed to create gotra.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal title="Add Branch" subtitle="New branch will be available in the member branch dropdown" onClose={onClose}>
+    <Modal title="Add Gotra" subtitle="New gotra will be available in the member gotra dropdown" onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="st-modal-body">
           {error && <ErrorBanner msg={error} />}
           <div className="st-field">
-            <label className="st-label">Branch Name <span className="st-required">*</span></label>
-            <input className="st-input" placeholder="e.g. kottumukkalu" value={name}
+            <label className="st-label">Gotra Name <span className="st-required">*</span></label>
+            <input className="st-input" placeholder="e.g. Kashyapa" value={name}
               onChange={(e) => setName(e.target.value)} autoFocus required />
             <p className="st-hint">Must be unique.</p>
           </div>
@@ -834,7 +839,7 @@ function AddBranchModal({ onClose, onSaved }) {
         <div className="st-modal-footer">
           <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
           <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
-            {loading ? 'Adding…' : 'Add Branch'}
+            {loading ? 'Adding…' : 'Add Gotra'}
           </button>
         </div>
       </form>
@@ -842,8 +847,8 @@ function AddBranchModal({ onClose, onSaved }) {
   );
 }
 
-function EditBranchModal({ branch, onClose, onSaved }) {
-  const [name, setName] = useState(branch.name);
+function EditGotraModal({ gotra, onClose, onSaved }) {
+  const [name, setName] = useState(gotra.name);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -852,22 +857,22 @@ function EditBranchModal({ branch, onClose, onSaved }) {
     setError('');
     setLoading(true);
     try {
-      await updateBranch(branch.id, name.trim());
+      await updateGotra(gotra.id, name.trim());
       onSaved();
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to update branch.');
+      setError(err.response?.data?.message ?? 'Failed to update gotra.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal title="Edit Branch" subtitle={`Editing: ${branch.name}`} onClose={onClose}>
+    <Modal title="Edit Gotra" subtitle={`Editing: ${gotra.name}`} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className="st-modal-body">
           {error && <ErrorBanner msg={error} />}
           <div className="st-field">
-            <label className="st-label">Branch Name <span className="st-required">*</span></label>
+            <label className="st-label">Gotra Name <span className="st-required">*</span></label>
             <input className="st-input" value={name}
               onChange={(e) => setName(e.target.value)} autoFocus required />
           </div>
@@ -883,8 +888,185 @@ function EditBranchModal({ branch, onClose, onSaved }) {
   );
 }
 
+function GotraTab() {
+  const [gotras, setGotras] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [editGotraItem, setEditGotraItem] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getGotras();
+      setGotras(res.data.data ?? []);
+    } catch {
+      setError('Failed to load gotras.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSaved = () => { setShowAdd(false); setEditGotraItem(null); load(); };
+
+  return (
+    <div className="st-tab-content">
+      <div className="st-section-header">
+        <div>
+          <h2 className="st-section-title">Gotra</h2>
+          <p className="st-section-sub">Define gotras — each branch belongs to one, and members select a gotra before choosing their branch</p>
+        </div>
+        <button className="st-add-btn" onClick={() => setShowAdd(true)}>+ Add Gotra</button>
+      </div>
+
+      {error && <ErrorBanner msg={error} />}
+
+      <div className="st-table-wrap">
+        {loading ? (
+          <div className="st-state">Loading…</div>
+        ) : gotras.length === 0 ? (
+          <div className="st-state">No gotras found. <button className="st-inline-btn" onClick={() => setShowAdd(true)}>Add the first one</button></div>
+        ) : (
+          <table className="st-table">
+            <thead>
+              <tr><th>#</th><th>Gotra Name</th><th>ID</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {gotras.map((g, i) => (
+                <tr key={g.id}>
+                  <td className="st-td-num">{i + 1}</td>
+                  <td><span className="st-pill st-pill--type">{g.name}</span></td>
+                  <td className="st-td-meta">{g.id}</td>
+                  <td>
+                    <button className="st-row-btn" onClick={() => setEditGotraItem(g)}>Edit</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showAdd && <AddGotraModal onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
+      {editGotraItem && <EditGotraModal gotra={editGotraItem} onClose={() => setEditGotraItem(null)} onSaved={handleSaved} />}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BRANCHES TAB
+// ═══════════════════════════════════════════════════════════════════
+
+function AddBranchModal({ gotras, onClose, onSaved }) {
+  const [name, setName] = useState('');
+  const [gotraId, setGotraId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await createBranch(name.trim(), Number(gotraId));
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to create branch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title="Add Branch" subtitle="New branch will be available in the member branch dropdown" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="st-modal-body">
+          {error && <ErrorBanner msg={error} />}
+          <div className="st-field">
+            <label className="st-label">Gotra <span className="st-required">*</span></label>
+            <select className="st-input" value={gotraId} onChange={(e) => setGotraId(e.target.value)} required>
+              <option value="">Select gotra…</option>
+              {gotras.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            <p className="st-hint">Which gotra this branch belongs to.</p>
+          </div>
+          <div className="st-field">
+            <label className="st-label">Branch Name <span className="st-required">*</span></label>
+            <input className="st-input" placeholder="e.g. kottumukkalu" value={name}
+              onChange={(e) => setName(e.target.value)} required />
+            <p className="st-hint">Must be unique.</p>
+          </div>
+        </div>
+        <div className="st-modal-footer">
+          <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
+            {loading ? 'Adding…' : 'Add Branch'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function EditBranchModal({ branch, gotras, onClose, onSaved }) {
+  const [name, setName] = useState(branch.name);
+  const [gotraId, setGotraId] = useState(branch.gotra_id ?? '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await updateBranch(branch.id, name.trim(), Number(gotraId));
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to update branch.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal title="Edit Branch" subtitle={`Editing: ${branch.name}`} onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="st-modal-body">
+          {error && <ErrorBanner msg={error} />}
+          <div className="st-field">
+            <label className="st-label">Gotra <span className="st-required">*</span></label>
+            <select className="st-input" value={gotraId} onChange={(e) => setGotraId(e.target.value)} required>
+              <option value="">Select gotra…</option>
+              {gotras.map((g) => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="st-field">
+            <label className="st-label">Branch Name <span className="st-required">*</span></label>
+            <input className="st-input" value={name}
+              onChange={(e) => setName(e.target.value)} required />
+          </div>
+        </div>
+        <div className="st-modal-footer">
+          <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
+            {loading ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 function BranchesTab() {
   const [branches, setBranches] = useState([]);
+  const [gotras, setGotras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAdd, setShowAdd] = useState(false);
@@ -894,8 +1076,9 @@ function BranchesTab() {
     setLoading(true);
     setError('');
     try {
-      const res = await getBranches();
-      setBranches(res.data.data ?? []);
+      const [branchesRes, gotrasRes] = await Promise.all([getBranches(), getGotras()]);
+      setBranches(branchesRes.data.data ?? []);
+      setGotras(gotrasRes.data.data ?? []);
     } catch {
       setError('Failed to load branches.');
     } finally {
@@ -914,10 +1097,13 @@ function BranchesTab() {
           <h2 className="st-section-title">Branches</h2>
           <p className="st-section-sub">Define branches selectable when registering or editing members</p>
         </div>
-        <button className="st-add-btn" onClick={() => setShowAdd(true)}>+ Add Branch</button>
+        <button className="st-add-btn" onClick={() => setShowAdd(true)} disabled={gotras.length === 0}>+ Add Branch</button>
       </div>
 
       {error && <ErrorBanner msg={error} />}
+      {!loading && gotras.length === 0 && (
+        <ErrorBanner msg="Add at least one gotra first — every branch must belong to a gotra." />
+      )}
 
       <div className="st-table-wrap">
         {loading ? (
@@ -927,13 +1113,14 @@ function BranchesTab() {
         ) : (
           <table className="st-table">
             <thead>
-              <tr><th>#</th><th>Branch Name</th><th>ID</th><th>Action</th></tr>
+              <tr><th>#</th><th>Branch Name</th><th>Gotra</th><th>ID</th><th>Action</th></tr>
             </thead>
             <tbody>
               {branches.map((b, i) => (
                 <tr key={b.id}>
                   <td className="st-td-num">{i + 1}</td>
                   <td><span className="st-pill st-pill--type">{b.name}</span></td>
+                  <td className="st-td-meta">{b.gotra_name || '—'}</td>
                   <td className="st-td-meta">{b.id}</td>
                   <td>
                     <button className="st-row-btn" onClick={() => setEditBranchItem(b)}>Edit</button>
@@ -945,8 +1132,8 @@ function BranchesTab() {
         )}
       </div>
 
-      {showAdd && <AddBranchModal onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
-      {editBranchItem && <EditBranchModal branch={editBranchItem} onClose={() => setEditBranchItem(null)} onSaved={handleSaved} />}
+      {showAdd && <AddBranchModal gotras={gotras} onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
+      {editBranchItem && <EditBranchModal branch={editBranchItem} gotras={gotras} onClose={() => setEditBranchItem(null)} onSaved={handleSaved} />}
     </div>
   );
 }
@@ -958,6 +1145,7 @@ function BranchesTab() {
 const TABS = [
   { key: 'user-types', label: 'User Types' },
   { key: 'member-status', label: 'Member Status' },
+  { key: 'gotra', label: 'Gotra' },
   { key: 'branches', label: 'Branches' },
   { key: 'payment-gateway', label: 'Payment Gateway' },
   { key: 'expense-categories', label: 'Expense Categories' },
@@ -987,6 +1175,7 @@ function Settings() {
 
       {activeTab === 'user-types' && <UserTypesTab />}
       {activeTab === 'member-status' && <MemberStatusTab />}
+      {activeTab === 'gotra' && <GotraTab />}
       {activeTab === 'branches' && <BranchesTab />}
       {activeTab === 'payment-gateway' && <PaymentGatewayTab />}
       {activeTab === 'expense-categories' && <ExpenseCategoriesTab />}

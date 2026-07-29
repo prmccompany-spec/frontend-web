@@ -6,6 +6,7 @@ import {
   updateAddress,
   createAddress,
   uploadMemberPhoto,
+  uploadMemberQR,
   getPendingPayments,
   resetMemberPassword,
 } from '../../services/memberService';
@@ -13,8 +14,12 @@ import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import { getMemberStatuses } from '../../services/memberStatusService';
 import { getBranches } from '../../services/branchService';
+import { getGotras } from '../../services/gotraService';
+import { matchesIdOrText, sortByMemberId } from '../../utils/memberSearch';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
 import { resolveFileUrl } from '../../utils/fileUrl';
+import { exportTableToPdf } from '../../utils/pdfExport';
+import ExportPdfButton from '../../components/ExportPdfButton/ExportPdfButton';
 import AssignDueModal from './payments/AssignDueModal';
 import './MemberList.css';
 
@@ -75,7 +80,7 @@ function ViewModal({ member, typeMap, onClose }) {
 
         <div className="ml-modal-body">
           <div className="vm-section-label">Identity</div>
-          {row('Gotra', member.gotra)}
+          {row('Gotra', member.gotra_name)}
           {row('Family Name', member.family_name)}
           {row("Father's Name", member.father_name)}
           {row('Aadhar Number', member.aadhar_number)}
@@ -148,14 +153,14 @@ function ViewModal({ member, typeMap, onClose }) {
 }
 
 // ── Edit Modal ────────────────────────────────────────────────────────────────
-function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) {
+function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onSaved }) {
   const [form, setForm] = useState({
     memberId: member.member_id ?? '',
     userTypeId: member.user_type_id ?? '',
     statusId: member.status_id ?? '',
+    gotraId: member.gotra_id ?? '',
     branchId: member.branch_id ?? '',
     name: member.name ?? '',
-    gotra: member.gotra ?? '',
     familyName: member.family_name ?? '',
     fatherName: member.father_name ?? '',
     phone: member.phone ?? '',
@@ -178,6 +183,8 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
   const [outsideAddressId, setOutsideAddressId] = useState(null);
   const [newPhoto, setNewPhoto] = useState(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
+  const [newQr, setNewQr] = useState(null);
+  const [newQrPreview, setNewQrPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -201,12 +208,20 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
   };
 
   const currentPhotoUrl = member.photo ? resolveFileUrl(member.photo) : '';
+  const currentQrUrl = member.qr_code ? resolveFileUrl(member.qr_code) : '';
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setNewPhoto(file);
     setNewPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleQrChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setNewQr(file);
+    setNewQrPreview(URL.createObjectURL(file));
   };
 
   // Pre-fill address fields from existing addresses
@@ -252,8 +267,18 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
       setForm((p) => ({ ...p, phone: value, whatsapp: value }));
       return;
     }
+    if (name === 'gotraId') {
+      // Branch list is scoped to the selected gotra — a branch chosen under
+      // a previous gotra is no longer valid, so clear it.
+      setForm((p) => ({ ...p, gotraId: value, branchId: '' }));
+      return;
+    }
     setForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
+
+  const branchesForGotra = form.gotraId
+    ? branches.filter((b) => String(b.gotra_id) === String(form.gotraId))
+    : [];
 
   const saveAddress = async (type, idRef, fields) => {
     const hasData = Object.values(fields).some((v) => v);
@@ -276,6 +301,11 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
         const fd = new FormData();
         fd.append('photo', newPhoto);
         await uploadMemberPhoto(member.id, fd);
+      }
+      if (newQr) {
+        const fd = new FormData();
+        fd.append('qr', newQr);
+        await uploadMemberQR(member.id, fd);
       }
       await saveAddress('local', localAddressId, {
         door_no: form.localDoorNo || null,
@@ -387,6 +417,54 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
               </p>
             </div>
 
+            {/* QR Code */}
+            <div className="ml-form-section">QR Code</div>
+            <div className="ml-photo-row">
+              <div
+                className="ml-photo-zone"
+                onClick={() => document.getElementById('ml-qr-input').click()}
+              >
+                {newQrPreview || currentQrUrl ? (
+                  <img
+                    src={newQrPreview || currentQrUrl}
+                    alt="QR code"
+                    className="ml-photo-preview"
+                  />
+                ) : (
+                  <div className="ml-photo-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
+                      <line x1="14" y1="14" x2="14" y2="21" />
+                      <line x1="21" y1="14" x2="21" y2="21" />
+                      <line x1="14" y1="17.5" x2="21" y2="17.5" />
+                    </svg>
+                    <span>No QR code</span>
+                  </div>
+                )}
+                <div className="ml-photo-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Change
+                </div>
+              </div>
+              <input
+                id="ml-qr-input"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleQrChange}
+              />
+              <p className="ml-photo-note">
+                {newQr ? `New: ${newQr.name}` : currentQrUrl ? 'Click QR to replace it' : 'Click to upload a custom QR (optional)'}
+              </p>
+            </div>
+
             {/* Reset Password */}
             <div className="ml-form-section">Reset Password</div>
             {resetPwError && <div className="ml-form-error ml-form-error--inline">{resetPwError}</div>}
@@ -438,7 +516,7 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
                 </select>
               </div>
             </div>
-            <div className="ml-form-grid-2">
+            <div className="ml-form-grid-3">
               <div className="ml-form-field">
                 <label className="ml-form-label">Status <span className="ml-required">*</span></label>
                 <select className="ml-form-input ml-form-select" name="statusId"
@@ -450,11 +528,21 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
                 </select>
               </div>
               <div className="ml-form-field">
+                <label className="ml-form-label">Gotra</label>
+                <select className="ml-form-input ml-form-select" name="gotraId"
+                  value={form.gotraId} onChange={handleChange}>
+                  <option value="">Select</option>
+                  {gotras.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="ml-form-field">
                 <label className="ml-form-label">Branch</label>
                 <select className="ml-form-input ml-form-select" name="branchId"
-                  value={form.branchId} onChange={handleChange}>
-                  <option value="">Select</option>
-                  {branches.map((b) => (
+                  value={form.branchId} onChange={handleChange} disabled={!form.gotraId}>
+                  <option value="">{form.gotraId ? 'Select' : 'Select gotra first'}</option>
+                  {branchesForGotra.map((b) => (
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
@@ -463,11 +551,7 @@ function EditModal({ member, userTypes, statuses, branches, onClose, onSaved }) 
 
             {/* Identity */}
             <div className="ml-form-section">Identity</div>
-            <div className="ml-form-grid-3">
-              <div className="ml-form-field">
-                <label className="ml-form-label">Gotra <span className="ml-required">*</span></label>
-                <input className="ml-form-input" name="gotra" value={form.gotra} onChange={handleChange} required />
-              </div>
+            <div className="ml-form-grid-2">
               <div className="ml-form-field">
                 <label className="ml-form-label">Family Name <span className="ml-required">*</span></label>
                 <input className="ml-form-input" name="familyName" value={form.familyName} onChange={handleChange} required />
@@ -645,6 +729,7 @@ function MemberList() {
   const [members, setMembers] = useState([]);
   const [userTypes, setUserTypes] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [gotras, setGotras] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -676,10 +761,11 @@ function MemberList() {
     setLoading(true);
     setError('');
     try {
-      const [membersRes, typesRes, statusesRes, branchesRes] = await Promise.all([
+      const [membersRes, typesRes, statusesRes, gotrasRes, branchesRes] = await Promise.all([
         getMembers(),
         getUserTypes(),
         getMemberStatuses(),
+        getGotras(),
         getBranches(),
       ]);
       setMembers(membersRes.data.data ?? []);
@@ -690,6 +776,7 @@ function MemberList() {
           : USER_TYPES.map((t) => ({ id: t.id, type_name: t.label }))
       );
       setStatuses(statusesRes.data.data ?? []);
+      setGotras(gotrasRes.data.data ?? []);
       setBranches(branchesRes.data.data ?? []);
     } catch {
       setError('Failed to load members. Is the backend running?');
@@ -708,25 +795,48 @@ function MemberList() {
 
   const hasActiveFilters = !!(filterUserType || filterBloodGroup || filterOutside);
 
-  const filtered = tabMembers
-    .filter((m) => {
-      const q = search.toLowerCase();
-      return (
-        m.name?.toLowerCase().includes(q) ||
-        m.member_id?.toLowerCase().includes(q) ||
-        m.phone?.includes(q)
-      );
-    })
-    .filter((m) => !filterUserType || String(m.user_type_id) === filterUserType)
-    .filter((m) => !filterBloodGroup || m.blood_group === filterBloodGroup)
-    .filter((m) => !filterOutside || (filterOutside === 'yes' ? !!m.out_of_rajapalayam : !m.out_of_rajapalayam))
-    .sort((a, b) => (a.member_id || '').localeCompare(b.member_id || '', undefined, { numeric: true }));
+  const filtered = sortByMemberId(
+    tabMembers
+      .filter((m) => matchesIdOrText(m.member_id, [m.name], search, m.phone))
+      .filter((m) => !filterUserType || String(m.user_type_id) === filterUserType)
+      .filter((m) => !filterBloodGroup || m.blood_group === filterBloodGroup)
+      .filter((m) => !filterOutside || (filterOutside === 'yes' ? !!m.out_of_rajapalayam : !m.out_of_rajapalayam))
+  );
 
   const clearFilters = () => {
     setFilterUserType('');
     setFilterBloodGroup('');
     setFilterOutside('');
   };
+
+  const memberFilterParts = [statusTab === 'active' ? 'Active' : 'Other Statuses'];
+  if (filterUserType) memberFilterParts.push(typeMap[filterUserType] || 'User Type');
+  if (filterBloodGroup) memberFilterParts.push(filterBloodGroup);
+  if (filterOutside) memberFilterParts.push(filterOutside === 'yes' ? 'Outside Rajapalayam' : 'In Rajapalayam');
+  if (search) memberFilterParts.push(`Search "${search}"`);
+
+  const handleExport = () => exportTableToPdf({
+    title: 'Members',
+    subtitle: memberFilterParts.join(' · '),
+    summary: [{ label: 'Members', value: filtered.length }],
+    columns: [
+      { header: 'Member ID', key: 'memberId' },
+      { header: 'Name', key: 'name' },
+      { header: 'User Type', key: 'userType' },
+      { header: 'Phone', key: 'phone' },
+      { header: 'Blood Group', key: 'bloodGroup' },
+      { header: 'Status', key: 'status' },
+    ],
+    rows: filtered.map((m) => ({
+      memberId: m.member_id,
+      name: m.name,
+      userType: typeMap[m.user_type_id] ?? `Type ${m.user_type_id}`,
+      phone: m.phone || '—',
+      bloodGroup: m.blood_group || '—',
+      status: m.status_name || (m.is_active ? 'Active' : 'Inactive'),
+    })),
+    filename: 'members',
+  });
 
   const handleEditSaved = () => {
     setEditMember(null);
@@ -821,6 +931,7 @@ function MemberList() {
             Clear Filters
           </button>
         )}
+        <ExportPdfButton onExport={handleExport} disabled={filtered.length === 0} />
       </div>
 
       {error && (
@@ -967,6 +1078,7 @@ function MemberList() {
           member={editMember}
           userTypes={userTypes}
           statuses={statuses}
+          gotras={gotras}
           branches={branches}
           onClose={() => setEditMember(null)}
           onSaved={handleEditSaved}

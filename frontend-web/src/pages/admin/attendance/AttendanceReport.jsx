@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback, Fragment } from 'react';
 import { getAttendance } from '../../../services/attendanceService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
+import { exportTableToPdf } from '../../../utils/pdfExport';
+import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
 import './AttendanceReport.css';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local calendar date, not UTC — toISOString() converts to UTC first, so
+// for IST (UTC+5:30) it still shows "yesterday" for the first 5.5 hours
+// after local midnight.
+const today = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -49,6 +59,7 @@ function groupByMemberDay(records) {
       entries: sorted,
       firstCheckIn,
       lastCheckOut: stillIn ? null : lastEntry.check_out_time,
+      lastCheckOutAuto: !stillIn && !!lastEntry.auto_checked_out,
       stillIn,
       sessions: sorted.length,
       totalDurationMs,
@@ -83,13 +94,44 @@ function AttendanceReport() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filteredRecords = records.filter((r) => {
-    const q = filters.search.toLowerCase();
-    return !q || r.member_name?.toLowerCase().includes(q) || r.member_code?.toLowerCase().includes(q);
-  });
+  const filteredRecords = records.filter((r) =>
+    matchesIdOrText(r.member_code, [r.member_name], filters.search)
+  );
 
   const groups = groupByMemberDay(filteredRecords);
   const presentCount = new Set(groups.map((g) => g.memberCode)).size;
+
+  const dateRangeLabel = filters.mode === 'day'
+    ? `Date: ${filters.date}`
+    : `${filters.from ? `From ${filters.from}` : ''}${filters.to ? ` To ${filters.to}` : ''}`.trim() || 'All dates';
+  const attendanceFilterParts = [dateRangeLabel];
+  if (filters.search) attendanceFilterParts.push(`Search "${filters.search}"`);
+
+  const handleExport = () => exportTableToPdf({
+    title: 'Attendance Report',
+    subtitle: attendanceFilterParts.join(' · '),
+    summary: [
+      { label: 'Members Present', value: presentCount },
+      { label: 'Total Entries', value: filteredRecords.length },
+    ],
+    columns: [
+      { header: 'Member', key: 'member' },
+      { header: 'Date', key: 'date' },
+      { header: 'First Check-in', key: 'firstCheckIn' },
+      { header: 'Last Check-out', key: 'lastCheckOut' },
+      { header: 'Sessions', key: 'sessions', align: 'right' },
+      { header: 'Total Duration', key: 'duration' },
+    ],
+    rows: groups.map((g) => ({
+      member: `${g.memberName}${g.memberCode ? ` (${g.memberCode})` : ''}`,
+      date: fmtDate(g.date),
+      firstCheckIn: fmtTime(g.firstCheckIn),
+      lastCheckOut: g.stillIn ? 'Still In' : g.lastCheckOutAuto ? `${fmtTime(g.lastCheckOut)} (auto)` : fmtTime(g.lastCheckOut),
+      sessions: g.sessions,
+      duration: fmtDuration(g.totalDurationMs),
+    })),
+    filename: 'attendance-report',
+  });
 
   const toggleExpand = (key) =>
     setExpanded((s) => {
@@ -153,6 +195,7 @@ function AttendanceReport() {
           value={filters.search}
           onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
         />
+        <ExportPdfButton onExport={handleExport} disabled={groups.length === 0} />
       </div>
 
       {loading ? (
@@ -202,9 +245,15 @@ function AttendanceReport() {
                       <td>{fmtDate(g.date)}</td>
                       <td>{fmtTime(g.firstCheckIn)}</td>
                       <td>
-                        {g.stillIn
-                          ? <span className="ar-status-badge ar-status-badge--in">Still In</span>
-                          : fmtTime(g.lastCheckOut)}
+                        {g.stillIn ? (
+                          <span className="ar-status-badge ar-status-badge--in">Still In</span>
+                        ) : g.lastCheckOutAuto ? (
+                          <span className="ar-status-badge ar-status-badge--auto" title={`Auto-checked out at ${fmtTime(g.lastCheckOut)}`}>
+                            Checked out by system
+                          </span>
+                        ) : (
+                          fmtTime(g.lastCheckOut)
+                        )}
                       </td>
                       <td>{g.sessions}</td>
                       <td>{fmtDuration(g.totalDurationMs)}</td>
@@ -225,9 +274,15 @@ function AttendanceReport() {
                                 <tr key={e.id}>
                                   <td>{fmtTime(e.check_in_time)}</td>
                                   <td>
-                                    {e.check_out_time
-                                      ? fmtTime(e.check_out_time)
-                                      : <span className="ar-status-badge ar-status-badge--in">Still In</span>}
+                                    {!e.check_out_time ? (
+                                      <span className="ar-status-badge ar-status-badge--in">Still In</span>
+                                    ) : e.auto_checked_out ? (
+                                      <span className="ar-status-badge ar-status-badge--auto" title={`Auto-checked out at ${fmtTime(e.check_out_time)}`}>
+                                        Checked out by system
+                                      </span>
+                                    ) : (
+                                      fmtTime(e.check_out_time)
+                                    )}
                                   </td>
                                   <td>
                                     {e.check_out_time

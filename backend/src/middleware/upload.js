@@ -19,6 +19,13 @@ export const uploadPhoto = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+// ── Member QR code upload (replaces the auto-generated one) ──
+export const uploadQR = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
 // ── Event image upload ────────────────────────────────
 export const uploadEventImage = multer({
   storage: multer.memoryStorage(),

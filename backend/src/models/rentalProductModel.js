@@ -10,18 +10,18 @@ export const getRentalProductById = async (id) => {
   return rows[0] || null;
 };
 
-export const createRentalProduct = async ({ name, description = null, per_day_rate = null, per_hour_rate = null }) => {
+export const createRentalProduct = async ({ name, description = null, day_rate, month_rate = null, year_rate = null }) => {
   const result = await query(
-    'INSERT INTO rental_products (name, description, per_day_rate, per_hour_rate) VALUES (?, ?, ?, ?)',
-    [name, description, per_day_rate, per_hour_rate]
+    'INSERT INTO rental_products (name, description, day_rate, month_rate, year_rate) VALUES (?, ?, ?, ?, ?)',
+    [name, description, day_rate, month_rate, year_rate]
   );
   return result.insertId;
 };
 
-export const updateRentalProduct = async (id, { name, description, per_day_rate, per_hour_rate }) => {
+export const updateRentalProduct = async (id, { name, description, day_rate, month_rate, year_rate }) => {
   return await query(
-    'UPDATE rental_products SET name = ?, description = ?, per_day_rate = ?, per_hour_rate = ? WHERE id = ?',
-    [name, description ?? null, per_day_rate ?? null, per_hour_rate ?? null, id]
+    'UPDATE rental_products SET name = ?, description = ?, day_rate = ?, month_rate = ?, year_rate = ? WHERE id = ?',
+    [name, description ?? null, day_rate, month_rate ?? null, year_rate ?? null, id]
   );
 };
 

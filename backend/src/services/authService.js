@@ -1,27 +1,61 @@
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import { findMemberByPhone } from '../models/authModel.js';
+import { findMemberByPhone, findMemberById } from '../models/authModel.js';
 import { getMemberById, updateMemberPassword } from '../models/memberModel.js';
+import {
+  createSession,
+  getActiveSessionByHash,
+  revokeSessionByHash,
+  revokeAllSessionsForMember,
+} from '../models/sessionModel.js';
+import { recordLogin } from '../models/loginHistoryModel.js';
 import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  hashToken,
+  refreshTokenExpiryDate,
+} from '../utils/tokenUtils.js';
 
-dotenv.config();
+const buildUserPayload = (member) => ({
+  id: member.id,
+  member_id: member.member_id,
+  name: member.name,
+  phone: member.phone,
+  user_type_id: member.user_type_id,
+  type_name: member.type_name,
+});
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
-const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
+// Issues a fresh access + refresh token pair and records the refresh token
+// (hashed) in the sessions table so it can be looked up and revoked later.
+const issueSession = async (member, userAgent) => {
+  const user = buildUserPayload(member);
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken();
 
-const issueTokenForMember = (member) => {
-  const payload = {
-    id: member.id,
-    member_id: member.member_id,
-    name: member.name,
-    phone: member.phone,
-    user_type_id: member.user_type_id,
-    type_name: member.type_name,
-  };
+  await createSession({
+    memberId: member.id,
+    refreshTokenHash: hashToken(refreshToken),
+    userAgent,
+    expiresAt: refreshTokenExpiryDate(),
+  });
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRE });
+  return { access_token: accessToken, refresh_token: refreshToken, user };
+};
 
-  return { access_token: token, user: payload };
+// Logging a login attempt must never break the actual login flow, so any
+// failure here is swallowed rather than propagated.
+const logAttempt = async ({ memberId = null, phone, status, reason = null, ip, userAgent }) => {
+  try {
+    await recordLogin({
+      member_id: memberId,
+      phone: phone || null,
+      status,
+      failure_reason: reason,
+      ip_address: ip || null,
+      user_agent: userAgent || null,
+    });
+  } catch {
+    /* ignore */
+  }
 };
 
 const requireActiveMember = async (phone) => {
@@ -45,10 +79,17 @@ const requireActiveMember = async (phone) => {
   return member;
 };
 
-export const loginWithPassword = async (phone, password) => {
-  const member = await requireActiveMember(phone);
+export const loginWithPassword = async (phone, password, { userAgent, ip } = {}) => {
+  let member;
+  try {
+    member = await requireActiveMember(phone);
+  } catch (err) {
+    await logAttempt({ phone, status: 'failed', reason: err.message, ip, userAgent });
+    throw err;
+  }
 
   if (!member.password) {
+    await logAttempt({ memberId: member.id, phone, status: 'failed', reason: 'Password not set', ip, userAgent });
     const err = new Error('Password not set. Please contact the committee.');
     err.statusCode = 403;
     throw err;
@@ -56,12 +97,49 @@ export const loginWithPassword = async (phone, password) => {
 
   const matches = await comparePassword(password, member.password);
   if (!matches) {
+    await logAttempt({ memberId: member.id, phone, status: 'failed', reason: 'Incorrect password', ip, userAgent });
     const err = new Error('Invalid phone number or password');
     err.statusCode = 401;
     throw err;
   }
 
-  return issueTokenForMember(member);
+  await logAttempt({ memberId: member.id, phone, status: 'success', ip, userAgent });
+  return await issueSession(member, userAgent);
+};
+
+// Refresh tokens are single-use — each refresh revokes the old session and
+// issues a new one (rotation), so a stolen refresh token only works once
+// before the legitimate client's next refresh invalidates it.
+export const refreshSession = async (refreshToken, userAgent) => {
+  if (!refreshToken) {
+    const err = new Error('Refresh token is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const hash = hashToken(refreshToken);
+  const session = await getActiveSessionByHash(hash);
+  if (!session) {
+    const err = new Error('Session expired or already logged out. Please sign in again.');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const member = await findMemberById(session.member_id);
+  if (!member || !member.is_active) {
+    await revokeSessionByHash(hash);
+    const err = new Error('Account is no longer active');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  await revokeSessionByHash(hash);
+  return await issueSession(member, userAgent);
+};
+
+export const logout = async (refreshToken) => {
+  if (!refreshToken) return;
+  await revokeSessionByHash(hashToken(refreshToken));
 };
 
 export const resetOwnPassword = async (memberId, oldPassword, newPassword) => {
@@ -93,4 +171,9 @@ export const resetOwnPassword = async (memberId, oldPassword, newPassword) => {
 
   const hashed = await hashPassword(newPassword);
   await updateMemberPassword(memberId, hashed);
+
+  // A changed password should kill every other logged-in session immediately
+  // — otherwise a stolen token would keep working right past the reason the
+  // password was changed.
+  await revokeAllSessionsForMember(memberId);
 };

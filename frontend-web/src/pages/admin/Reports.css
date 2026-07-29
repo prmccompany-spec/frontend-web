@@ -358,6 +358,16 @@
   white-space: nowrap;
 }
 
+.rp-ref {
+  font-family: monospace;
+  font-size: 12px;
+  background: #f3f4f6;
+  border-radius: 5px;
+  padding: 2px 7px;
+  color: #555;
+  white-space: nowrap;
+}
+
 .rp-amount {
   font-weight: 700;
   white-space: nowrap;

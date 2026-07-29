@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { getRentals } from '../../services/rentalService';
 import { getAttendance } from '../../services/attendanceService';
+import { getMyLoginHistory } from '../../services/loginHistoryService';
 import { downloadMemberIdCard } from '../../utils/downloadIdCard';
 import SiteTour from '../../components/SiteTour/SiteTour';
 import ProfileMenu from '../../components/ProfileMenu/ProfileMenu';
@@ -135,6 +136,7 @@ function Dashboard() {
   const [pendingItems, setPendingItems] = useState([]);
   const [rentals, setRentals] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [loginHistory, setLoginHistory] = useState([]);
   const [showPending, setShowPending] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [showPayModal, setShowPayModal] = useState(false);
@@ -149,6 +151,7 @@ function Dashboard() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showRentalsModal, setShowRentalsModal] = useState(false);
+  const [showLoginHistoryModal, setShowLoginHistoryModal] = useState(false);
   const [downloadingId, setDownloadingId] = useState(false);
 
   const loadAll = useCallback(() => {
@@ -160,13 +163,15 @@ function Dashboard() {
       api.get('/pending-payments', { params: { member_id: user.id, status: 'pending' } }),
       getRentals({ member_id: user.id }),
       getAttendance({ member_id: user.id }),
+      getMyLoginHistory(20),
     ])
-      .then(([memRes, payRes, pendRes, rentalRes, attRes]) => {
+      .then(([memRes, payRes, pendRes, rentalRes, attRes, loginRes]) => {
         setMember(memRes.data.data ?? memRes.data);
         setPayments(payRes.data.data ?? []);
         setPendingItems(pendRes.data.data ?? []);
         setRentals(rentalRes.data ?? []);
         setAttendance(attRes.data ?? []);
+        setLoginHistory(loginRes.data?.data ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -214,6 +219,7 @@ function Dashboard() {
   const recentRentals = rentals.slice(0, 5);
   const recentAttendance = attendance.slice(0, 5);
   const activeRentals = rentals.filter((r) => r.status === 'active').length;
+  const lastLogin = loginHistory.find((l) => l.status === 'success');
 
   // ── Payment Overview donut ──
   const paymentOverviewData = [
@@ -274,6 +280,13 @@ function Dashboard() {
           <button className="db-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="db-nav-btn" onClick={() => navigate('/member-search')}>Member Search</button>
           <button className="db-nav-btn" onClick={() => navigate('/services')}>Offline Services</button>
+          <button className="tour-btn tour-btn--onred" onClick={() => navigate('/user-guide')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            User Guide
+          </button>
           <button className="tour-btn tour-btn--onred" data-tour="member-tour-btn" onClick={startTour}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -350,6 +363,14 @@ function Dashboard() {
                         Member since {fmtMonthYear(member.created_at)}
                       </div>
                     )}
+                    {lastLogin && (
+                      <div className="db-profile-field">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        Last login {fmtDate(lastLogin.created_at)}, {fmtTime(lastLogin.created_at)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -358,10 +379,10 @@ function Dashboard() {
                 <h2 className="db-section-title">My Details</h2>
                 {member ? (
                   <div className="db-personal-grid">
-                    {member.gotra && (
+                    {member.gotra_name && (
                       <div className="db-personal-item">
                         <span className="db-personal-key">Gotra</span>
-                        <span className="db-personal-val">{member.gotra}</span>
+                        <span className="db-personal-val">{member.gotra_name}</span>
                       </div>
                     )}
                     {member.family_name && (
@@ -477,6 +498,17 @@ function Dashboard() {
                       </svg>
                     </span>
                     <span className="db-quicklink-label">Member Directory</span>
+                    <svg className="db-quicklink-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                  <button className="db-quicklink-item" onClick={() => setShowLoginHistoryModal(true)}>
+                    <span className="db-quicklink-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </span>
+                    <span className="db-quicklink-label">Login History</span>
                     <svg className="db-quicklink-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
@@ -791,6 +823,7 @@ function Dashboard() {
                         <table className="db-table">
                           <thead>
                             <tr>
+                              <th>Ref</th>
                               <th>Date</th>
                               <th>Category</th>
                               <th>Amount</th>
@@ -800,6 +833,7 @@ function Dashboard() {
                           <tbody>
                             {recentPayments.map((p) => (
                               <tr key={p.id}>
+                                <td><span className="db-ref">{p.payment_ref}</span></td>
                                 <td className="db-td-meta">{fmtDate(p.payment_date)}</td>
                                 <td>
                                   {p.category_name}
@@ -904,9 +938,15 @@ function Dashboard() {
                                 <td>{fmtTime(a.check_in_time)}</td>
                                 <td>{a.check_out_time ? fmtTime(a.check_out_time) : '—'}</td>
                                 <td>
-                                  {a.check_out_time
-                                    ? <span className="db-status-badge db-status-badge--cleared">Present</span>
-                                    : <span className="db-rental-badge db-rental-badge--active">Still In</span>}
+                                  {!a.check_out_time ? (
+                                    <span className="db-rental-badge db-rental-badge--active">Still In</span>
+                                  ) : a.auto_checked_out ? (
+                                    <span className="db-status-badge db-status-badge--auto" title={`Auto-checked out at ${fmtTime(a.check_out_time)}`}>
+                                      Checked out by system
+                                    </span>
+                                  ) : (
+                                    <span className="db-status-badge db-status-badge--cleared">Present</span>
+                                  )}
                                 </td>
                               </tr>
                             ))}
@@ -937,6 +977,7 @@ function Dashboard() {
                         <table className="db-table">
                           <thead>
                             <tr>
+                              <th>Ref</th>
                               <th>Item</th>
                               <th>Period</th>
                               <th>Status</th>
@@ -946,6 +987,7 @@ function Dashboard() {
                           <tbody>
                             {recentRentals.map((r) => (
                               <tr key={r.id}>
+                                <td><span className="db-ref">{r.rental_ref}</span></td>
                                 <td>{r.product_name}</td>
                                 <td className="db-td-meta">{fmtDate(r.start_date)} – {fmtDate(r.end_date)}</td>
                                 <td>
@@ -985,11 +1027,12 @@ function Dashboard() {
                 <div className="db-scroll-table db-scroll-table--tall">
                   <table className="db-table">
                     <thead>
-                      <tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+                      <tr><th>Ref</th><th>Date</th><th>Category</th><th>Type</th><th>Amount</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                       {paymentHistory.map((p) => (
                         <tr key={p.id}>
+                          <td><span className="db-ref">{p.payment_ref}</span></td>
                           <td className="db-td-meta">{fmtDate(p.payment_date)}</td>
                           <td>
                             {p.category_name}
@@ -1036,9 +1079,15 @@ function Dashboard() {
                           <td>{a.check_out_time ? fmtTime(a.check_out_time) : '—'}</td>
                           <td className="db-td-meta">{a.check_out_time ? fmtDuration(new Date(a.check_out_time) - new Date(a.check_in_time)) : '—'}</td>
                           <td>
-                            {a.check_out_time
-                              ? <span className="db-status-badge db-status-badge--cleared">Present</span>
-                              : <span className="db-rental-badge db-rental-badge--active">Still In</span>}
+                            {!a.check_out_time ? (
+                              <span className="db-rental-badge db-rental-badge--active">Still In</span>
+                            ) : a.auto_checked_out ? (
+                              <span className="db-status-badge db-status-badge--auto" title={`Auto-checked out at ${fmtTime(a.check_out_time)}`}>
+                                Checked out by system
+                              </span>
+                            ) : (
+                              <span className="db-status-badge db-status-badge--cleared">Present</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1065,11 +1114,12 @@ function Dashboard() {
               <div className="db-scroll-table db-scroll-table--tall">
                 <table className="db-table">
                   <thead>
-                    <tr><th>Item</th><th>Period</th><th>Status</th><th>Amount</th></tr>
+                    <tr><th>Ref</th><th>Item</th><th>Period</th><th>Status</th><th>Amount</th></tr>
                   </thead>
                   <tbody>
                     {rentals.map((r) => (
                       <tr key={r.id}>
+                        <td><span className="db-ref">{r.rental_ref}</span></td>
                         <td>{r.product_name}</td>
                         <td className="db-td-meta">{fmtDate(r.start_date)} – {fmtDate(r.end_date)}</td>
                         <td><span className={`db-rental-badge db-rental-badge--${r.status}`}>{RENTAL_STATUS_LABEL[r.status] ?? r.status}</span></td>
@@ -1079,6 +1129,51 @@ function Dashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── View All: Login History ── */}
+      {showLoginHistoryModal && (
+        <div className="db-modal-overlay" onClick={() => setShowLoginHistoryModal(false)}>
+          <div className="db-modal db-modal--table" onClick={(e) => e.stopPropagation()}>
+            <button className="db-modal-close" onClick={() => setShowLoginHistoryModal(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <div className="db-modal-body db-modal-body--table">
+              <h3 className="db-section-title">Login History</h3>
+              <p className="db-empty" style={{ marginBottom: 12 }}>
+                If you don't recognize one of these, change your password right away.
+              </p>
+              {loginHistory.length === 0 ? (
+                <p className="db-empty">No login activity recorded yet.</p>
+              ) : (
+                <div className="db-scroll-table db-scroll-table--tall">
+                  <table className="db-table">
+                    <thead>
+                      <tr><th>Date &amp; Time</th><th>Status</th><th>IP Address</th></tr>
+                    </thead>
+                    <tbody>
+                      {loginHistory.map((l) => (
+                        <tr key={l.id}>
+                          <td className="db-td-meta">{fmtDate(l.created_at)}, {fmtTime(l.created_at)}</td>
+                          <td>
+                            {l.status === 'success' ? (
+                              <span className="db-status-badge db-status-badge--cleared">Success</span>
+                            ) : (
+                              <span className="db-rental-badge db-rental-badge--cancelled">Failed</span>
+                            )}
+                          </td>
+                          <td className="db-td-meta">{l.ip_address || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -311,6 +311,16 @@
   flex-shrink: 0;
 }
 
+.ms-phone-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ms-phone-link:hover {
+  color: #e8341a;
+  text-decoration: underline;
+}
+
 .ms-card-view-btn {
   width: 100%;
   display: flex;
@@ -519,6 +529,15 @@
   font-weight: 500;
   text-align: right;
   word-break: break-word;
+}
+
+.ms-row-link {
+  text-decoration: none;
+}
+
+.ms-row-link:hover {
+  color: #e8341a;
+  text-decoration: underline;
 }
 
 /* ── Responsive ───────────────────────────────────── */

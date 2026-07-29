@@ -7,12 +7,15 @@ export const listBranches = asyncHandler(async (req, res) => {
 });
 
 export const createBranch = asyncHandler(async (req, res) => {
-  const { name } = req.body;
+  const { name, gotra_id } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: 'name is required' });
   }
+  if (!gotra_id) {
+    return res.status(400).json({ success: false, message: 'gotra_id is required' });
+  }
 
-  const id = await addBranch(name);
+  const id = await addBranch(name, Number(gotra_id));
   res.status(201).json({ success: true, message: 'Branch created', id });
 });
 
@@ -22,11 +25,14 @@ export const updateBranch = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid branch ID' });
   }
 
-  const { name } = req.body;
+  const { name, gotra_id } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: 'name is required' });
   }
+  if (!gotra_id) {
+    return res.status(400).json({ success: false, message: 'gotra_id is required' });
+  }
 
-  await editBranch(id, name);
+  await editBranch(id, name, Number(gotra_id));
   res.json({ success: true, message: 'Branch updated' });
 });

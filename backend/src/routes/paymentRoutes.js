@@ -10,8 +10,11 @@ import {
   getSummary,
   collectDuesForMember,
 } from '../controllers/paymentController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 router.get('/categories', listCategories);
 router.post('/categories', createCategory);

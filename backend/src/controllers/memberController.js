@@ -9,7 +9,9 @@ import {
   fetchAllMembers,
   fetchMemberById,
   fetchNextMemberId,
+  checkMemberIdAvailability,
   saveMemberPhoto,
+  saveMemberQR,
   resetMemberPasswordByAdmin,
 } from '../services/memberService.js';
 import { uploadBuffer } from '../utils/cloudinaryUtils.js';
@@ -120,6 +122,15 @@ export const getNextMemberId = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { nextMemberId } });
 });
 
+export const checkMemberId = asyncHandler(async (req, res) => {
+  const { member_id } = req.query;
+  if (!member_id || !String(member_id).trim()) {
+    return res.status(400).json({ success: false, message: 'member_id query parameter is required' });
+  }
+  const result = await checkMemberIdAvailability(String(member_id).trim());
+  res.json({ success: true, data: result });
+});
+
 export const listMembers = asyncHandler(async (req, res) => {
   const members = await fetchAllMembers();
   res.json({ success: true, count: members.length, data: members });
@@ -150,6 +161,25 @@ export const uploadMemberPhoto = asyncHandler(async (req, res) => {
   await saveMemberPhoto(memberId, result.secure_url);
 
   res.json({ success: true, message: 'Photo uploaded successfully', photo: result.secure_url });
+});
+
+export const uploadMemberQR = asyncHandler(async (req, res) => {
+  const memberId = Number(req.params.id);
+  if (!memberId || Number.isNaN(memberId)) {
+    return res.status(400).json({ success: false, message: 'Invalid member ID' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No QR code file provided' });
+  }
+
+  const result = await uploadBuffer(req.file.buffer, {
+    folder: 'org/qrcodes',
+    public_id: `member_${memberId}_custom_${Date.now()}`,
+    resource_type: 'image',
+  });
+  await saveMemberQR(memberId, result.secure_url);
+
+  res.json({ success: true, message: 'QR code uploaded successfully', qr_code: result.secure_url });
 });
 
 export const resetPassword = asyncHandler(async (req, res) => {

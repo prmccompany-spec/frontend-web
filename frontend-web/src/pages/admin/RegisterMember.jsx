@@ -8,20 +8,22 @@ import {
   hasLocalAddress,
   hasOutsideAddress,
 } from '../../types/member';
-import { createMember, createAddress, uploadMemberPhoto, createPendingPayment, getNextMemberId } from '../../services/memberService';
+import { createMember, createAddress, uploadMemberPhoto, uploadMemberQR, createPendingPayment, getNextMemberId, checkMemberIdAvailable } from '../../services/memberService';
 import { getUserTypes } from '../../services/userTypeService';
 import { getCategories } from '../../services/paymentService';
 import { getMemberStatuses } from '../../services/memberStatusService';
 import { getBranches } from '../../services/branchService';
+import { getGotras } from '../../services/gotraService';
+import { showToast } from '../../components/Toast/toastBus';
 import './RegisterMember.css';
 
 const initialForm = {
   memberId: '',
   userTypeId: '',
   statusId: '',
+  gotraId: '',
   branchId: '',
   name: '',
-  gotra: '',
   familyName: '',
   fatherName: '',
   phone: '',
@@ -52,12 +54,18 @@ function RegisterMember() {
   const [pendingItems, setPendingItems] = useState([]);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [qrMode, setQrMode] = useState('auto');
+  const [qr, setQr] = useState(null);
+  const [qrPreview, setQrPreview] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [memberIdError, setMemberIdError] = useState('');
+  const [checkingMemberId, setCheckingMemberId] = useState(false);
   const [userTypes, setUserTypes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const [gotras, setGotras] = useState([]);
   const [branches, setBranches] = useState([]);
 
   useEffect(() => {
@@ -86,6 +94,9 @@ function RegisterMember() {
         if (active) setForm((f) => ({ ...f, statusId: String(active.id) }));
       })
       .catch(() => {});
+    getGotras()
+      .then((res) => setGotras(res.data.data ?? []))
+      .catch(() => {});
     getBranches()
       .then((res) => setBranches(res.data.data ?? []))
       .catch(() => {});
@@ -103,6 +114,26 @@ function RegisterMember() {
     setPhotoPreview('');
   };
 
+  const handleQrChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setQr(file);
+    setQrPreview(URL.createObjectURL(file));
+  };
+
+  const handleQrRemove = () => {
+    setQr(null);
+    setQrPreview('');
+  };
+
+  const handleQrModeChange = (mode) => {
+    setQrMode(mode);
+    if (mode === 'auto') {
+      setQr(null);
+      setQrPreview('');
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -114,8 +145,36 @@ function RegisterMember() {
       setForm((prev) => ({ ...prev, phone: value, whatsapp: value }));
       return;
     }
+    if (name === 'gotraId') {
+      // Branch list is scoped to the selected gotra — a branch chosen under
+      // a previous gotra is no longer valid, so clear it.
+      setForm((prev) => ({ ...prev, gotraId: value, branchId: '' }));
+      return;
+    }
+
+    if (name === 'memberId' && memberIdError) {
+      setMemberIdError('');
+    }
 
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleMemberIdBlur = async () => {
+    const value = form.memberId.trim();
+    if (!value) return;
+    setCheckingMemberId(true);
+    try {
+      const res = await checkMemberIdAvailable(value);
+      if (!res.data?.data?.available) {
+        setMemberIdError('This Member ID already exists — please choose a different one.');
+      } else {
+        setMemberIdError('');
+      }
+    } catch {
+      // Non-blocking — the create/edit submit still enforces uniqueness server-side.
+    } finally {
+      setCheckingMemberId(false);
+    }
   };
 
   const addPendingItem = () =>
@@ -141,6 +200,12 @@ function RegisterMember() {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (memberIdError) {
+      setError(memberIdError);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -165,6 +230,14 @@ function RegisterMember() {
         await uploadMemberPhoto(memberId, fd);
       }
 
+      // 4b. Replace the auto-generated QR with a custom one, only when the
+      // admin has deliberately switched to manual mode and picked a file
+      if (qrMode === 'manual' && qr) {
+        const fd = new FormData();
+        fd.append('qr', qr);
+        await uploadMemberQR(memberId, fd);
+      }
+
       // 5. Create pending payment entries
       for (const item of pendingItems) {
         if (item.categoryId && item.title.trim() && Number(item.amount) > 0) {
@@ -179,17 +252,27 @@ function RegisterMember() {
       }
 
       setSuccess(`Member "${form.name}" registered successfully (ID: ${form.memberId}).`);
+      showToast(`Member "${form.name}" registered successfully.`, 'success');
       setForm(initialForm);
       setPendingItems([]);
       setPhoto(null);
       setPhotoPreview('');
+      setQrMode('auto');
+      setQr(null);
+      setQrPreview('');
+      setMemberIdError('');
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please try again.';
       setError(msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }
   };
+
+  const branchesForGotra = form.gotraId
+    ? branches.filter((b) => String(b.gotra_id) === String(form.gotraId))
+    : [];
 
   return (
     <div className="rm-page">
@@ -238,13 +321,16 @@ function RegisterMember() {
                 Member ID <span className="rm-required">*</span>
               </label>
               <input
-                className="rm-input"
+                className={`rm-input${memberIdError ? ' rm-input--error' : ''}`}
                 name="memberId"
                 placeholder="Auto-generated…"
                 value={form.memberId}
                 onChange={handleChange}
+                onBlur={handleMemberIdBlur}
                 required
               />
+              {checkingMemberId && <span className="rm-field-hint">Checking availability…</span>}
+              {memberIdError && <span className="rm-field-error">{memberIdError}</span>}
             </div>
 
             <div className="rm-field">
@@ -282,7 +368,7 @@ function RegisterMember() {
             </div>
           </div>
 
-          <div className="rm-grid-2">
+          <div className="rm-grid-3">
             <div className="rm-field">
               <label className="rm-label">Status <span className="rm-required">*</span></label>
               <select
@@ -301,15 +387,32 @@ function RegisterMember() {
               </select>
             </div>
             <div className="rm-field">
+              <label className="rm-label">Gotra</label>
+              <select
+                className="rm-input rm-select"
+                name="gotraId"
+                value={form.gotraId}
+                onChange={handleChange}
+              >
+                <option value="">Select gotra</option>
+                {gotras.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="rm-field">
               <label className="rm-label">Branch</label>
               <select
                 className="rm-input rm-select"
                 name="branchId"
                 value={form.branchId}
                 onChange={handleChange}
+                disabled={!form.gotraId}
               >
-                <option value="">Select branch</option>
-                {branches.map((b) => (
+                <option value="">{form.gotraId ? 'Select branch' : 'Select gotra first'}</option>
+                {branchesForGotra.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
                   </option>
@@ -323,18 +426,7 @@ function RegisterMember() {
         <div className="rm-card">
           <div className="rm-section-label">Identity</div>
 
-          <div className="rm-grid-3">
-            <div className="rm-field">
-              <label className="rm-label">Gotra <span className="rm-required">*</span></label>
-              <input
-                className="rm-input"
-                name="gotra"
-                placeholder="Enter gotra"
-                value={form.gotra}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="rm-grid-2">
             <div className="rm-field">
               <label className="rm-label">Family Name <span className="rm-required">*</span></label>
               <input
@@ -489,6 +581,90 @@ function RegisterMember() {
               )}
             </div>
           </div>
+        </div>
+        <div className="rm-card rm-card--photo">
+          <div className="rm-section-label">Member QR Code</div>
+
+          <div className="rm-qr-mode-toggle">
+            <button
+              type="button"
+              className={`rm-qr-mode-btn ${qrMode === 'auto' ? 'rm-qr-mode-btn--active' : ''}`}
+              onClick={() => handleQrModeChange('auto')}
+            >
+              Auto-generate
+            </button>
+            <button
+              type="button"
+              className={`rm-qr-mode-btn ${qrMode === 'manual' ? 'rm-qr-mode-btn--active' : ''}`}
+              onClick={() => handleQrModeChange('manual')}
+            >
+              Upload manually
+            </button>
+          </div>
+
+          {qrMode === 'auto' ? (
+            <p className="rm-qr-auto-note">
+              A QR code will be generated automatically for this member once they're registered.
+              Switch to "Upload manually" only if you intend to use a specific QR image instead.
+            </p>
+          ) : (
+            <div className="rm-photo-row">
+              <div
+                className={`rm-photo-zone ${qrPreview ? 'rm-photo-zone--filled' : ''}`}
+                onClick={() => document.getElementById('rm-qr-input').click()}
+              >
+                {qrPreview ? (
+                  <img src={qrPreview} alt="QR preview" className="rm-photo-preview" />
+                ) : (
+                  <div className="rm-photo-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="7" />
+                      <rect x="14" y="3" width="7" height="7" />
+                      <rect x="3" y="14" width="7" height="7" />
+                      <line x1="14" y1="14" x2="14" y2="21" />
+                      <line x1="21" y1="14" x2="21" y2="21" />
+                      <line x1="14" y1="17.5" x2="21" y2="17.5" />
+                    </svg>
+                    <span>Click to upload</span>
+                    <span className="rm-photo-hint">JPG, PNG or WebP · max 5 MB</span>
+                  </div>
+                )}
+                {qrPreview && (
+                  <div className="rm-photo-overlay">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Change
+                  </div>
+                )}
+              </div>
+              <input
+                id="rm-qr-input"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={handleQrChange}
+              />
+              <div className="rm-photo-info">
+                <p className="rm-photo-info-title">
+                  {qrPreview ? qr?.name : 'No QR image selected yet'}
+                </p>
+                <p className="rm-photo-info-sub">
+                  {qrPreview
+                    ? `${(qr.size / 1024).toFixed(0)} KB`
+                    : 'This will replace the auto-generated QR code for this member.'}
+                </p>
+                {qrPreview && (
+                  <button type="button" className="rm-photo-remove" onClick={handleQrRemove}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         {/* ── Personal Details ── */}
         <div className="rm-card">
@@ -800,7 +976,7 @@ function RegisterMember() {
 
         <div className="rm-actions">
           <button type="button" className="rm-btn rm-btn--secondary"
-            onClick={() => { setForm(initialForm); setPendingItems([]); }}>
+            onClick={() => { setForm(initialForm); setPendingItems([]); setMemberIdError(''); }}>
             Clear Form
           </button>
           <button type="submit" className="rm-btn rm-btn--primary" disabled={loading}>

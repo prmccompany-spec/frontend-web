@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { scanAttendance } from '../../../services/attendanceService';
+import { showToast } from '../../../components/Toast/toastBus';
 import './Scanner.css';
 
 const DEBOUNCE_MS = 2000;
@@ -56,16 +57,23 @@ function Scanner() {
         message: res.message,
       };
       setFeedback(entry);
+      if (res.action === 'checkin') {
+        showToast(`${entry.memberName} checked in successfully.`, 'success');
+      } else if (res.action === 'checkout') {
+        showToast(`${entry.memberName} checked out successfully.`, 'success');
+      }
       if (res.action !== 'ignored') {
         setRecent((r) => [entry, ...r].slice(0, 15));
       }
     } catch (err) {
+      const msg = err.response?.data?.message || 'Scan failed. Try again.';
       setFeedback({
         id: `${Date.now()}`,
         time: new Date(),
         action: 'error',
-        message: err.response?.data?.message || 'Scan failed. Try again.',
+        message: msg,
       });
+      showToast(msg, 'error');
     } finally {
       setBusy(false);
     }

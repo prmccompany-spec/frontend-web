@@ -6,6 +6,9 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import { getPayments } from '../../services/paymentService';
 import { getRentals } from '../../services/rentalService';
 import { getExpenses } from '../../services/expenseService';
+import { getRealizedRentalIncome } from '../../utils/rentalIncome';
+import { exportTableToPdf } from '../../utils/pdfExport';
+import ExportPdfButton from '../../components/ExportPdfButton/ExportPdfButton';
 import './Reports.css';
 
 const fmt = (val) =>
@@ -106,29 +109,35 @@ function Reports() {
       date: p.payment_date,
       type: p.pending_payment_id ? 'Due Collection' : 'Payment',
       label: p.category_name,
-      meta: p.payment_ref,
+      ref: p.payment_ref,
       party: p.member_name,
       partyCode: p.member_code,
       amount: Number(p.amount),
       mode: p.payment_type,
       handledBy: p.collected_by_name,
     }));
-    // A cancelled rental never actually generated income, so it's excluded
-    // here (not just from totals) rather than shown with a caveat.
-    const fromRentals = rentals
-      .filter((r) => r.status !== 'cancelled')
-      .map((r) => ({
-        id: `rental-${r.id}`,
-        date: r.created_at,
+    // A rental's advance is booked as income when collected; the balance
+    // only counts once the rental is actually returned and settled — an
+    // active rental's uncollected balance is not income yet, and a
+    // cancelled rental never generated any (see getRealizedRentalIncome).
+    const rentalById = new Map(rentals.map((r) => [r.id, r]));
+    const fromRentals = getRealizedRentalIncome(rentals).map((entry) => {
+      const r = rentalById.get(entry.rentalId);
+      const isOutsider = !r.member_name;
+      return {
+        id: `rental-${entry.rentalId}-${entry.stage}`,
+        date: entry.date,
         type: 'Rental',
         label: r.product_name,
-        meta: `${fmtDate(r.start_date)} – ${fmtDate(r.end_date)}`,
-        party: r.member_name,
-        partyCode: r.member_code,
-        amount: Number(r.amount),
-        mode: r.payment_type,
+        ref: r.rental_ref,
+        meta: `${fmtDate(r.start_date)} – ${fmtDate(r.end_date)} (${entry.stage === 'advance' ? 'Advance' : 'Balance'})`,
+        party: r.member_name || r.renter_name,
+        partyCode: isOutsider ? 'Non-member' : r.member_code,
+        amount: entry.amount,
+        mode: entry.mode,
         handledBy: r.collected_by_name,
-      }));
+      };
+    });
     return [...fromPayments, ...fromRentals].sort((a, b) => asDate(b.date) - asDate(a.date));
   }, [payments, rentals]);
 
@@ -198,7 +207,7 @@ function Reports() {
       if (incomeFilters.mode && e.mode !== incomeFilters.mode) return false;
       if (!inRange(e.date, incomeFilters.date_from, incomeFilters.date_to)) return false;
       if (q) {
-        const hay = `${e.party} ${e.partyCode} ${e.label} ${e.meta}`.toLowerCase();
+        const hay = `${e.party} ${e.partyCode} ${e.label} ${e.meta} ${e.ref}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -206,6 +215,45 @@ function Reports() {
   }, [incomeEntries, incomeFilters]);
   const incomeHasFilters = !!(incomeFilters.search || incomeFilters.type || incomeFilters.label || incomeFilters.mode || incomeFilters.date_from || incomeFilters.date_to);
   const incomeTotal = filteredIncome.reduce((s, e) => s + e.amount, 0);
+
+  const incomeFilterParts = [];
+  if (incomeFilters.type) incomeFilterParts.push(`Type: ${incomeFilters.type}`);
+  if (incomeFilters.label) incomeFilterParts.push(incomeFilters.label);
+  if (incomeFilters.mode) incomeFilterParts.push(incomeFilters.mode === 'qr' ? 'QR' : 'Cash');
+  if (incomeFilters.date_from) incomeFilterParts.push(`From ${incomeFilters.date_from}`);
+  if (incomeFilters.date_to) incomeFilterParts.push(`To ${incomeFilters.date_to}`);
+  if (incomeFilters.search) incomeFilterParts.push(`Search "${incomeFilters.search}"`);
+
+  const handleExportIncome = () => exportTableToPdf({
+    title: 'Income Ledger',
+    subtitle: incomeFilterParts.length ? incomeFilterParts.join(' · ') : 'All income entries',
+    summary: [
+      { label: 'Entries', value: filteredIncome.length },
+      { label: 'Total', value: `Rs. ${fmt(incomeTotal)}` },
+    ],
+    columns: [
+      { header: 'Ref', key: 'ref' },
+      { header: 'Date', key: 'date' },
+      { header: 'Type', key: 'type' },
+      { header: 'Member', key: 'member' },
+      { header: 'Category / Product', key: 'label' },
+      { header: 'Amount', key: 'amount', align: 'right' },
+      { header: 'Mode', key: 'mode' },
+      { header: 'Collected By', key: 'collectedBy' },
+    ],
+    rows: filteredIncome.map((e) => ({
+      ref: e.ref || '—',
+      date: fmtDate(e.date),
+      type: e.type,
+      member: `${e.party}${e.partyCode ? ` (${e.partyCode})` : ''}`,
+      label: `${e.label}${e.meta ? ` — ${e.meta}` : ''}`,
+      amount: `Rs. ${fmt(e.amount)}`,
+      mode: e.mode === 'qr' ? 'QR' : 'Cash',
+      collectedBy: e.handledBy || '—',
+    })),
+    filename: 'income-ledger',
+    orientation: 'landscape',
+  });
 
   // ══════════ EXPENSES TAB ══════════
   const [expenseFilters, setExpenseFilters] = useState({ search: '', category: '', date_from: '', date_to: '' });
@@ -225,6 +273,36 @@ function Reports() {
   const expenseHasFilters = !!(expenseFilters.search || expenseFilters.category || expenseFilters.date_from || expenseFilters.date_to);
   const expenseTotal = filteredExpenses.reduce((s, e) => s + e.amount, 0);
 
+  const expenseFilterParts = [];
+  if (expenseFilters.category) expenseFilterParts.push(expenseFilters.category);
+  if (expenseFilters.date_from) expenseFilterParts.push(`From ${expenseFilters.date_from}`);
+  if (expenseFilters.date_to) expenseFilterParts.push(`To ${expenseFilters.date_to}`);
+  if (expenseFilters.search) expenseFilterParts.push(`Search "${expenseFilters.search}"`);
+
+  const handleExportExpenses = () => exportTableToPdf({
+    title: 'Expenses Report',
+    subtitle: expenseFilterParts.length ? expenseFilterParts.join(' · ') : 'All expense entries',
+    summary: [
+      { label: 'Expenses', value: filteredExpenses.length },
+      { label: 'Total', value: `Rs. ${fmt(expenseTotal)}` },
+    ],
+    columns: [
+      { header: 'Date & Time', key: 'date' },
+      { header: 'Category', key: 'category' },
+      { header: 'Reason', key: 'reason' },
+      { header: 'Amount', key: 'amount', align: 'right' },
+      { header: 'Recorded By', key: 'recordedBy' },
+    ],
+    rows: filteredExpenses.map((e) => ({
+      date: fmtDateTime(e.date),
+      category: e.category,
+      reason: e.reason,
+      amount: `Rs. ${fmt(e.amount)}`,
+      recordedBy: e.recordedBy,
+    })),
+    filename: 'expenses-report',
+  });
+
   // ══════════ TALLY TAB ══════════
   const [tallyFilters, setTallyFilters] = useState({ search: '', kind: '', date_from: '', date_to: '' });
   const filteredTally = useMemo(() => {
@@ -243,6 +321,40 @@ function Reports() {
   const tallyIn = filteredTally.filter((t) => t.kind === 'in').reduce((s, t) => s + t.amount, 0);
   const tallyOut = filteredTally.filter((t) => t.kind === 'out').reduce((s, t) => s + t.amount, 0);
   const tallyDisplayed = [...filteredTally].reverse();
+
+  const tallyFilterParts = [];
+  if (tallyFilters.kind) tallyFilterParts.push(tallyFilters.kind === 'in' ? 'Income Only' : 'Expenses Only');
+  if (tallyFilters.date_from) tallyFilterParts.push(`From ${tallyFilters.date_from}`);
+  if (tallyFilters.date_to) tallyFilterParts.push(`To ${tallyFilters.date_to}`);
+  if (tallyFilters.search) tallyFilterParts.push(`Search "${tallyFilters.search}"`);
+
+  const handleExportTally = () => exportTableToPdf({
+    title: 'Tally Book',
+    subtitle: tallyFilterParts.length ? tallyFilterParts.join(' · ') : 'All ledger entries',
+    summary: [
+      { label: 'Entries', value: filteredTally.length },
+      { label: 'In', value: `Rs. ${fmt(tallyIn)}` },
+      { label: 'Out', value: `Rs. ${fmt(tallyOut)}` },
+      { label: 'Net', value: `Rs. ${fmt(Math.abs(tallyIn - tallyOut))}` },
+    ],
+    columns: [
+      { header: 'Date', key: 'date' },
+      { header: 'Description', key: 'description' },
+      { header: 'Party', key: 'party' },
+      { header: 'In', key: 'in', align: 'right' },
+      { header: 'Out', key: 'out', align: 'right' },
+      { header: 'Balance', key: 'balance', align: 'right' },
+    ],
+    rows: tallyDisplayed.map((t) => ({
+      date: fmtDate(t.date),
+      description: t.label,
+      party: t.party || '—',
+      in: t.kind === 'in' ? `Rs. ${fmt(t.amount)}` : '',
+      out: t.kind === 'out' ? `Rs. ${fmt(t.amount)}` : '',
+      balance: `Rs. ${fmt(t.balance)}`,
+    })),
+    filename: 'tally-book',
+  });
 
   if (loading) {
     return (
@@ -377,6 +489,7 @@ function Reports() {
             {incomeHasFilters && (
               <button className="rp-filter-clear" onClick={() => setIncomeFilters({ search: '', type: '', label: '', mode: '', date_from: '', date_to: '' })}>Clear</button>
             )}
+            <ExportPdfButton onExport={handleExportIncome} disabled={filteredIncome.length === 0} />
           </div>
 
           {filteredIncome.length === 0 ? (
@@ -391,6 +504,7 @@ function Reports() {
                 <table className="rp-table">
                   <thead>
                     <tr>
+                      <th>Ref</th>
                       <th>Date</th>
                       <th>Type</th>
                       <th>Member</th>
@@ -403,6 +517,7 @@ function Reports() {
                   <tbody>
                     {filteredIncome.map((e) => (
                       <tr key={e.id}>
+                        <td><span className="rp-ref">{e.ref}</span></td>
                         <td className="rp-td-meta">{fmtDate(e.date)}</td>
                         <td><TypeBadge type={e.type} /></td>
                         <td>
@@ -449,6 +564,7 @@ function Reports() {
             {expenseHasFilters && (
               <button className="rp-filter-clear" onClick={() => setExpenseFilters({ search: '', category: '', date_from: '', date_to: '' })}>Clear</button>
             )}
+            <ExportPdfButton onExport={handleExportExpenses} disabled={filteredExpenses.length === 0} />
             <button className="rp-manage-btn" onClick={() => navigate('/admin/expenses')}>Manage in Expense Book</button>
           </div>
 
@@ -511,6 +627,7 @@ function Reports() {
             {tallyHasFilters && (
               <button className="rp-filter-clear" onClick={() => setTallyFilters({ search: '', kind: '', date_from: '', date_to: '' })}>Clear</button>
             )}
+            <ExportPdfButton onExport={handleExportTally} disabled={filteredTally.length === 0} />
           </div>
 
           {filteredTally.length === 0 ? (

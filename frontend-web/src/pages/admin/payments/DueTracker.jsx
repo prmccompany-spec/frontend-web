@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPendingPayments, getMembers } from '../../../services/memberService';
+import { matchesIdOrText } from '../../../utils/memberSearch';
+import { exportTableToPdf } from '../../../utils/pdfExport';
+import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
 import './DueTracker.css';
 
 const fmt = (val) =>
@@ -143,16 +146,10 @@ function DueTracker() {
       });
   }, [dues, phoneByMember]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return withMeta;
-    return withMeta.filter(
-      (d) =>
-        d.member_name?.toLowerCase().includes(q) ||
-        d.member_code?.toLowerCase().includes(q) ||
-        d.title?.toLowerCase().includes(q)
-    );
-  }, [withMeta, search]);
+  const filtered = useMemo(
+    () => withMeta.filter((d) => matchesIdOrText(d.member_code, [d.member_name, d.title], search)),
+    [withMeta, search]
+  );
 
   const overdueDues = useMemo(
     () => filtered.filter((d) => d.isOverdue).sort((a, b) => b.daysOverdue - a.daysOverdue),
@@ -205,6 +202,35 @@ function DueTracker() {
   const overdueMemberCount = new Set(overdueDues.map((d) => d.member_id)).size;
   const todayTotal = todayDues.reduce((s, d) => s + Number(d.amount), 0);
 
+  const handleExport = () => exportTableToPdf({
+    title: 'Due Tracker — Outstanding Dues',
+    subtitle: search ? `Search "${search}"` : 'All pending dues',
+    summary: [
+      { label: 'Dues', value: filtered.length },
+      { label: 'Outstanding', value: `Rs. ${fmt(outstandingTotal)}` },
+      { label: 'Overdue', value: `Rs. ${fmt(overdueTotal)}` },
+    ],
+    columns: [
+      { header: 'Member', key: 'member' },
+      { header: 'Due', key: 'due' },
+      { header: 'Category', key: 'category' },
+      { header: 'Amount', key: 'amount', align: 'right' },
+      { header: 'Due Date', key: 'dueDate' },
+      { header: 'Status', key: 'status' },
+      { header: 'Contact', key: 'contact' },
+    ],
+    rows: filtered.map((d) => ({
+      member: `${d.member_name}${d.member_code ? ` (${d.member_code})` : ''}`,
+      due: d.title,
+      category: d.category_name,
+      amount: `Rs. ${fmt(d.amount)}`,
+      dueDate: fmtDate(d.due_date),
+      status: d.isOverdue ? `${d.daysOverdue}d overdue` : d.isToday ? 'Due today' : d.daysOverdue === null ? 'No due date' : `In ${Math.abs(d.daysOverdue)}d`,
+      contact: d.phone || '—',
+    })),
+    filename: 'due-tracker',
+  });
+
   if (loading) {
     return (
       <div className="admin-content">
@@ -247,6 +273,7 @@ function DueTracker() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <ExportPdfButton onExport={handleExport} disabled={filtered.length === 0} />
       </div>
 
       {activeTab === 'overdue' && (

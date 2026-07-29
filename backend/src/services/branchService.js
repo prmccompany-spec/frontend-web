@@ -10,7 +10,7 @@ export const fetchAllBranches = async () => {
   return await getAllBranches();
 };
 
-export const addBranch = async (name) => {
+export const addBranch = async (name, gotraId) => {
   const trimmed = name.trim();
 
   const existing = await getBranchByName(trimmed);
@@ -20,10 +20,10 @@ export const addBranch = async (name) => {
     throw error;
   }
 
-  return await createBranch(trimmed);
+  return await createBranch(trimmed, gotraId);
 };
 
-export const editBranch = async (id, name) => {
+export const editBranch = async (id, name, gotraId) => {
   const existing = await getBranchById(id);
   if (!existing) {
     const error = new Error('Branch not found');
@@ -40,5 +40,5 @@ export const editBranch = async (id, name) => {
     throw error;
   }
 
-  return await updateBranch(id, trimmed);
+  return await updateBranch(id, trimmed, gotraId);
 };

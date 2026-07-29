@@ -6,8 +6,11 @@ import {
   updateProofData,
   deleteProofData,
 } from '../controllers/addressProofController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 router.post('/', createNewProof);
 router.get('/:id', getProof);

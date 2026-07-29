@@ -1,9 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCategories, createPayment, collectDues, getPayments } from '../../../services/paymentService';
 import { getMembers, getPendingPayments } from '../../../services/memberService';
+import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
+import { showToast } from '../../../components/Toast/toastBus';
 import './PaymentEntry.css';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local calendar date, not UTC — toISOString() converts to UTC first, so
+// for IST (UTC+5:30) it still shows "yesterday" for the first 5.5 hours
+// after local midnight.
+const today = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const fmt = (val) =>
   Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -96,22 +105,21 @@ function PaymentEntry() {
         payment_type: form.payment_type,
         notes: form.notes || null,
       });
+      showToast(`Cleared ${ids.length} due${ids.length !== 1 ? 's' : ''} successfully.`, 'success');
       setSelectedDueIds([]);
       loadMemberPanel(form.member_id);
     } catch (err) {
-      setCollectError(err.response?.data?.message || 'Failed to clear due(s).');
+      const msg = err.response?.data?.message || 'Failed to clear due(s).';
+      setCollectError(msg);
+      showToast(msg, 'error');
     } finally {
       setCollecting(false);
     }
   };
 
-  const filteredMembers = members.filter((m) => {
-    const q = memberSearch.toLowerCase();
-    return (
-      m.name?.toLowerCase().includes(q) ||
-      m.member_id?.toLowerCase().includes(q)
-    );
-  }).slice(0, 8);
+  const filteredMembers = sortByMemberId(
+    members.filter((m) => matchesIdOrText(m.member_id, [m.name], memberSearch))
+  ).slice(0, 8);
 
   const selectMember = (m, field) => {
     if (field === 'member_id') {
@@ -154,6 +162,7 @@ function PaymentEntry() {
         notes: form.notes || null,
       });
       setResult(res);
+      showToast('Payment recorded successfully.', 'success');
       setForm({
         member_id: '',
         memberDisplay: '',
@@ -166,7 +175,9 @@ function PaymentEntry() {
         notes: '',
       });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to record payment.');
+      const msg = err.response?.data?.message || 'Failed to record payment.';
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -241,7 +252,7 @@ function PaymentEntry() {
                 }}
               >
                 <option value="">Select collector…</option>
-                {members.map((m) => (
+                {sortByMemberId(members).map((m) => (
                   <option key={m.id} value={m.id}>{m.name} ({m.member_id})</option>
                 ))}
               </select>

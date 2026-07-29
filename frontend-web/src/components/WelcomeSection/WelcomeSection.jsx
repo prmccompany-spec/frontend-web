@@ -53,9 +53,6 @@ function WelcomeSection() {
           </p>
 
           <div className="welcome-actions">
-            <button className="welcome-donate-btn" onClick={() => navigate('/donate')}>
-              Donate Now
-            </button>
             <button className="welcome-learn-btn" onClick={() => navigate('/about')}>
               Learn More →
             </button>

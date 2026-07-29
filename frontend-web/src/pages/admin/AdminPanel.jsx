@@ -11,6 +11,8 @@ import { getPaymentSummary, getPayments } from '../../services/paymentService';
 import { getExpenses } from '../../services/expenseService';
 import { getRentals, getRentalProducts } from '../../services/rentalService';
 import { getAttendance } from '../../services/attendanceService';
+import { getLoginHistory } from '../../services/loginHistoryService';
+import { getRealizedRentalIncome } from '../../utils/rentalIncome';
 import './AdminPanel.css';
 
 const fmt = (val) =>
@@ -168,6 +170,7 @@ function AdminPanel() {
   const [rentals, setRentals] = useState([]);
   const [rentalProducts, setRentalProducts] = useState([]);
   const [attendanceRange, setAttendanceRange] = useState([]);
+  const [loginHistory, setLoginHistory] = useState([]);
   const [runTour, setRunTour] = useState(false);
   const [tourRestartToken, setTourRestartToken] = useState(0);
 
@@ -182,8 +185,10 @@ function AdminPanel() {
       getRentalProducts().catch(() => []),
       getAttendance({ from: daysAgo(ATTENDANCE_TREND_DAYS - 1), to: today() })
         .then((res) => res.data ?? []).catch(() => []),
+      getLoginHistory({ from: `${daysAgo(6)} 00:00:00`, limit: 500 })
+        .then((res) => res.data?.data ?? []).catch(() => []),
     ])
-      .then(([m, ps, pay, exp, dues, r, rp, att]) => {
+      .then(([m, ps, pay, exp, dues, r, rp, att, logins]) => {
         setMembers(m);
         setPaymentSummary(ps);
         setPayments(pay);
@@ -192,6 +197,7 @@ function AdminPanel() {
         setRentals(r);
         setRentalProducts(rp);
         setAttendanceRange(att);
+        setLoginHistory(logins);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -285,10 +291,14 @@ function AdminPanel() {
   });
 
   // ── Rentals ──
+  // Revenue is realized income only: a rental's advance counts the moment
+  // it's collected, its balance only once actually returned & settled — see
+  // getRealizedRentalIncome. An active rental's uncollected balance isn't
+  // revenue yet, and a cancelled rental never generated any.
   const activeRentalsCount = rentals.filter((r) => r.status === 'active').length;
-  const rentalsThisMonth = rentals.filter((r) => monthKey(r.created_at) === thisMonth);
-  const rentalRevenueThisMonth = rentalsThisMonth.reduce((s, r) => s + Number(r.amount), 0);
-  const rentalRevenueLastMonth = rentals.filter((r) => monthKey(r.created_at) === lastMonth).reduce((s, r) => s + Number(r.amount), 0);
+  const rentalIncomeEntries = getRealizedRentalIncome(rentals);
+  const rentalRevenueThisMonth = rentalIncomeEntries.filter((e) => monthKey(e.date) === thisMonth).reduce((s, e) => s + e.amount, 0);
+  const rentalRevenueLastMonth = rentalIncomeEntries.filter((e) => monthKey(e.date) === lastMonth).reduce((s, e) => s + e.amount, 0);
   const rentalRevenueDelta = pctChange(rentalRevenueThisMonth, rentalRevenueLastMonth);
   const rentedProductIds = new Set(rentals.filter((r) => r.status === 'active').map((r) => r.product_id));
   const availableProducts = rentalProducts.filter((p) => p.is_active && !rentedProductIds.has(p.id)).length;
@@ -296,7 +306,7 @@ function AdminPanel() {
   const recentRentals = [...rentals].sort((a, b) => asDate(b.created_at) - asDate(a.created_at)).slice(0, 5);
   const rentalDailyTrend = Array.from({ length: ATTENDANCE_TREND_DAYS }, (_, i) => {
     const dateKey = daysAgo(ATTENDANCE_TREND_DAYS - 1 - i);
-    return rentals.filter((r) => fmtDateKey(r.created_at) === dateKey).reduce((s, r) => s + Number(r.amount), 0);
+    return rentalIncomeEntries.filter((e) => fmtDateKey(e.date) === dateKey).reduce((s, e) => s + e.amount, 0);
   });
 
   // ── Payments Overview: Received vs Pending, last 6 months ──
@@ -308,6 +318,12 @@ function AdminPanel() {
   const pendingByMonth = monthsWindow.map(({ key }) => pendingOnly.filter((d) => d.due_date && monthKey(d.due_date) === key).reduce((s, d) => s + Number(d.amount), 0));
   const expensesByMonth = monthsWindow.map(({ key }) => expenses.filter((e) => monthKey(e.created_at) === key).reduce((s, e) => s + Number(e.amount), 0));
 
+  // ── Login Activity ──
+  const loginsToday = loginHistory.filter((l) => fmtDateKey(l.created_at) === today());
+  const successToday = loginsToday.filter((l) => l.status === 'success').length;
+  const failedToday = loginsToday.filter((l) => l.status === 'failed').length;
+  const recentLogins = [...loginHistory].sort((a, b) => asDate(b.created_at) - asDate(a.created_at)).slice(0, 5);
+
   return (
     <div className="admin-content">
       <div className="admin-page-header ap-dash-header">
@@ -316,6 +332,13 @@ function AdminPanel() {
           <p className="admin-page-subtitle">Overview of members, payments, dues, expenses, rentals and attendance</p>
         </div>
         <div className="ap-dash-header-right">
+          <button className="tour-btn" onClick={() => navigate('/admin/user-guide')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+            User Guide
+          </button>
           <button className="tour-btn" data-tour="admin-tour-btn" onClick={startTour}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -715,13 +738,14 @@ function AdminPanel() {
                 <div className="ap-mini-table-wrap">
                   <table className="ap-mini-table">
                     <thead>
-                      <tr><th>Asset</th><th>Rented To</th><th>Status</th></tr>
+                      <tr><th>Ref</th><th>Asset</th><th>Rented To</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                       {recentRentals.map((r) => (
                         <tr key={r.id}>
+                          <td><span className="ap-ref">{r.rental_ref}</span></td>
                           <td>{r.product_name}</td>
-                          <td>{r.member_name}</td>
+                          <td>{r.member_name || r.renter_name}</td>
                           <td>
                             <span className={`ap-rental-badge ap-rental-badge--${r.status}`}>
                               {RENTAL_STATUS_LABEL[r.status] ?? r.status}
@@ -753,6 +777,43 @@ function AdminPanel() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* ══════════ LOGIN ACTIVITY ══════════ */}
+          <div className="ap-chart-card ap-full-row">
+            <div className="ap-panel-header">
+              <span>Login Activity</span>
+              <button className="ap-panel-link" onClick={() => navigate('/admin/login-tracker')}>View All</button>
+            </div>
+            <div className="ap-asset-tiles">
+              <div className="ap-asset-tile">
+                <span className="ap-asset-tile-icon ap-asset-tile-icon--green">✓</span>
+                <span className="ap-asset-tile-value">{successToday}</span>
+                <span className="ap-asset-tile-label">Successful (Today)</span>
+              </div>
+              <div className="ap-asset-tile">
+                <span className="ap-asset-tile-icon ap-asset-tile-icon--red">✕</span>
+                <span className="ap-asset-tile-value">{failedToday}</span>
+                <span className="ap-asset-tile-label">Failed (Today)</span>
+              </div>
+            </div>
+            <div className="ap-panel-subheader">Recent Logins</div>
+            {recentLogins.length === 0 ? (
+              <div className="ap-chart-empty ap-chart-empty--sm">No login activity yet.</div>
+            ) : (
+              <ul className="ap-checkin-list">
+                {recentLogins.map((l) => (
+                  <li className="ap-checkin-item" key={l.id}>
+                    <span className="ap-checkin-avatar">{initials(l.member_name || l.phone || '?')}</span>
+                    <span className="ap-checkin-name">{l.member_name || l.phone || 'Unknown'}</span>
+                    <span className="ap-checkin-time">{fmtTime(l.created_at)}</span>
+                    <span className={`ap-badge ap-badge--${l.status === 'success' ? 'in' : 'out'}`}>
+                      {l.status === 'success' ? 'OK' : 'FAIL'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </ThemeProvider>
       )}

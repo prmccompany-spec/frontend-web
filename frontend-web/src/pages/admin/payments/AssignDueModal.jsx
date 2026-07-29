@@ -3,7 +3,14 @@ import { getCategories } from '../../../services/paymentService';
 import { getPendingPayments, createPendingPayment, deletePendingPayment } from '../../../services/memberService';
 import './AssignDueModal.css';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local calendar date, not UTC — toISOString() converts to UTC first, so
+// for IST (UTC+5:30) it still shows "yesterday" for the first 5.5 hours
+// after local midnight.
+const today = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 function AssignDueModal({ member, onClose }) {
   const [pendings, setPendings] = useState([]);

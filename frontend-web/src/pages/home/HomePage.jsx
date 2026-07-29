@@ -6,16 +6,14 @@ import DriveSection from '../../components/DriveSection/DriveSection';
 import SponsorsSection from '../../components/SponsorsSection/SponsorsSection';
 import TestimonialsSection from '../../components/TestimonialsSection/TestimonialsSection';
 import StatsSection from '../../components/StatsSection/StatsSection';
-import VideoPopup from '../../components/VideoPopup/VideoPopup';
 import './HomePage.css';
 
 function HomePage() {
   return (
     <div className="home-page">
-      <VideoPopup />
       <MarqueeBar />
       <HeroSlider />
-      <GameBanner />
+      {/* <GameBanner /> */}
       <WelcomeSection />
       <DriveSection />
       <SponsorsSection />

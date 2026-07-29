@@ -6,8 +6,11 @@ import {
   updateRentalProduct,
   deleteRentalProduct,
 } from '../controllers/rentalProductController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 router.get('/', listRentalProducts);
 router.post('/', createRentalProduct);

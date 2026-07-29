@@ -2,25 +2,7 @@ import { jsPDF } from 'jspdf';
 import idFront from '../assets/ID_front.png';
 import idBack from '../assets/ID_Back.png';
 import { resolveFileUrl } from './fileUrl';
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-    img.src = src;
-  });
-}
-
-function imageToDataURL(img) {
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  return canvas.toDataURL('image/png');
-}
+import { loadImage, imageToDataURL } from './imageUtils';
 
 /**
  * Downloads a two-page PDF ID card for the given member.

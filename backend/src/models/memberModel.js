@@ -3,10 +3,11 @@ import { generateMemberQR } from '../utils/qrUtils.js';
 import { hashPassword } from '../utils/passwordUtils.js';
 
 const MEMBER_SELECT = `
-  SELECT m.*, ms.status_name, b.name AS branch_name
+  SELECT m.*, ms.status_name, b.name AS branch_name, g.name AS gotra_name
   FROM members m
   LEFT JOIN member_status ms ON ms.id = m.status_id
   LEFT JOIN branches b ON b.id = m.branch_id
+  LEFT JOIN gotras g ON g.id = m.gotra_id
 `;
 
 export const getMemberById = async (memberId) => {
@@ -24,7 +25,9 @@ export const getMemberByMemberId = async (memberIdentifier) => {
 // numeric member_ids (none expected) CAST to 0 and are harmlessly ignored.
 export const getNextMemberId = async () => {
   const results = await query('SELECT COALESCE(MAX(CAST(member_id AS UNSIGNED)), 0) AS max_id FROM members');
-  return String(results[0].max_id + 1);
+  // mysql2 returns BIGINT aggregates as strings — without Number() here,
+  // "9995" + 1 does string concatenation ("99951") instead of addition.
+  return String(Number(results[0].max_id) + 1);
 };
 
 export const getMemberByTableId = async (tableId) => {
@@ -36,7 +39,6 @@ export const createMember = async (memberData) => {
   const {
     member_id,
     user_type_id,
-    gotra = null,
     family_name = null,
     name,
     father_name = null,
@@ -55,6 +57,7 @@ export const createMember = async (memberData) => {
     marriage_date = null,
     status_id = null,
     branch_id = null,
+    gotra_id = null,
     password = null,
   } = memberData;
 
@@ -66,12 +69,11 @@ export const createMember = async (memberData) => {
 
   const results = await query(
     `INSERT INTO members
-      (member_id, user_type_id, gotra, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, branch_id, created_at)
+      (member_id, user_type_id, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, branch_id, gotra_id, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       member_id,
       user_type_id,
-      gotra,
       family_name,
       name,
       father_name,
@@ -91,6 +93,7 @@ export const createMember = async (memberData) => {
       marriage_date,
       status_id,
       branch_id,
+      gotra_id,
     ]
   );
 
@@ -166,6 +169,10 @@ export const getAllMembers = async () => {
 
 export const updateMemberPhoto = async (memberId, photoPath) => {
   return await query('UPDATE members SET photo = ? WHERE id = ?', [photoPath, memberId]);
+};
+
+export const updateMemberQR = async (memberId, qrPath) => {
+  return await query('UPDATE members SET qr_code = ? WHERE id = ?', [qrPath, memberId]);
 };
 
 export const updateMemberPassword = async (memberId, hashedPassword) => {

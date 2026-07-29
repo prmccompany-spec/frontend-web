@@ -8,6 +8,7 @@ import {
   deleteEvent,
 } from '../controllers/eventController.js';
 import { uploadEventImage as uploadMiddleware } from '../middleware/upload.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -17,12 +18,15 @@ const router = express.Router();
 // PUT  /api/events/:id          — update (multipart/form-data, image optional)
 // PATCH /api/events/:id/image   — upload/replace image only
 // DELETE /api/events/:id        — soft-delete
+//
+// Reads are open — events are public marketing content, browsable without
+// logging in. Writes need auth.
 
 router.get('/', listEvents);
 router.get('/:id', getEvent);
-router.post('/', uploadMiddleware.single('image'), createEvent);
-router.put('/:id', uploadMiddleware.single('image'), updateEvent);
-router.patch('/:id/image', uploadMiddleware.single('image'), uploadEventImage);
-router.delete('/:id', deleteEvent);
+router.post('/', authMiddleware, uploadMiddleware.single('image'), createEvent);
+router.put('/:id', authMiddleware, uploadMiddleware.single('image'), updateEvent);
+router.patch('/:id/image', authMiddleware, uploadMiddleware.single('image'), uploadEventImage);
+router.delete('/:id', authMiddleware, deleteEvent);
 
 export default router;

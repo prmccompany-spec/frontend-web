@@ -6,12 +6,15 @@ import UnderConstruction from '../pages/UnderConstruction/UnderConstruction';
 import Dashboard from '../pages/user/Dashboard';
 import Services from '../pages/user/Services';
 import MemberSearch from '../pages/user/MemberSearch';
+import UserGuide from '../pages/user/UserGuide';
 import AdminLayout from '../pages/admin/AdminLayout';
 import AdminPanel from '../pages/admin/AdminPanel';
+import AdminUserGuide from '../pages/admin/UserGuide';
 import RegisterMember from '../pages/admin/RegisterMember';
 import MemberList from '../pages/admin/MemberList';
 import Settings from '../pages/admin/Settings';
 import AuthControl from '../pages/admin/AuthControl';
+import LoginTracker from '../pages/admin/LoginTracker';
 import PaymentEntry from '../pages/admin/payments/PaymentEntry';
 import PaymentHistory from '../pages/admin/payments/PaymentHistory';
 import Reports from '../pages/admin/Reports';
@@ -34,7 +37,11 @@ import Scanner from '../pages/admin/attendance/Scanner';
 import AttendanceReport from '../pages/admin/attendance/AttendanceReport';
 
 const ProtectedRoute = ({ children, routeKey }) => {
-  const { canAccess } = useAuth();
+  const { canAccess, permissionsLoaded } = useAuth();
+  // Route permissions load asynchronously — deciding before they arrive
+  // would default to "allowed" and briefly flash protected content before
+  // redirecting once the real permission comes in.
+  if (!permissionsLoaded) return null;
   if (!canAccess(routeKey)) {
     return <Navigate to="/" replace />;
   }
@@ -74,6 +81,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/user-guide"
+        element={
+          <ProtectedRoute routeKey="user-guide">
+            <UserGuide />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/admin"
         element={
           <ProtectedRoute routeKey="admin">
@@ -86,6 +102,7 @@ function AppRoutes() {
         <Route path="register-member" element={<RegisterMember />} />
         <Route path="settings" element={<Settings />} />
         <Route path="auth-control" element={<AuthControl />} />
+        <Route path="login-tracker" element={<LoginTracker />} />
         <Route path="payments/entry" element={<PaymentEntry />} />
         <Route path="payments/history" element={<PaymentHistory />} />
         <Route path="payments/assign-due" element={<AssignDue />} />
@@ -103,6 +120,7 @@ function AppRoutes() {
         <Route path="rentals/history" element={<RentalHistory />} />
         <Route path="attendance/scan" element={<Scanner />} />
         <Route path="attendance/report" element={<AttendanceReport />} />
+        <Route path="user-guide" element={<AdminUserGuide />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />
@@ -111,14 +129,6 @@ function AppRoutes() {
       <Route path="/events" element={<EventsPage />} />
       <Route path="/news" element={<UnderConstruction />} />
       <Route path="/awards" element={<UnderConstruction />} />
-      <Route
-        path="/donate"
-        element={
-          <ProtectedRoute routeKey="donate">
-            <UnderConstruction />
-          </ProtectedRoute>
-        }
-      />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy-policy" element={<PrivacyPage />} />
       <Route path="/refund-policy" element={<RefundPage />} />

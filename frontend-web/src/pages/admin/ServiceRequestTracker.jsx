@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { getAllRequests, getRequestDetail } from '../../services/serviceRequestService';
 import { getWorkflowSteps } from '../../services/serviceService';
 import { resolveFileUrl } from '../../utils/fileUrl';
+import { exportTableToPdf } from '../../utils/pdfExport';
+import ExportPdfButton from '../../components/ExportPdfButton/ExportPdfButton';
 import './ServiceRequestTracker.css';
 
 const STATUS_LABEL = {
@@ -189,6 +191,30 @@ function ServiceRequestTracker() {
 
   const shown = { awaiting, completed, rejected, all: filtered }[activeTab];
 
+  const activeTabLabel = TABS.find((t) => t.key === activeTab)?.label ?? 'All Requests';
+  const handleExport = () => exportTableToPdf({
+    title: `Service Request Tracker — ${activeTabLabel}`,
+    subtitle: search ? `Search "${search}"` : 'All records in this view',
+    summary: [{ label: 'Requests', value: shown.length }],
+    columns: [
+      { header: 'Request No', key: 'requestNo' },
+      { header: 'Member', key: 'member' },
+      { header: 'Service', key: 'service' },
+      { header: 'Status', key: 'status' },
+      { header: 'Submitted', key: 'submitted' },
+      { header: 'Completed', key: 'completed' },
+    ],
+    rows: shown.map((r) => ({
+      requestNo: r.request_no,
+      member: `${r.member_name}${r.member_code ? ` (${r.member_code})` : ''}`,
+      service: r.service_name,
+      status: STATUS_LABEL[r.status] ?? r.status,
+      submitted: fmtDate(r.submitted_at),
+      completed: fmtDate(r.completed_at),
+    })),
+    filename: 'service-request-tracker',
+  });
+
   const totalRequests = requests.length;
   const totalAwaiting = requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length;
   const totalCompleted = requests.filter((r) => r.status === 'COMPLETED').length;
@@ -236,6 +262,7 @@ function ServiceRequestTracker() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <ExportPdfButton onExport={handleExport} disabled={shown.length === 0} />
       </div>
 
       <div className="rt-section">

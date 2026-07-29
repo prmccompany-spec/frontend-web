@@ -1,6 +1,7 @@
 import React, { createContext, useState, useCallback, useEffect } from 'react';
 import authService from '../services/authService';
 import api from '../services/api';
+import { showToast } from '../components/Toast/toastBus';
 
 export const AuthContext = createContext();
 
@@ -8,13 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUser());
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
   const [routePermissions, setRoutePermissions] = useState([]);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     api.get('/route-permissions')
       .then((res) => setRoutePermissions(res.data.data ?? []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setPermissionsLoaded(true));
   }, []);
 
   const login = useCallback(async (phone, password) => {
@@ -24,10 +27,12 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.login(phone, password);
       setUser(data.user);
       setIsAuthenticated(true);
+      showToast(`Welcome back, ${data.user.name}!`, 'success');
       return data;
     } catch (err) {
       const msg = err.response?.data?.message || 'Invalid phone number or password';
       setError(msg);
+      showToast(msg, 'error');
       throw err;
     } finally {
       setLoading(false);
@@ -43,6 +48,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     setError(null);
+    showToast('You have been logged out.', 'success');
   }, []);
 
   const canAccess = useCallback(
@@ -64,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, routePermissions, loading, error, login, resetPassword, logout, canAccess }}
+      value={{ user, isAuthenticated, routePermissions, permissionsLoaded, loading, error, login, resetPassword, logout, canAccess }}
     >
       {children}
     </AuthContext.Provider>

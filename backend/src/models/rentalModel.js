@@ -1,5 +1,15 @@
 import { query } from '../config/database.js';
 
+// Mirrors paymentModel.js's generatePaymentRef — same shape, different
+// prefix, so every income source in the app carries a consistent,
+// human-shareable reference id for future lookup/reconciliation.
+const generateRentalRef = () => {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `RENT-${date}-${rand}`;
+};
+
 const SELECT_BASE = `
   SELECT r.*,
     p.name AS product_name,
@@ -7,7 +17,7 @@ const SELECT_BASE = `
     cb.name AS collected_by_name
   FROM rentals r
   JOIN rental_products p ON r.product_id = p.id
-  JOIN members m ON r.member_id = m.id
+  LEFT JOIN members m ON r.member_id = m.id
   LEFT JOIN members cb ON r.collected_by = cb.id
 `;
 
@@ -42,22 +52,33 @@ export const getAllRentals = async (filters = {}) => {
 };
 
 export const createRental = async ({
-  product_id, member_id, rate_type, rate_amount, start_date, end_date,
-  amount, payment_type = 'cash', collected_by = null, notes = null,
+  product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date,
+  amount, advance_amount = 0, advance_payment_type = null, collected_by = null, notes = null,
 }) => {
+  const rental_ref = generateRentalRef();
   const result = await query(
     `INSERT INTO rentals
-      (product_id, member_id, rate_type, rate_amount, start_date, end_date, amount, payment_type, collected_by, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [product_id, member_id, rate_type, rate_amount, start_date, end_date, amount, payment_type, collected_by, notes]
+      (rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, notes]
   );
-  return result.insertId;
+  return { id: result.insertId, rental_ref };
 };
 
+// Only for 'active' <-> 'cancelled' — returning a rental goes through
+// settleRentalReturn instead, since it also records the final settlement.
 export const updateRentalStatus = async (id, status) => {
-  const returned_at = status === 'returned' ? new Date() : null;
   return await query(
-    'UPDATE rentals SET status = ?, returned_at = ?, updated_at = NOW() WHERE id = ?',
-    [status, returned_at, id]
+    'UPDATE rentals SET status = ?, updated_at = NOW() WHERE id = ?',
+    [status, id]
+  );
+};
+
+export const settleRentalReturn = async (id, { end_date, amount, settlement_payment_type }) => {
+  return await query(
+    `UPDATE rentals
+     SET status = 'returned', end_date = ?, amount = ?, settlement_payment_type = ?, returned_at = NOW(), updated_at = NOW()
+     WHERE id = ?`,
+    [end_date, amount, settlement_payment_type, id]
   );
 };

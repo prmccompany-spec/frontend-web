@@ -120,10 +120,106 @@
   overflow: hidden;
 }
 
-/* Upper blank area — content will be added later */
+/* Upper area — live community review summary */
 .stats-impact-content {
   flex: 1;
   background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.stats-review-summary {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stats-review-score {
+  font-size: 56px;
+  font-weight: 900;
+  color: #111;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stats-review-stars {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 10px;
+}
+
+.stats-review-star {
+  font-size: 22px;
+  color: #e5e5e5;
+}
+
+.stats-review-star--filled {
+  color: #e8341a;
+}
+
+.stats-review-count {
+  font-size: 13.5px;
+  color: #999;
+  margin: 0;
+}
+
+.stats-review-quote {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #f4a7a7;
+  width: 100%;
+  position: relative;
+}
+
+.stats-review-quote-mark {
+  font-size: 44px;
+  color: #e8341a;
+  opacity: 0.15;
+  line-height: 1;
+  display: block;
+}
+
+.stats-review-quote-text {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.7;
+  margin: 4px 0 10px;
+  font-style: italic;
+}
+
+.stats-review-quote-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8341a;
+}
+
+.stats-review-summary--empty {
+  color: #aaa;
+  gap: 14px;
+}
+
+.stats-review-summary--empty svg {
+  width: 40px;
+  height: 40px;
+  color: #f4a7a7;
+}
+
+.stats-review-summary--empty p {
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0;
+}
+
+.stats-impact-thanks {
+  font-size: 15px;
+  color: #1a6b35;
+  font-weight: 600;
+  flex: 1;
 }
 
 /* Footer area */

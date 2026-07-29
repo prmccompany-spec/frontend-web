@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import ResetPasswordModal from '../../components/ProfileMenu/ResetPasswordModal';
+import { getPendingApprovals } from '../../services/serviceRequestService';
+import { getReviews } from '../../services/reviewService';
 import './AdminLayout.css';
+
+// How often to refresh the sidebar's pending-count badges. The layout stays
+// mounted across every admin sub-page, so this is the only place a poll is
+// needed to keep counts current without a full page reload.
+const BADGE_POLL_MS = 60000;
 
 const sidebarLinks = [
   {
@@ -66,6 +73,7 @@ const sidebarLinks = [
     label: 'Request Tracker',
     path: '/admin/services/requests',
     end: false,
+    badgeKey: 'requests',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -73,7 +81,7 @@ const sidebarLinks = [
       </svg>
     ),
   },
-  { divider: true, label: 'Events' },
+  { divider: true, label: 'Website' },
   {
     label: 'Add Event',
     path: '/admin/events/add',
@@ -86,6 +94,17 @@ const sidebarLinks = [
         <line x1="3" y1="10" x2="21" y2="10" />
         <line x1="12" y1="14" x2="12" y2="18" />
         <line x1="10" y1="16" x2="14" y2="16" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Reviews',
+    path: '/admin/reviews',
+    end: false,
+    badgeKey: 'reviews',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
       </svg>
     ),
   },
@@ -285,6 +304,22 @@ function AdminLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showReset, setShowReset] = useState(false);
+  const [badgeCounts, setBadgeCounts] = useState({ requests: 0, reviews: 0 });
+
+  const loadBadgeCounts = useCallback(() => {
+    getPendingApprovals()
+      .then((requests) => setBadgeCounts((c) => ({ ...c, requests: requests.length })))
+      .catch(() => {});
+    getReviews('pending')
+      .then((res) => setBadgeCounts((c) => ({ ...c, reviews: res.data?.data?.length ?? 0 })))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadBadgeCounts();
+    const interval = setInterval(loadBadgeCounts, BADGE_POLL_MS);
+    return () => clearInterval(interval);
+  }, [loadBadgeCounts]);
 
   const handleLogout = () => {
     logout();
@@ -320,6 +355,9 @@ function AdminLayout() {
               >
                 {link.icon}
                 <span>{link.label}</span>
+                {link.badgeKey && badgeCounts[link.badgeKey] > 0 && (
+                  <span className="al-nav-badge">{badgeCounts[link.badgeKey]}</span>
+                )}
               </NavLink>
             )
           )}

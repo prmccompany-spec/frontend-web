@@ -25,6 +25,7 @@ import TermsPage from '../pages/legal/TermsPage';
 import PrivacyPage from '../pages/legal/PrivacyPage';
 import RefundPage from '../pages/legal/RefundPage';
 import AddEvent from '../pages/admin/events/AddEvent';
+import Reviews from '../pages/admin/Reviews';
 import ServicesList from '../pages/admin/ServicesList';
 import ServiceForm from '../pages/admin/ServiceForm';
 import ServiceConfig from '../pages/admin/ServiceConfig';
@@ -109,6 +110,7 @@ function AppRoutes() {
         <Route path="payments/due-tracker" element={<DueTracker />} />
         <Route path="reports" element={<Reports />} />
         <Route path="events/add" element={<AddEvent />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="services" element={<ServicesList />} />
         <Route path="services/new" element={<ServiceForm />} />
         <Route path="services/:id/edit" element={<ServiceForm />} />

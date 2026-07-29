@@ -532,3 +532,26 @@ ALTER TABLE rentals ADD COLUMN rental_ref VARCHAR(30) UNIQUE NULL AFTER id;
 
 INSERT INTO route_permissions (route_key, route_label, description, require_login, allowed_type_ids) VALUES
 ('user-guide', 'Member User Guide', 'Member portal help/user guide page — any logged-in member can access', 1, '[]');
+
+-- ============================================================
+-- PUBLIC REVIEWS / FEEDBACK FEATURE
+-- ============================================================
+-- Anyone visiting the home page can leave a review — name, a 1-5 star
+-- rating, and a message — with no login required, so there's no
+-- member_id to attach (matches the request: "there is no member_id fetch
+-- for this"). Submissions start 'pending' and only ever appear on the
+-- public home page once an admin approves them via the new admin/reviews
+-- page. reviewed_by records which admin (members.id) actioned it, purely
+-- for an audit trail — no FOREIGN KEY constraint, matching this schema's
+-- convention throughout.
+
+CREATE TABLE reviews (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  rating TINYINT NOT NULL,
+  message TEXT NOT NULL,
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  reviewed_by INT NULL,
+  reviewed_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

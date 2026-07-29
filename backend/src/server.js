@@ -25,6 +25,7 @@ import expenseRoutes from './routes/expenseRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import gotraRoutes from './routes/gotraRoutes.js';
 import loginHistoryRoutes from './routes/loginHistoryRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializePool } from './config/database.js';
 
@@ -68,6 +69,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/gotras', gotraRoutes);
 app.use('/api/login-history', loginHistoryRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

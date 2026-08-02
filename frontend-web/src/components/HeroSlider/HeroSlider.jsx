@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import slide1 from '../../assets/prmcf_welcome_image.png';
+import slide1 from '../../assets/office_photo.jpg';
 import volleyballSlide from '../../assets/volley_ball_tournament.png';
 import groupPhoto from '../../assets/group_photo.png';
 import './HeroSlider.css';

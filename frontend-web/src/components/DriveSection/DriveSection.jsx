@@ -1,3 +1,4 @@
+import volleyballImg from '../../assets/volley_ball_tournament.png';
 import './DriveSection.css';
 
 const cards = [
@@ -9,9 +10,9 @@ const cards = [
   },
   {
     id: 2,
-    title: 'Social Welfare',
-    description: 'Supporting the needy through various initiatives.',
-    image: null,
+    title: 'Volleyball Tournament',
+    description: 'Celebrating sportsmanship and community spirit.',
+    image: volleyballImg,
   },
   {
     id: 3,

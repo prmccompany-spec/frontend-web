@@ -51,7 +51,7 @@ function Navbar() {
 
         {/* Logo - Center */}
         <div className="navbar-logo" onClick={() => goTo('/')}>
-          <img src={logo} alt="PRMC Logo" />
+          <img src={logo} alt="PRMCF Logo" />
         </div>
 
         {/* Right side actions */}
@@ -84,7 +84,7 @@ function Navbar() {
       <div className={`nav-drawer${menuOpen ? ' is-open' : ''}`}>
         {/* Drawer header */}
         <div className="nav-drawer-header">
-          <img src={logo} alt="PRMC Logo" className="nav-drawer-logo" onClick={() => goTo('/')} />
+          <img src={logo} alt="PRMCF Logo" className="nav-drawer-logo" onClick={() => goTo('/')} />
           <button className="nav-drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round">

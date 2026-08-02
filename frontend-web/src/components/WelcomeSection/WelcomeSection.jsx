@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import welcomeImg from '../../assets/slide3.jpg';
+import welcomeImg from '../../assets/deity_image.png';
 import './WelcomeSection.css';
 
 function WelcomeSection() {
@@ -17,7 +17,7 @@ function WelcomeSection() {
         <div className="welcome-image-wrap">
           <div className="welcome-blob-ring">
             <div className="welcome-blob">
-              <img src={welcomeImg} alt="Community children" className="welcome-img" />
+              <img src={welcomeImg} alt="PRMCF Deity" className="welcome-img" />
             </div>
           </div>
         </div>

@@ -1,28 +1,28 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import slide1 from '../../assets/slide1.jpg';
-import slide2 from '../../assets/slide2.jpg';
-import slide3 from '../../assets/slide3.jpg';
+import slide1 from '../../assets/prmcf_welcome_image.png';
+import volleyballSlide from '../../assets/volley_ball_tournament.png';
+import groupPhoto from '../../assets/group_photo.png';
 import './HeroSlider.css';
 
 const slides = [
   {
     id: 1,
-    title: 'Welcome to PRMC',
+    title: 'Welcome to PRMCF',
     subtitle: 'Preserving Tradition, Building the Future',
     image: slide1, // replace with actual image import
   },
   {
-    id: 2,
-    title: 'Annual Culture Programs',
-    subtitle: 'Connecting Generations Through Events and Festivals',
-    image: slide2,
+    id: 4,
+    title: 'Volleyball Tournament',
+    subtitle: 'Celebrating Sportsmanship and Community Spirit',
+    image: volleyballSlide,
   },
   {
-    id: 3,
-    title: 'Welfare Activities for People',
-    subtitle: 'Building the Future for Those in Need',
-    image: slide3,
+    id: 5,
+    title: 'Our Community Together',
+    subtitle: 'Coming Together in Faith and Fellowship',
+    image: groupPhoto,
   },
 ];
 
@@ -75,7 +75,7 @@ function HeroSlider() {
 
         {/* Right: Text */}
         <div className={`hero-content ${animating ? 'hero-content-fade' : ''}`}>
-          <div className="hero-tag">PRMC Foundation</div>
+          <div className="hero-tag">PRMCF Foundation</div>
           <h1 className="hero-title">{slide.title}</h1>
           <p className="hero-subtitle">{slide.subtitle}</p>
           <div className="hero-buttons">

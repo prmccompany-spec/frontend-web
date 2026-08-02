@@ -212,15 +212,7 @@ function AboutPage() {
 
           {/* Left — video with overlay tag */}
           <div className="ab-about-img-wrap">
-            <video
-              className="ab-about-img"
-              src="/about-video.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              poster={festivalImg}
-            />
+            <img src={festivalImg} alt="Community festival" className="ab-about-img" />
             <div className="ab-about-img-tag">
               <span>🎉</span>
               <span>Annual Community Celebration</span>

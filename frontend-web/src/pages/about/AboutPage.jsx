@@ -210,9 +210,17 @@ function AboutPage() {
       <section className="ab-about">
         <div className="ab-about-inner">
 
-          {/* Left — image with overlay tag */}
+          {/* Left — video with overlay tag */}
           <div className="ab-about-img-wrap">
-            <img src={festivalImg} alt="Community festival" className="ab-about-img" />
+            <video
+              className="ab-about-img"
+              src="/about-video.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              poster={festivalImg}
+            />
             <div className="ab-about-img-tag">
               <span>🎉</span>
               <span>Annual Community Celebration</span>

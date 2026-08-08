@@ -12,8 +12,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  height: 60px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  padding: 12px 32px;
+  min-height: 60px;
   flex-shrink: 0;
   box-shadow: 0 2px 12px rgba(232, 52, 26, 0.3);
 }
@@ -50,7 +52,10 @@
 .ms-header-nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+  row-gap: 8px;
 }
 
 .ms-nav-btn {
@@ -230,6 +235,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  min-width: 0;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
@@ -273,6 +279,7 @@
   font-weight: 700;
   color: #111;
   margin-bottom: 6px;
+  overflow-wrap: break-word;
 }
 
 .ms-card-type {
@@ -543,7 +550,14 @@
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 800px) {
   .ms-header {
-    padding: 0 16px;
+    padding: 10px 16px;
+  }
+
+  /* Dashboard / Offline Services duplicate links already reachable from
+     the Dashboard page itself — drop them here so the portal header
+     stays to one row instead of overflowing on medium/small screens. */
+  .ms-header-nav .ms-nav-btn {
+    display: none;
   }
 
   .ms-content {
@@ -565,11 +579,9 @@
 }
 
 @media (max-width: 480px) {
-  .ms-nav-btn {
-    display: none;
-  }
-
   .ms-grid {
-    grid-template-columns: 1fr 1fr;
+    /* One card per row — two squeezed columns left each card too
+       narrow for the name/photo/details to fit. */
+    grid-template-columns: 1fr;
   }
 }

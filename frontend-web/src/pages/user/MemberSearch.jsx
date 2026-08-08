@@ -13,6 +13,21 @@ import './MemberSearch.css';
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
+// Falls back to initials if there's no photo, or the photo URL fails to
+// load — a bare <img> with a broken src renders its alt text instead,
+// which overflows the circular frame on mobile browsers.
+function MemberAvatar({ photo, name, imgClassName, initialClassName }) {
+  const [failed, setFailed] = useState(false);
+  const src = photo ? resolveFileUrl(photo) : null;
+
+  if (!src || failed) {
+    return <span className={initialClassName}>{(name || '?')[0].toUpperCase()}</span>;
+  }
+  return (
+    <img src={src} alt={name} className={imgClassName} onError={() => setFailed(true)} />
+  );
+}
+
 // ── Full details modal ──────────────────────────────────────────────────────
 function DetailsModal({ member, typeMap, onClose }) {
   const [addresses, setAddresses] = useState([]);
@@ -49,9 +64,12 @@ function DetailsModal({ member, typeMap, onClose }) {
             </svg>
           </button>
           <div className="ms-profile-photo">
-            {member.photo
-              ? <img src={resolveFileUrl(member.photo)} alt={member.name} className="ms-profile-img" />
-              : <span className="ms-profile-initial">{(member.name || '?')[0].toUpperCase()}</span>}
+            <MemberAvatar
+              photo={member.photo}
+              name={member.name}
+              imgClassName="ms-profile-img"
+              initialClassName="ms-profile-initial"
+            />
           </div>
           <h2 className="ms-profile-name">{member.name}</h2>
           <div className="ms-profile-meta">
@@ -211,9 +229,12 @@ function MemberSearch() {
             {filtered.map((m) => (
               <div className="ms-card" key={m.id}>
                 <div className="ms-card-photo">
-                  {m.photo
-                    ? <img src={resolveFileUrl(m.photo)} alt={m.name} className="ms-card-img" />
-                    : <span className="ms-card-initial">{(m.name || '?')[0].toUpperCase()}</span>}
+                  <MemberAvatar
+                    photo={m.photo}
+                    name={m.name}
+                    imgClassName="ms-card-img"
+                    initialClassName="ms-card-initial"
+                  />
                 </div>
                 <div className="ms-card-body">
                   <div className="ms-card-name">{m.name}</div>

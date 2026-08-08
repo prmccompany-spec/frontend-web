@@ -12,8 +12,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  height: 60px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  padding: 12px 32px;
+  min-height: 60px;
   flex-shrink: 0;
   box-shadow: 0 2px 12px rgba(232, 52, 26, 0.3);
 }
@@ -50,7 +52,10 @@
 .db-header-nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+  row-gap: 8px;
 }
 
 .db-nav-btn {
@@ -1297,7 +1302,14 @@
   }
 
   .db-header {
-    padding: 0 16px;
+    padding: 10px 16px;
+  }
+
+  /* Home / Member Search / Offline Services duplicate links already
+     reachable from the site-wide navbar (hamburger drawer + profile
+     dropdown) — drop them here so the portal header stays to one row. */
+  .db-header-nav .db-nav-btn {
+    display: none;
   }
 
   .db-content {
@@ -1334,7 +1346,19 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .db-nav-btn {
+  /* Collapse the tour/guide pills to icon-only circles so brand + actions
+     + avatar fit on one line instead of stacking into a cluttered header. */
+  .tour-btn {
+    padding: 9px;
+    border-radius: 50%;
+  }
+
+  .tour-btn-label {
     display: none;
+  }
+
+  .tour-btn svg {
+    width: 15px;
+    height: 15px;
   }
 }

@@ -280,19 +280,19 @@ function Dashboard() {
           <button className="db-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="db-nav-btn" onClick={() => navigate('/member-search')}>Member Search</button>
           <button className="db-nav-btn" onClick={() => navigate('/services')}>Offline Services</button>
-          <button className="tour-btn tour-btn--onred" onClick={() => navigate('/user-guide')}>
+          <button className="tour-btn tour-btn--onred" onClick={() => navigate('/user-guide')} aria-label="User Guide">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
-            User Guide
+            <span className="tour-btn-label">User Guide</span>
           </button>
-          <button className="tour-btn tour-btn--onred" data-tour="member-tour-btn" onClick={startTour}>
+          <button className="tour-btn tour-btn--onred" data-tour="member-tour-btn" onClick={startTour} aria-label="Take a Tour">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
             </svg>
-            Take a Tour
+            <span className="tour-btn-label">Take a Tour</span>
           </button>
           <ProfileMenu />
         </nav>

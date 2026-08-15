@@ -128,7 +128,7 @@ function Delta({ value, suffix = 'vs last month' }) {
 }
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [member, setMember] = useState(null);
@@ -1184,7 +1184,7 @@ function Dashboard() {
         <EditProfileModal
           member={member}
           onClose={() => setShowEditProfile(false)}
-          onSaved={() => { setShowEditProfile(false); loadAll(); }}
+          onSaved={() => { setShowEditProfile(false); loadAll(); refreshUser().catch(() => {}); }}
         />
       )}
     </div>

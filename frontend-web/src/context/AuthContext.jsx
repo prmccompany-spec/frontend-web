@@ -43,6 +43,14 @@ export const AuthProvider = ({ children }) => {
     return await authService.resetPassword(oldPassword, newPassword);
   }, []);
 
+  // Re-issues tokens so the cached user payload (name, phone, etc.) picks up
+  // edits made after login instead of staying frozen until the next sign-in.
+  const refreshUser = useCallback(async () => {
+    const data = await authService.refreshAccessToken();
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
@@ -70,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, routePermissions, permissionsLoaded, loading, error, login, resetPassword, logout, canAccess }}
+      value={{ user, isAuthenticated, routePermissions, permissionsLoaded, loading, error, login, resetPassword, refreshUser, logout, canAccess }}
     >
       {children}
     </AuthContext.Provider>

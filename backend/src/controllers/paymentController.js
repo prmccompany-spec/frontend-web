@@ -7,6 +7,7 @@ import {
   recordPayment,
   fetchPayments,
   fetchPaymentById,
+  modifyPayment,
   fetchSummary,
   collectDues,
 } from '../services/paymentService.js';
@@ -42,6 +43,15 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 export const createPayment = asyncHandler(async (req, res) => {
   const result = await recordPayment(req.body);
   res.status(201).json({ success: true, message: 'Payment recorded', ...result });
+});
+
+export const updatePayment = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id || Number.isNaN(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid payment ID' });
+  }
+  await modifyPayment(id, req.body);
+  res.json({ success: true, message: 'Payment updated' });
 });
 
 export const listPayments = asyncHandler(async (req, res) => {

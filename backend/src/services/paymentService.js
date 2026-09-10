@@ -6,6 +6,7 @@ import {
   deactivateCategory,
   createPayment,
   insertPaymentTx,
+  updatePayment,
   getPaymentById,
   getAllPayments,
   getPaymentSummary,
@@ -85,6 +86,54 @@ export const fetchPaymentById = async (id) => {
     throw err;
   }
   return payment;
+};
+
+export const modifyPayment = async (id, { category_id, amount, payment_date, payment_type, notes }) => {
+  const existing = await getPaymentById(id);
+  if (!existing) {
+    const err = new Error('Payment not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (existing.pending_payment_id) {
+    const err = new Error('Payments used to clear dues cannot be edited');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (!category_id || amount === undefined || amount === null || amount === '' || !payment_date) {
+    const err = new Error('category_id, amount and payment_date are required');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!['cash', 'qr'].includes(payment_type)) {
+    const err = new Error('payment_type must be cash or qr');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    const err = new Error('Amount must be greater than zero');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const category = await getCategoryById(category_id);
+  if (!category) {
+    const err = new Error('Payment category not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  return await updatePayment(id, {
+    category_id,
+    amount: numericAmount,
+    payment_date,
+    payment_type,
+    notes: notes?.trim() || null,
+  });
 };
 
 export const modifyCategory = async (id, data) => {

@@ -5,6 +5,7 @@ import {
   updateCategory,
   deleteCategory,
   createPayment,
+  updatePayment,
   listPayments,
   getPayment,
   getSummary,
@@ -23,6 +24,7 @@ router.delete('/categories/:id', deleteCategory);
 router.get('/summary', getSummary);
 router.get('/', listPayments);
 router.post('/', createPayment);
+router.put('/:id', updatePayment);
 router.post('/collect-dues', collectDuesForMember);
 router.get('/:id', getPayment);
 

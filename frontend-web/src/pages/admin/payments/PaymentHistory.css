@@ -170,3 +170,139 @@
   color: #999;
   font-size: 14px;
 }
+
+.ph-row-btn {
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  background: white;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+.ph-row-btn:hover {
+  background: #fff5f5;
+}
+
+.ph-locked {
+  color: #999;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ph-overlay {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 1000;
+}
+
+.ph-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+  max-width: 520px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.ph-modal-header {
+  align-items: flex-start;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+
+.ph-modal-title {
+  color: #111;
+  font-size: 19px;
+  margin: 0;
+}
+
+.ph-modal-subtitle {
+  color: #777;
+  font-size: 13px;
+  margin: 5px 0 0;
+}
+
+.ph-modal-close {
+  background: none;
+  border: 0;
+  color: #666;
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.ph-modal-body {
+  display: grid;
+  gap: 15px;
+  padding: 22px 24px;
+}
+
+.ph-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ph-label {
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ph-field .ph-input {
+  width: 100%;
+}
+
+.ph-textarea {
+  resize: vertical;
+}
+
+.ph-error {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 7px;
+  color: #be123c;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.ph-modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 5px;
+}
+
+.ph-btn {
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 15px;
+}
+
+.ph-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.ph-btn--ghost {
+  background: white;
+  border: 1px solid #ddd;
+  color: #555;
+}
+
+.ph-btn--primary {
+  background: #dc3545;
+  border: 1px solid #dc3545;
+  color: white;
+}

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getPayments, getCategories } from '../../../services/paymentService';
+import { getPayments, getCategories, updatePayment } from '../../../services/paymentService';
 import { matchesIdOrText } from '../../../utils/memberSearch';
 import { exportTableToPdf } from '../../../utils/pdfExport';
 import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
+import { showToast } from '../../../components/Toast/toastBus';
 import './PaymentHistory.css';
 
 const fmt = (val) =>
@@ -11,10 +12,104 @@ const fmt = (val) =>
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
+function PaymentModal({ categories, payment, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    category_id: String(payment.category_id),
+    amount: String(payment.amount),
+    payment_date: payment.payment_date?.slice(0, 10) ?? '',
+    payment_type: payment.payment_type,
+    notes: payment.notes ?? '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!form.category_id) return setError('Please select a payment category.');
+    if (!form.amount || Number(form.amount) <= 0) return setError('Enter a valid amount.');
+    if (!form.payment_date) return setError('Please select a payment date.');
+
+    setSubmitting(true);
+    try {
+      await updatePayment(payment.id, {
+        category_id: Number(form.category_id),
+        amount: Number(form.amount),
+        payment_date: form.payment_date,
+        payment_type: form.payment_type,
+        notes: form.notes,
+      });
+      showToast('Payment updated successfully.', 'success');
+      onSaved();
+    } catch (err) {
+      const message = err.response?.data?.message ?? 'Failed to update payment.';
+      setError(message);
+      showToast(message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="ph-overlay" onClick={onClose}>
+      <div className="ph-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="ph-modal-header">
+          <div>
+            <h2 className="ph-modal-title">Edit Payment</h2>
+            <p className="ph-modal-subtitle">{payment.payment_ref} · {payment.member_name}</p>
+          </div>
+          <button type="button" className="ph-modal-close" onClick={onClose} aria-label="Close">×</button>
+        </div>
+        <form className="ph-modal-body" onSubmit={handleSubmit}>
+          {error && <div className="ph-error">{error}</div>}
+          <div className="ph-field">
+            <label className="ph-label">Payment Category *</label>
+            <select className="ph-input" value={form.category_id} onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}>
+              <option value="">Select category…</option>
+              {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select>
+          </div>
+          <div className="ph-field">
+            <label className="ph-label">Amount (₹) *</label>
+            <input type="number" min="1" step="0.01" className="ph-input" placeholder="0.00"
+              value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+          </div>
+          <div className="ph-field">
+            <label className="ph-label">Payment Date *</label>
+            <input type="date" className="ph-input" value={form.payment_date}
+              onChange={(e) => setForm((f) => ({ ...f, payment_date: e.target.value }))} />
+          </div>
+          <div className="ph-field">
+            <label className="ph-label">Payment Type *</label>
+            <select className="ph-input" value={form.payment_type}
+              onChange={(e) => setForm((f) => ({ ...f, payment_type: e.target.value }))}>
+              <option value="cash">Cash</option>
+              <option value="qr">QR Code</option>
+            </select>
+          </div>
+          <div className="ph-field">
+            <label className="ph-label">Notes</label>
+            <textarea className="ph-input ph-textarea" rows={3} placeholder="Optional remarks…"
+              value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+          </div>
+          <div className="ph-modal-footer">
+            <button type="button" className="ph-btn ph-btn--ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="ph-btn ph-btn--primary" disabled={submitting}>
+              {submitting ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function PaymentHistory() {
   const [payments, setPayments] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingPayment, setEditingPayment] = useState(null);
 
   const [filters, setFilters] = useState({
     category_id: '',
@@ -83,6 +178,11 @@ function PaymentHistory() {
     })),
     filename: 'payment-history',
   });
+
+  const handleSaved = () => {
+    setEditingPayment(null);
+    load();
+  };
 
   return (
     <div className="admin-content ph-page">
@@ -156,6 +256,7 @@ function PaymentHistory() {
                   <th>Date</th>
                   <th>Collected By</th>
                   <th>Notes</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,12 +277,27 @@ function PaymentHistory() {
                     <td>{fmtDate(p.payment_date)}</td>
                     <td>{p.collected_by_name}</td>
                     <td className="ph-notes">{p.notes || '—'}</td>
+                    <td>
+                      {p.pending_payment_id ? (
+                        <span className="ph-locked">Due cleared</span>
+                      ) : (
+                        <button type="button" className="ph-row-btn" onClick={() => setEditingPayment(p)}>Edit</button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </>
+      )}
+      {editingPayment && (
+        <PaymentModal
+          categories={categories}
+          payment={editingPayment}
+          onClose={() => setEditingPayment(null)}
+          onSaved={handleSaved}
+        />
       )}
     </div>
   );

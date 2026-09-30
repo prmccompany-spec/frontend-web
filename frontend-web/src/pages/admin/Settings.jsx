@@ -27,14 +27,15 @@ import {
   createGotra,
   updateGotra,
 } from '../../services/gotraService';
+import { createStaffUser, getStaffUsers, setStaffUserActive, updateStaffUser } from '../../services/staffUserService';
 import './Settings.css';
 
 // ─── Shared helpers ───────────────────────────────────────────────
 
-function Modal({ title, subtitle, onClose, children }) {
+function Modal({ title, subtitle, onClose, children, wide = false }) {
   return (
     <div className="st-backdrop" onClick={onClose}>
-      <div className="st-modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`st-modal${wide ? ' st-modal--wide' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="st-modal-header">
           <div>
             <h2 className="st-modal-title">{title}</h2>
@@ -646,6 +647,167 @@ function ExpenseCategoriesTab() {
   );
 }
 
+function StaffUserModal({ staffUser, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: staffUser?.name ?? '',
+    phone: staffUser?.phone ?? '',
+    father_name: staffUser?.father_name ?? '',
+    address: staffUser?.address ?? '',
+    aadhar_card: staffUser?.aadhar_card ?? '',
+    dob: staffUser?.dob ? staffUser.dob.split('T')[0] : '',
+    password: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (event) => setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    const { password, ...profile } = form;
+    try {
+      if (staffUser) {
+        await updateStaffUser(staffUser.id, { ...profile, ...(password ? { password } : {}) });
+      } else {
+        await createStaffUser(form);
+      }
+      onSaved();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Unable to save staff account.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fields = [
+    ['name', 'Full Name', 'text'],
+    ['phone', 'Phone Number', 'tel'],
+    ['father_name', "Father's Name", 'text'],
+    ['aadhar_card', 'Aadhar Card Number', 'text'],
+    ['dob', 'Date of Birth', 'date'],
+  ];
+
+  return (
+    <Modal wide title={staffUser ? 'Edit Staff Account' : 'Add Staff Account'}
+      subtitle="Staff accounts are separate from member records and have Admin access." onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <div className="st-modal-body">
+          {error && <ErrorBanner msg={error} />}
+          {fields.map(([name, label, type]) => (
+            <div className="st-field" key={name}>
+              <label className="st-label" htmlFor={`staff-${name}`}>{label}{['name', 'phone'].includes(name) ? ' *' : ''}</label>
+              <input id={`staff-${name}`} className="st-input" name={name} type={type}
+                value={form[name]} onChange={handleChange} required={['name', 'phone'].includes(name)} />
+            </div>
+          ))}
+          <div className="st-field">
+            <label className="st-label" htmlFor="staff-address">Address</label>
+            <textarea id="staff-address" className="st-input" name="address" rows="3"
+              value={form.address} onChange={handleChange} />
+          </div>
+          <div className="st-field">
+            <label className="st-label" htmlFor="staff-password">{staffUser ? 'New Password (optional)' : 'Password *'}</label>
+            <input id="staff-password" className="st-input" name="password" type="password"
+              minLength={8} autoComplete="new-password" value={form.password} onChange={handleChange}
+              required={!staffUser} />
+            <p className="st-hint">At least 8 characters. The password is stored as a secure hash.</p>
+          </div>
+          <div className="st-field">
+            <span className="st-label">User Type</span>
+            <div className="st-staff-fixed-role">Admin</div>
+          </div>
+        </div>
+        <div className="st-modal-footer">
+          <button type="button" className="st-btn st-btn--ghost" onClick={onClose}>Cancel</button>
+          <button type="submit" className="st-btn st-btn--primary" disabled={loading}>
+            {loading ? 'Saving…' : staffUser ? 'Save Changes' : 'Create Staff Account'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function StaffUsersTab() {
+  const [staffUsers, setStaffUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [editStaff, setEditStaff] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await getStaffUsers();
+      setStaffUsers(response.data.data ?? []);
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to load staff accounts.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSaved = () => {
+    setShowAdd(false);
+    setEditStaff(null);
+    load();
+  };
+
+  const toggleActive = async (staff) => {
+    try {
+      await setStaffUserActive(staff.id, !staff.is_active);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to update staff account status.');
+    }
+  };
+
+  return (
+    <div className="st-tab-content">
+      <div className="st-section-header">
+        <div>
+          <h2 className="st-section-title">Staff Users</h2>
+          <p className="st-section-sub">Manage outsider staff accounts with Admin access</p>
+        </div>
+        <button className="st-add-btn" onClick={() => setShowAdd(true)}>+ Add Staff User</button>
+      </div>
+      {error && <div className="st-staff-error">{error}</div>}
+      <div className="st-table-wrap">
+        {loading ? <div className="st-state">Loading staff accounts…</div> : staffUsers.length === 0 ? (
+          <div className="st-state">No staff accounts found.</div>
+        ) : (
+          <table className="st-table">
+            <thead><tr><th>Name</th><th>Phone</th><th>Father's Name</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {staffUsers.map((staff) => (
+                <tr key={staff.id}>
+                  <td>{staff.name || '—'}</td>
+                  <td>{staff.phone || '—'}</td>
+                  <td>{staff.father_name || '—'}</td>
+                  <td><span className="st-pill st-pill--type">{staff.type_name || 'Admin'}</span></td>
+                  <td>{staff.is_active ? 'Active' : 'Inactive'}</td>
+                  <td className="st-td-actions">
+                    <button className="st-row-btn" onClick={() => setEditStaff(staff)}>Edit</button>
+                    <button className={`st-row-btn${staff.is_active ? ' st-row-btn--danger' : ''}`}
+                      onClick={() => toggleActive(staff)}>{staff.is_active ? 'Deactivate' : 'Activate'}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {showAdd && <StaffUserModal onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
+      {editStaff && <StaffUserModal staffUser={editStaff} onClose={() => setEditStaff(null)} onSaved={handleSaved} />}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // MEMBER STATUS TAB
 // ═══════════════════════════════════════════════════════════════════
@@ -1144,6 +1306,7 @@ function BranchesTab() {
 
 const TABS = [
   { key: 'user-types', label: 'User Types' },
+  { key: 'staff-users', label: 'Staff Users' },
   { key: 'member-status', label: 'Member Status' },
   { key: 'gotra', label: 'Gotra' },
   { key: 'branches', label: 'Branches' },
@@ -1174,6 +1337,7 @@ function Settings() {
       </div>
 
       {activeTab === 'user-types' && <UserTypesTab />}
+      {activeTab === 'staff-users' && <StaffUsersTab />}
       {activeTab === 'member-status' && <MemberStatusTab />}
       {activeTab === 'gotra' && <GotraTab />}
       {activeTab === 'branches' && <BranchesTab />}

@@ -133,6 +133,7 @@ ALTER TABLE members ADD COLUMN email VARCHAR(150) NULL;
 ALTER TABLE members ADD COLUMN aadhar_number VARCHAR(12) NULL;
 ALTER TABLE members ADD COLUMN engagement_date DATE NULL;
 ALTER TABLE members ADD COLUMN marriage_date DATE NULL;
+ALTER TABLE members ADD COLUMN marital_status ENUM('Married', 'Bachelor') NULL AFTER occupation;
 
 ALTER TABLE payments ADD COLUMN payment_type ENUM('cash', 'qr') NOT NULL DEFAULT 'cash';
 
@@ -555,3 +556,47 @@ CREATE TABLE reviews (
   reviewed_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+OCT 2026 changes -- Gowtham
+
+ALTER TABLE members ADD COLUMN marital_status ENUM('Married', 'Bachelor') NULL AFTER occupation;
+
+-- ============================================================
+-- OUTSIDER STAFF ACCOUNTS
+-- ============================================================
+-- Staff are not member records. They use the shared admin user type, while
+-- their identity and password remain in this separate table. All profile
+-- fields are nullable; required values and role assignment are validated
+-- by the API. Password values must be bcrypt hashes written by the backend.
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NULL,
+  user_type_id INT NULL,
+  phone VARCHAR(20) NULL,
+  password VARCHAR(255) NULL,
+  father_name VARCHAR(255) NULL,
+  address TEXT NULL,
+  aadhar_card VARCHAR(20) NULL,
+  dob DATE NULL,
+  is_active TINYINT(1) NULL DEFAULT 1,
+  created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Existing member sessions retain member_id. Staff sessions use user_id and
+-- account_type='staff'; account_type='member' is written for legacy rows.
+ALTER TABLE sessions MODIFY COLUMN member_id INT NULL;
+ALTER TABLE sessions ADD COLUMN user_id INT NULL AFTER member_id;
+ALTER TABLE sessions ADD COLUMN account_type VARCHAR(20) NULL AFTER user_id;
+UPDATE sessions SET account_type = 'member' WHERE account_type IS NULL;
+
+-- Retain the identity behind login attempts separately from member IDs.
+ALTER TABLE login_history ADD COLUMN user_id INT NULL AFTER member_id;
+ALTER TABLE login_history ADD COLUMN account_type VARCHAR(20) NULL AFTER user_id;
+UPDATE login_history SET account_type = 'member' WHERE member_id IS NOT NULL AND account_type IS NULL;
+UPDATE login_history lh
+JOIN users u ON u.phone = lh.phone
+SET lh.user_id = u.id, lh.account_type = 'staff'
+WHERE lh.member_id IS NULL AND lh.account_type IS NULL;
+UPDATE login_history SET account_type = 'unknown' WHERE account_type IS NULL;

@@ -152,6 +152,10 @@
   line-height: 1;
 }
 
+.rm-form--optional .rm-required {
+  display: none;
+}
+
 /* ── Input ────────────────────────────────────────── */
 .rm-input {
   width: 100%;

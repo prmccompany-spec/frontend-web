@@ -229,6 +229,12 @@
   overflow: hidden;
 }
 
+.st-modal--wide {
+  max-width: 560px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
 .st-modal-header {
   display: flex;
   align-items: flex-start;
@@ -327,6 +333,29 @@
   font-size: 11px;
   color: #bbb;
   margin: 0;
+}
+
+.st-staff-fixed-role {
+  width: fit-content;
+  padding: 7px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #444;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.st-staff-error {
+  padding: 10px 16px;
+  border-bottom: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.st-tabs {
+  overflow-x: auto;
 }
 
 .st-btn {

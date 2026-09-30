@@ -34,6 +34,17 @@ export const checkMemberIdAvailability = async (memberId) => {
   const existing = await getMemberByMemberId(memberId);
   return { available: !existing };
 };
+import { getStaffUserByPhone } from '../models/staffUserModel.js';
+
+const ensurePhoneIsNotStaff = async (phone) => {
+  const normalizedPhone = String(phone ?? '').trim();
+  if (!normalizedPhone) return;
+  if ((await getStaffUserByPhone(normalizedPhone)).length > 0) {
+    const error = new Error('This phone number belongs to a staff account and cannot be used for a member.');
+    error.statusCode = 409;
+    throw error;
+  }
+};
 
 export const createNewMember = async (memberData) => {
   if (!memberData.member_id) {
@@ -48,6 +59,8 @@ export const createNewMember = async (memberData) => {
     error.statusCode = 409;
     throw error;
   }
+
+  await ensurePhoneIsNotStaff(memberData.phone);
 
   return await createMember(memberData);
 };
@@ -68,6 +81,8 @@ export const modifyMember = async (memberId, memberData) => {
       throw error;
     }
   }
+
+  if (memberData.phone !== undefined) await ensurePhoneIsNotStaff(memberData.phone);
 
   const result = await updateMember(memberId, memberData);
   if (!result) {

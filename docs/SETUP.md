@@ -183,36 +183,7 @@ src/
 mysql -u root -p
 
 # Run these SQL commands
-CREATE DATABASE prmcf_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE prmcf_db;
-
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role ENUM('user', 'admin') DEFAULT 'user',
-  is_active TINYINT DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_email (email),
-  INDEX idx_role (role)
-);
-
-# Add sample users
-INSERT INTO users (name, email, password, role) VALUES (
-  'Admin User',
-  'admin@example.com',
-  '$2a$10$dXJ3SW6G7P50eS3BQObSOOuO68ug5r5H8KnzzVgXXbVxzy1HTZoO',
-  'admin'
-);
-
-INSERT INTO users (name, email, password, role) VALUES (
-  'Test User',
-  'user@example.com',
-  '$2a$10$K7is/e.P0.Tl6Z0ZqH5H3e7V1EKXNfLvDuSQJlvQJnzKhZDUEbKLm',
-  'user'
-);
+Get DB
 ```
 
 **API Endpoints:**

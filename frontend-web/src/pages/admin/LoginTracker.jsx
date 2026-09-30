@@ -6,6 +6,7 @@ import './LoginTracker.css';
 
 const fmtDateTime = (d) =>
   d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+const accountTypeOf = (historyItem) => historyItem.resolved_account_type || historyItem.account_type || 'unknown';
 
 // Local calendar date, not UTC — toISOString() converts to UTC first, so
 // for IST (UTC+5:30) it still shows "yesterday" for the first 5.5 hours
@@ -68,14 +69,14 @@ function LoginTracker() {
     const q = filters.search.trim().toLowerCase();
     if (!q) return history;
     return history.filter((h) => {
-      const hay = `${h.member_name ?? ''} ${h.member_code ?? ''} ${h.phone ?? ''}`.toLowerCase();
+      const hay = `${h.member_name ?? ''} ${h.staff_name ?? ''} ${h.member_code ?? ''} ${h.phone ?? ''} ${accountTypeOf(h)}`.toLowerCase();
       return hay.includes(q);
     });
   }, [history, filters.search]);
 
   const successCount = filtered.filter((h) => h.status === 'success').length;
   const failedCount = filtered.filter((h) => h.status === 'failed').length;
-  const uniqueMembers = new Set(filtered.filter((h) => h.member_id).map((h) => h.member_id)).size;
+  const uniqueAccounts = new Set(filtered.map((h) => `${accountTypeOf(h)}:${h.member_id ?? h.user_id ?? h.phone ?? h.id}`)).size;
 
   const hasFilters = !!(filters.status || filters.search || filters.from);
 
@@ -95,7 +96,8 @@ function LoginTracker() {
     ],
     columns: [
       { header: 'Date & Time', key: 'date' },
-      { header: 'Member', key: 'member' },
+      { header: 'Account', key: 'account' },
+      { header: 'Account Type', key: 'accountType' },
       { header: 'Status', key: 'status' },
       { header: 'Reason', key: 'reason' },
       { header: 'IP Address', key: 'ip' },
@@ -103,7 +105,10 @@ function LoginTracker() {
     ],
     rows: filtered.map((h) => ({
       date: fmtDateTime(h.created_at),
-      member: h.member_name ? `${h.member_name} (${h.member_code})` : `Unknown (${h.phone || '—'})`,
+      account: accountTypeOf(h) === 'staff'
+        ? `${h.staff_name || 'Staff'} (${h.phone || '—'})`
+        : accountTypeOf(h) === 'member' && h.member_name ? `${h.member_name} (${h.member_code})` : `${accountTypeOf(h)} (${h.phone || '—'})`,
+      accountType: accountTypeOf(h),
       status: h.status === 'success' ? 'Success' : 'Failed',
       reason: h.failure_reason || '—',
       ip: h.ip_address || '—',
@@ -123,7 +128,7 @@ function LoginTracker() {
         <StatCard label="Total Attempts" value={filtered.length} />
         <StatCard label="Successful" value={successCount} color="#059669" />
         <StatCard label="Failed" value={failedCount} color="#dc2626" />
-        <StatCard label="Unique Members" value={uniqueMembers} color="#2563eb" />
+        <StatCard label="Unique Accounts" value={uniqueAccounts} color="#2563eb" />
       </div>
 
       <div className="lt-filters">
@@ -174,7 +179,8 @@ function LoginTracker() {
             <thead>
               <tr>
                 <th>Date &amp; Time</th>
-                <th>Member</th>
+                <th>Account</th>
+                <th>Account Type</th>
                 <th>Status</th>
                 <th>Reason</th>
                 <th>IP Address</th>
@@ -186,17 +192,27 @@ function LoginTracker() {
                 <tr key={h.id}>
                   <td className="lt-td-meta">{fmtDateTime(h.created_at)}</td>
                   <td>
-                    {h.member_name ? (
+                    {accountTypeOf(h) === 'staff' ? (
+                      <>
+                        <div className="lt-member-name">{h.staff_name || 'Staff'}</div>
+                        <div className="lt-member-code">{h.phone || '—'}</div>
+                      </>
+                    ) : accountTypeOf(h) === 'member' && h.member_name ? (
                       <>
                         <div className="lt-member-name">{h.member_name}</div>
                         <div className="lt-member-code">{h.member_code}</div>
                       </>
                     ) : (
                       <>
-                        <div className="lt-member-name">Unknown</div>
+                        <div className="lt-member-name">{accountTypeOf(h) === 'ambiguous' ? 'Ambiguous account' : 'Unknown'}</div>
                         <div className="lt-member-code">{h.phone}</div>
                       </>
                     )}
+                  </td>
+                  <td>
+                    <span className={`lt-account-badge lt-account-badge--${accountTypeOf(h)}`}>
+                      {accountTypeOf(h) === 'staff' ? 'Staff' : accountTypeOf(h) === 'member' ? 'Member' : accountTypeOf(h)}
+                    </span>
                   </td>
                   <td>
                     <span className={`lt-status-badge lt-status-badge--${h.status}`}>

@@ -16,16 +16,18 @@ import {
 } from '../services/memberService.js';
 import { uploadBuffer } from '../utils/cloudinaryUtils.js';
 
+const MEMBER_FIELDS_REQUIRED = false;
+
 const validateMemberPayload = (payload) => {
   if (!payload.member_id) {
     return 'member_id is required';
   }
 
-  if (payload.user_type_id === undefined || payload.user_type_id === null) {
+  if (MEMBER_FIELDS_REQUIRED && (payload.user_type_id === undefined || payload.user_type_id === null)) {
     return 'user_type_id is required';
   }
 
-  if (!payload.name) {
+  if (MEMBER_FIELDS_REQUIRED && !payload.name) {
     return 'name is required';
   }
 

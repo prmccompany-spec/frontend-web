@@ -7,6 +7,11 @@ const persistSession = (data) => {
 };
 
 const authService = {
+  identifyLoginType: async (phone) => {
+    const response = await api.post('/auth/login-type', { phone });
+    return response.data;
+  },
+
   login: async (phone, password) => {
     const response = await api.post('/auth/login', { phone, password });
     persistSession(response.data);

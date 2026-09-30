@@ -220,6 +220,24 @@
   color: #111;
   letter-spacing: -0.01em;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.db-bachelor-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border: 1px solid #86efac;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .db-profile-meta {

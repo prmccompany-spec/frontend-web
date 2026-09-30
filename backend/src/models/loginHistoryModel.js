@@ -1,18 +1,25 @@
 import { query } from '../config/database.js';
 
 const SELECT_BASE = `
-  SELECT lh.*, m.name AS member_name, m.member_id AS member_code
+  SELECT lh.*, m.name AS member_name, m.member_id AS member_code,
+         u.name AS staff_name,
+         COALESCE(lh.account_type,
+           CASE WHEN lh.member_id IS NOT NULL THEN 'member'
+                WHEN u.id IS NOT NULL THEN 'staff'
+                ELSE 'unknown' END) AS resolved_account_type
   FROM login_history lh
   LEFT JOIN members m ON m.id = lh.member_id
+  LEFT JOIN users u ON u.id = lh.user_id
 `;
 
 export const recordLogin = async ({
-  member_id = null, phone = null, status, failure_reason = null, ip_address = null, user_agent = null,
+  member_id = null, user_id = null, account_type = 'unknown', phone = null,
+  status, failure_reason = null, ip_address = null, user_agent = null,
 }) => {
   const result = await query(
-    `INSERT INTO login_history (member_id, phone, status, failure_reason, ip_address, user_agent)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [member_id, phone, status, failure_reason, ip_address, user_agent]
+    `INSERT INTO login_history (member_id, user_id, account_type, phone, status, failure_reason, ip_address, user_agent)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [member_id, user_id, account_type, phone, status, failure_reason, ip_address, user_agent]
   );
   return result.insertId;
 };

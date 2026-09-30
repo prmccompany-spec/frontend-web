@@ -1,21 +1,42 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import authService from '../../services/authService';
 import './LoginPage.css';
 
 function LoginForm({ onSuccess }) {
   const [step, setStep] = useState('phone'); // 'phone' | 'password'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [loginType, setLoginType] = useState('');
+  const [checkingAccount, setCheckingAccount] = useState(false);
   const [error, setError] = useState('');
   const { login, loading } = useAuth();
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
     setError('');
     if (phone.trim().length < 10) {
       return setError('Enter a valid 10-digit mobile number.');
     }
-    setStep('password');
+    setCheckingAccount(true);
+    try {
+      const result = await authService.identifyLoginType(phone.trim());
+      if (result.account_type === 'ambiguous') {
+        setError('This number is linked to multiple accounts. Please contact an administrator.');
+        return;
+      }
+      if (!['member', 'staff'].includes(result.account_type)) {
+        setError('No active account was found for this phone number.');
+        return;
+      }
+      setLoginType(result.account_type);
+      setPassword('');
+      setStep('password');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to check this phone number. Please try again.');
+    } finally {
+      setCheckingAccount(false);
+    }
   };
 
   const handleLogin = async (e) => {
@@ -32,6 +53,7 @@ function LoginForm({ onSuccess }) {
   const handleChangeNumber = () => {
     setStep('phone');
     setPassword('');
+    setLoginType('');
     setError('');
   };
 
@@ -42,7 +64,9 @@ function LoginForm({ onSuccess }) {
         <p className="lp-subtitle">
           {step === 'phone'
             ? 'Enter your registered mobile number'
-            : `Enter the password for ${phone}`}
+            : loginType === 'member'
+              ? `Enter your 6-digit member password for ${phone}`
+              : `Enter your staff password for ${phone}`}
         </p>
       </div>
 
@@ -78,8 +102,8 @@ function LoginForm({ onSuccess }) {
               />
             </div>
           </div>
-          <button type="submit" className="lp-submit" disabled={phone.length < 10}>
-            Continue
+          <button type="submit" className="lp-submit" disabled={checkingAccount || phone.length < 10}>
+            {checkingAccount ? <><span className="lp-spinner" /> Checking…</> : 'Continue'}
           </button>
         </form>
       ) : (
@@ -89,20 +113,24 @@ function LoginForm({ onSuccess }) {
             <div className="lp-input-wrap">
               <input
                 type="password"
-                inputMode="numeric"
+                inputMode={loginType === 'member' ? 'numeric' : undefined}
                 id="password"
                 className="lp-input lp-input--flat"
-                placeholder="6-digit password"
+                placeholder={loginType === 'member' ? '6-digit password' : 'Enter your password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                maxLength={6}
+                onChange={(e) => setPassword(loginType === 'member'
+                  ? e.target.value.replace(/\D/g, '').slice(0, 6)
+                  : e.target.value)}
+                minLength={loginType === 'member' ? 6 : 8}
+                maxLength={loginType === 'member' ? 6 : 128}
                 required
                 disabled={loading}
                 autoFocus
               />
             </div>
           </div>
-          <button type="submit" className="lp-submit" disabled={loading || password.length < 6}>
+          <button type="submit" className="lp-submit"
+            disabled={loading || (loginType === 'member' ? password.length !== 6 : password.length < 8)}>
             {loading ? <><span className="lp-spinner" /> Signing in…</> : 'Sign in'}
           </button>
           <button

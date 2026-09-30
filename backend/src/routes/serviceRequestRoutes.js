@@ -1,5 +1,5 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware, requireMemberAccount } from '../middleware/authMiddleware.js';
 import { uploadRequestDocuments } from '../middleware/upload.js';
 import {
   createRequest,
@@ -17,8 +17,8 @@ const router = express.Router();
 // approver), so auth is required for the whole resource.
 router.use(authMiddleware);
 
-router.post('/', uploadRequestDocuments, createRequest);
-router.get('/mine', listMine);
+router.post('/', requireMemberAccount, uploadRequestDocuments, createRequest);
+router.get('/mine', requireMemberAccount, listMine);
 router.get('/pending', listPending);
 router.get('/all', listAll);
 router.get('/:id', getRequest);

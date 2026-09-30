@@ -2,7 +2,7 @@
 
 ## Overview
 
-PRMCF uses a **phone-number login** system. There are no passwords and no OTP — a registered member enters their phone number and is logged in directly if it matches an active member record. On success a signed JWT is issued and stored in `localStorage`.
+PRMCF uses phone-number and password login for both registered members and external staff. Members authenticate against `members`; external staff authenticate against `users`. On success, a signed JWT and a refresh-token session are issued and stored in `localStorage`.
 
 Access to routes is fully configurable through the **Auth Control** admin panel, which reads from the `route_permissions` table at runtime.
 
@@ -11,12 +11,13 @@ Access to routes is fully configurable through the **Auth Control** admin panel,
 ## Flow
 
 ```
-Member enters phone number
+Member or staff enters phone number and password
         │
         ▼
 POST /api/auth/login
-  → Looks up member by phone in members table (is_active = 1)
-  → If found: signs JWT with member payload
+  → Looks up active member and staff accounts by phone
+  → Matches password hash and identifies account_type
+  → Signs JWT and creates a refresh session for that account
   → Returns { access_token, user }
         │
         ▼
@@ -62,6 +63,7 @@ Signed with `JWT_SECRET` from `.env`. Default expiry: `7d`.
 
 ```json
 {
+  "account_type": "member",
   "id": 42,
   "member_id": "MEM001",
   "name": "Siva Kumar",
@@ -71,7 +73,11 @@ Signed with `JWT_SECRET` from `.env`. Default expiry: `7d`.
 }
 ```
 
-Token is attached as `Authorization: Bearer <token>` on every API request via the axios request interceptor in `frontend-web/src/services/api.js`. A 401 response automatically clears the token and redirects to `/login`.
+Token is attached as `Authorization: Bearer <token>` on every API request via the axios request interceptor in `frontend-web/src/services/api.js`. A 401 response automatically clears the token and redirects to `/login`. Staff account activity and current user type are rechecked on authenticated requests so deactivation or role changes apply immediately.
+
+### External staff accounts
+
+External staff are stored in `users`, never in `members`. Their `user_type_id` points to the shared `admin` row in `user_types`, so existing role-based admin authorization applies. Member and staff rows may have overlapping numeric IDs; tokens therefore include `account_type` (`member` or `staff`), and sessions store `member_id` or `user_id` with that account kind. Member self-service endpoints reject staff principals rather than interpreting a staff ID as a member ID. Staff accounts are managed from Settings → Staff Users.
 
 ---
 
@@ -88,13 +94,14 @@ Token is attached as `Authorization: Bearer <token>` on every API request via th
 
 | File | Exports |
 |------|---------|
-| `backend/src/services/authService.js` | `loginWithPhone(phone)` |
+| `backend/src/services/authService.js` | `loginWithPassword(phone, password)`, `refreshSession`, `logout` |
 
 ### Controllers & Routes
 
 | Route | Method | Handler | Auth |
 |-------|--------|---------|------|
 | `/api/auth/login` | POST | `handleLogin` | Public |
+| `/api/auth/login-type` | POST | `identifyLoginType` | Public |
 | `/api/auth/profile` | GET | `profile` | JWT required |
 | `/api/route-permissions` | GET | `getAll` | Public |
 | `/api/route-permissions` | POST | `create` | JWT required |
@@ -128,7 +135,7 @@ router.delete('/:id', authMiddleware, requireTypes(1), destroy);
 
 | Method | Description |
 |--------|-------------|
-| `login(phone)` | POST to `/auth/login`, stores token + user in `localStorage` |
+| `login(phone, password)` | POST to `/auth/login`, stores token + user in `localStorage` |
 | `logout()` | Clears `localStorage` |
 | `getCurrentUser()` | Returns parsed user object from `localStorage` |
 | `getToken()` | Returns raw JWT string |

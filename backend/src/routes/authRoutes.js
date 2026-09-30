@@ -1,5 +1,5 @@
 import express from 'express';
-import { handleLogin, handleRefresh, handleLogout, handleResetPassword, profile } from '../controllers/authController.js';
+import { identifyLoginType, handleLogin, handleRefresh, handleLogout, handleResetPassword, profile } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -8,6 +8,7 @@ const router = express.Router();
 // refresh token itself (not the, possibly expired, access token) is the
 // credential for both.
 router.post('/login', handleLogin);
+router.post('/login-type', identifyLoginType);
 router.post('/refresh', handleRefresh);
 router.post('/logout', handleLogout);
 router.post('/reset-password', authMiddleware, handleResetPassword);

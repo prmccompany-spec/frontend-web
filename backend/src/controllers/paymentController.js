@@ -41,7 +41,11 @@ export const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 export const createPayment = asyncHandler(async (req, res) => {
-  const result = await recordPayment(req.body);
+  const result = await recordPayment({
+    ...req.body,
+    collected_by: req.user.id,
+    collected_by_type: req.user.account_type,
+  });
   res.status(201).json({ success: true, message: 'Payment recorded', ...result });
 });
 
@@ -81,6 +85,10 @@ export const getSummary = asyncHandler(async (req, res) => {
 });
 
 export const collectDuesForMember = asyncHandler(async (req, res) => {
-  const result = await collectDues(req.body);
+  const result = await collectDues({
+    ...req.body,
+    collected_by: req.user.id,
+    collected_by_type: req.user.account_type,
+  });
   res.status(201).json({ success: true, message: 'Dues cleared', ...result });
 });

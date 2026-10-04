@@ -4,6 +4,7 @@ import { getRentalProducts, createRental } from '../../../services/rentalService
 import { getMembers } from '../../../services/memberService';
 import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
 import { showToast } from '../../../components/Toast/toastBus';
+import { useAuth } from '../../../context/AuthContext';
 import './RentalEntry.css';
 
 const nowLocal = () => {
@@ -26,6 +27,7 @@ const MS_PER_UNIT = {
 
 function RentalEntry() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [members, setMembers] = useState([]);
   const [memberSearch, setMemberSearch] = useState('');
@@ -43,8 +45,6 @@ function RentalEntry() {
     amount: '',
     advance_amount: '',
     advance_payment_type: 'cash',
-    collected_by: '',
-    collectorDisplay: '',
     notes: '',
   });
 
@@ -56,6 +56,11 @@ function RentalEntry() {
     getRentalProducts({ active: true }).then(setProducts).catch(() => {});
     getMembers().then((res) => setMembers(res.data?.data ?? [])).catch(() => {});
   }, []);
+
+  const collectorLabel = user?.account_type === 'staff'
+    ? `${user.name} (Staff)`
+    : user?.name ? `${user.name} (${user.member_id})` : '';
+  const collectorType = user?.account_type === 'staff' ? 'staff' : 'member';
 
   const selectedProduct = useMemo(
     () => products.find((p) => String(p.id) === String(form.product_id)),
@@ -92,8 +97,6 @@ function RentalEntry() {
     if (field === 'member_id') {
       setForm((f) => ({ ...f, member_id: m.id, memberDisplay: `${m.name} (${m.member_id})` }));
       setMemberSearch('');
-    } else {
-      setForm((f) => ({ ...f, collected_by: m.id, collectorDisplay: `${m.name} (${m.member_id})` }));
     }
     setShowSuggestions(false);
   };
@@ -105,6 +108,7 @@ function RentalEntry() {
     if (!form.product_id) return setError('Please select a product.');
     if (form.renterType === 'member' && !form.member_id) return setError('Please select a member.');
     if (form.renterType === 'guest' && !form.renter_name.trim()) return setError("Please enter the renter's name.");
+    if (!user?.id) return setError('Sign in again to identify who collected the payment.');
     if (!form.end_date) return setError('Please set an end date/time.');
     if (new Date(form.end_date) <= new Date(form.start_date)) return setError('End date must be after start date.');
     if (!form.amount || Number(form.amount) <= 0) return setError('Enter a valid amount.');
@@ -125,7 +129,8 @@ function RentalEntry() {
         amount: Number(form.amount),
         advance_amount: advanceNum,
         advance_payment_type: advanceNum > 0 ? form.advance_payment_type : null,
-        collected_by: form.collected_by || null,
+        collected_by: user.id,
+        collected_by_type: collectorType,
         notes: form.notes || null,
       });
       showToast(`Rental recorded successfully. Reference: ${result.rental_ref}`, 'success');
@@ -277,26 +282,7 @@ function RentalEntry() {
             {/* Collected By */}
             <div className="re-field">
               <label className="re-label">Collected By</label>
-              {form.collectorDisplay ? (
-                <div className="re-selected-pill">
-                  {form.collectorDisplay}
-                  <button type="button" className="re-pill-clear" onClick={() => setForm((f) => ({ ...f, collected_by: '', collectorDisplay: '' }))}>×</button>
-                </div>
-              ) : (
-                <select
-                  className="re-input"
-                  value={form.collected_by}
-                  onChange={(e) => {
-                    const m = members.find((x) => String(x.id) === e.target.value);
-                    setForm((f) => ({ ...f, collected_by: e.target.value, collectorDisplay: m ? `${m.name} (${m.member_id})` : '' }));
-                  }}
-                >
-                  <option value="">Select collector…</option>
-                  {sortByMemberId(members).map((m) => (
-                    <option key={m.id} value={m.id}>{m.name} ({m.member_id})</option>
-                  ))}
-                </select>
-              )}
+              <input className="re-input" value={collectorLabel} readOnly />
             </div>
 
             {/* Amount */}

@@ -584,6 +584,13 @@ CREATE TABLE users (
   updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Collector IDs may refer to members or staff. Existing collector IDs refer
+-- to members, so the default preserves the meaning of all existing records.
+ALTER TABLE payments
+  ADD COLUMN collected_by_type ENUM('member', 'staff') NOT NULL DEFAULT 'member' AFTER collected_by;
+ALTER TABLE rentals
+  ADD COLUMN collected_by_type ENUM('member', 'staff') NOT NULL DEFAULT 'member' AFTER collected_by;
+
 -- Existing member sessions retain member_id. Staff sessions use user_id and
 -- account_type='staff'; account_type='member' is written for legacy rows.
 ALTER TABLE sessions MODIFY COLUMN member_id INT NULL;

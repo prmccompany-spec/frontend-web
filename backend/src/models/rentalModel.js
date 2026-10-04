@@ -14,11 +14,12 @@ const SELECT_BASE = `
   SELECT r.*,
     p.name AS product_name,
     m.name AS member_name, m.member_id AS member_code,
-    cb.name AS collected_by_name
+    COALESCE(cbm.name, cbu.name) AS collected_by_name
   FROM rentals r
   JOIN rental_products p ON r.product_id = p.id
   LEFT JOIN members m ON r.member_id = m.id
-  LEFT JOIN members cb ON r.collected_by = cb.id
+  LEFT JOIN members cbm ON r.collected_by_type = 'member' AND r.collected_by = cbm.id
+  LEFT JOIN users cbu ON r.collected_by_type = 'staff' AND r.collected_by = cbu.id
 `;
 
 export const getRentalById = async (id) => {
@@ -53,14 +54,14 @@ export const getAllRentals = async (filters = {}) => {
 
 export const createRental = async ({
   product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date,
-  amount, advance_amount = 0, advance_payment_type = null, collected_by = null, notes = null,
+  amount, advance_amount = 0, advance_payment_type = null, collected_by = null, collected_by_type = 'member', notes = null,
 }) => {
   const rental_ref = generateRentalRef();
   const result = await query(
     `INSERT INTO rentals
-      (rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, notes]
+      (rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, collected_by_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [rental_ref, product_id, member_id, renter_name, rate_type, rate_amount, start_date, end_date, amount, advance_amount, advance_payment_type, collected_by, collected_by_type, notes]
   );
   return { id: result.insertId, rental_ref };
 };

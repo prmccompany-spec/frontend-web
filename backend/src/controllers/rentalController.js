@@ -30,7 +30,11 @@ export const getRental = asyncHandler(async (req, res) => {
 });
 
 export const createRental = asyncHandler(async (req, res) => {
-  const { id, rental_ref } = await bookRental(req.body);
+  const { id, rental_ref } = await bookRental({
+    ...req.body,
+    collected_by: req.user.id,
+    collected_by_type: req.user.account_type,
+  });
   res.status(201).json({ success: true, message: 'Rental recorded', id, rental_ref });
 });
 

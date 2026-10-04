@@ -7,6 +7,7 @@ import {
 } from '../models/rentalModel.js';
 import { getRentalProductById } from '../models/rentalProductModel.js';
 import { getMemberById } from '../models/memberModel.js';
+import { getStaffUserById } from '../models/staffUserModel.js';
 
 const fail = (message, statusCode) => {
   const error = new Error(message);
@@ -35,7 +36,7 @@ const computeAmount = (rateType, rateAmount, dayRate, startDate, endDate) => {
 export const bookRental = async (data) => {
   const {
     product_id, member_id, renter_name, rate_type, start_date, end_date,
-    amount, advance_amount, advance_payment_type, collected_by, notes,
+    amount, advance_amount, advance_payment_type, collected_by, collected_by_type = 'member', notes,
   } = data;
 
   if (!product_id || !rate_type || !start_date || !end_date) {
@@ -50,6 +51,9 @@ export const bookRental = async (data) => {
   if (!RATE_TYPES.includes(rate_type)) {
     fail(`rate_type must be one of: ${RATE_TYPES.join(', ')}`, 400);
   }
+  if (!['member', 'staff'].includes(collected_by_type)) {
+    fail('collected_by_type must be member or staff', 400);
+  }
   if (new Date(end_date) <= new Date(start_date)) {
     fail('end_date must be after start_date', 400);
   }
@@ -63,12 +67,16 @@ export const bookRental = async (data) => {
   const [product, member, collector] = await Promise.all([
     getRentalProductById(product_id),
     member_id ? getMemberById(member_id) : Promise.resolve(null),
-    collected_by ? getMemberById(collected_by) : Promise.resolve(null),
+    collected_by
+      ? collected_by_type === 'staff' ? getStaffUserById(collected_by) : getMemberById(collected_by)
+      : Promise.resolve(null),
   ]);
 
   if (!product) fail('Rental product not found', 404);
   if (member_id && !member) fail('Member not found', 404);
-  if (collected_by && !collector) fail('Collector (collected_by) member not found', 404);
+  if (collected_by && (!collector || (collected_by_type === 'staff' && !collector.is_active))) {
+    fail(`Collector (collected_by) ${collected_by_type} not found or inactive`, 404);
+  }
 
   const rateAmount = product[`${rate_type}_rate`];
   if (!rateAmount) fail(`This product has no ${rate_type} rate configured`, 400);
@@ -94,6 +102,7 @@ export const bookRental = async (data) => {
     advance_amount: advanceNum,
     advance_payment_type: advanceNum > 0 ? advance_payment_type : null,
     collected_by: collected_by || null,
+    collected_by_type,
     notes: notes || null,
   });
 };

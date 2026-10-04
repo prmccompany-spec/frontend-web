@@ -3,6 +3,7 @@ import { getCategories, createPayment, collectDues, getPayments } from '../../..
 import { getMembers, getPendingPayments } from '../../../services/memberService';
 import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
 import { showToast } from '../../../components/Toast/toastBus';
+import { useAuth } from '../../../context/AuthContext';
 import './PaymentEntry.css';
 
 // Local calendar date, not UTC — toISOString() converts to UTC first, so
@@ -21,6 +22,7 @@ const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 function PaymentEntry() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const [memberSearch, setMemberSearch] = useState('');
@@ -33,8 +35,6 @@ function PaymentEntry() {
     amount: '',
     payment_date: today(),
     payment_type: 'cash',
-    collected_by: '',
-    collectorDisplay: '',
     notes: '',
   });
 
@@ -54,6 +54,11 @@ function PaymentEntry() {
     getCategories().then(setCategories).catch(() => {});
     getMembers().then((res) => setMembers(res.data?.data ?? [])).catch(() => {});
   }, []);
+
+  const collectorLabel = user?.account_type === 'staff'
+    ? `${user.name} (Staff)`
+    : user?.name ? `${user.name} (${user.member_id})` : '';
+  const collectorType = user?.account_type === 'staff' ? 'staff' : 'member';
 
   const loadMemberPanel = useCallback((memberId) => {
     if (!memberId) {
@@ -92,7 +97,7 @@ function PaymentEntry() {
   const handleCollectDues = async (ids) => {
     setCollectError('');
     if (!form.member_id) return setCollectError('Select a member first.');
-    if (!form.collected_by) return setCollectError('Select who is collecting before clearing dues.');
+    if (!user?.id) return setCollectError('Sign in again to identify who collected the payment.');
     if (ids.length === 0) return;
 
     setCollecting(true);
@@ -100,7 +105,8 @@ function PaymentEntry() {
       await collectDues({
         member_id: form.member_id,
         pending_payment_ids: ids,
-        collected_by: form.collected_by,
+        collected_by: user.id,
+        collected_by_type: collectorType,
         payment_date: form.payment_date,
         payment_type: form.payment_type,
         notes: form.notes || null,
@@ -125,8 +131,6 @@ function PaymentEntry() {
     if (field === 'member_id') {
       setForm((f) => ({ ...f, member_id: m.id, memberDisplay: `${m.name} (${m.member_id})` }));
       setMemberSearch('');
-    } else {
-      setForm((f) => ({ ...f, collected_by: m.id, collectorDisplay: `${m.name} (${m.member_id})` }));
     }
     setShowSuggestions(false);
   };
@@ -146,7 +150,7 @@ function PaymentEntry() {
     setResult(null);
 
     if (!form.member_id) return setError('Please select a member.');
-    if (!form.collected_by) return setError('Please select who collected the payment.');
+    if (!user?.id) return setError('Sign in again to identify who collected the payment.');
     if (!form.category_id) return setError('Please select a payment category.');
     if (!form.amount || Number(form.amount) <= 0) return setError('Enter a valid amount.');
 
@@ -158,7 +162,8 @@ function PaymentEntry() {
         amount: Number(form.amount),
         payment_date: form.payment_date,
         payment_type: form.payment_type,
-        collected_by: form.collected_by,
+        collected_by: user.id,
+        collected_by_type: collectorType,
         notes: form.notes || null,
       });
       setResult(res);
@@ -170,8 +175,6 @@ function PaymentEntry() {
         amount: '',
         payment_date: today(),
         payment_type: 'cash',
-        collected_by: '',
-        collectorDisplay: '',
         notes: '',
       });
     } catch (err) {
@@ -237,26 +240,7 @@ function PaymentEntry() {
           {/* Collected By */}
           <div className="pe-field">
             <label className="pe-label">Collected By *</label>
-            {form.collectorDisplay ? (
-              <div className="pe-selected-pill">
-                {form.collectorDisplay}
-                <button type="button" className="pe-pill-clear" onClick={() => setForm((f) => ({ ...f, collected_by: '', collectorDisplay: '' }))}>×</button>
-              </div>
-            ) : (
-              <select
-                className="pe-input"
-                value={form.collected_by}
-                onChange={(e) => {
-                  const m = members.find((x) => String(x.id) === e.target.value);
-                  setForm((f) => ({ ...f, collected_by: e.target.value, collectorDisplay: m ? `${m.name} (${m.member_id})` : '' }));
-                }}
-              >
-                <option value="">Select collector…</option>
-                {sortByMemberId(members).map((m) => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.member_id})</option>
-                ))}
-              </select>
-            )}
+            <input className="pe-input" value={collectorLabel} readOnly />
           </div>
 
           {/* Payment Type */}

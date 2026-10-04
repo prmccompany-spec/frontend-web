@@ -3,7 +3,7 @@ import { create, list, setActive, update } from '../controllers/staffUserControl
 import { authMiddleware, requireTypes } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-router.use(authMiddleware, requireTypes(1));
+router.use(authMiddleware);
 router.get('/', list);
 router.post('/', create);
 router.put('/:id', update);

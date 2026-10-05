@@ -39,12 +39,12 @@ export const deactivateCategory = async (id) => {
 
 // ─── Payments ────────────────────────────────────────────────────
 
-export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null, pending_payment_id = null }) => {
+export const createPayment = async ({ member_id, category_id, amount, payment_date, collected_by, collected_by_type = 'member', payment_type = 'cash', notes = null, pending_payment_id = null }) => {
   const payment_ref = generatePaymentRef();
   const result = await query(
-    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes]
+    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, collected_by_type, payment_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, collected_by_type, payment_type, notes]
   );
   return { id: result.insertId, payment_ref };
 };
@@ -52,12 +52,12 @@ export const createPayment = async ({ member_id, category_id, amount, payment_da
 // Runs on a caller-supplied transaction connection — used by
 // paymentService.collectDues so that inserting the payment row and
 // marking its due 'paid' commit or roll back together.
-export const insertPaymentTx = async (connection, { member_id, category_id, amount, payment_date, collected_by, payment_type = 'cash', notes = null, pending_payment_id = null }) => {
+export const insertPaymentTx = async (connection, { member_id, category_id, amount, payment_date, collected_by, collected_by_type = 'member', payment_type = 'cash', notes = null, pending_payment_id = null }) => {
   const payment_ref = generatePaymentRef();
   const [result] = await connection.execute(
-    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, payment_type, notes]
+    `INSERT INTO payments (payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, collected_by_type, payment_type, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [payment_ref, member_id, pending_payment_id, category_id, amount, payment_date, collected_by, collected_by_type, payment_type, notes]
   );
   return { id: result.insertId, payment_ref };
 };
@@ -75,11 +75,12 @@ export const getPaymentById = async (id) => {
     `SELECT p.*,
        m.name AS member_name, m.member_id AS member_code,
        c.name AS category_name,
-       cb.name AS collected_by_name
+       COALESCE(cbm.name, cbu.name) AS collected_by_name
      FROM payments p
      JOIN members m ON p.member_id = m.id
      JOIN payment_categories c ON p.category_id = c.id
-     JOIN members cb ON p.collected_by = cb.id
+     LEFT JOIN members cbm ON p.collected_by_type = 'member' AND p.collected_by = cbm.id
+     LEFT JOIN users cbu ON p.collected_by_type = 'staff' AND p.collected_by = cbu.id
      WHERE p.id = ?`,
     [id]
   );
@@ -113,11 +114,12 @@ export const getAllPayments = async (filters = {}) => {
     `SELECT p.*,
        m.name AS member_name, m.member_id AS member_code,
        c.name AS category_name,
-       cb.name AS collected_by_name
+       COALESCE(cbm.name, cbu.name) AS collected_by_name
      FROM payments p
      JOIN members m ON p.member_id = m.id
      JOIN payment_categories c ON p.category_id = c.id
-     JOIN members cb ON p.collected_by = cb.id
+     LEFT JOIN members cbm ON p.collected_by_type = 'member' AND p.collected_by = cbm.id
+     LEFT JOIN users cbu ON p.collected_by_type = 'staff' AND p.collected_by = cbu.id
      ${where}
      ORDER BY p.payment_date DESC, p.created_at DESC`,
     values
@@ -149,10 +151,12 @@ export const getPaymentSummary = async () => {
   );
 
   const byCollector = await query(
-    `SELECT m.name, m.member_id AS member_code, COUNT(*) AS count, COALESCE(SUM(p.amount), 0) AS total_collected
+    `SELECT COALESCE(m.name, u.name) AS name, m.member_id AS member_code,
+       p.collected_by_type, COUNT(*) AS count, COALESCE(SUM(p.amount), 0) AS total_collected
      FROM payments p
-     JOIN members m ON p.collected_by = m.id
-     GROUP BY p.collected_by, m.name, m.member_id
+     LEFT JOIN members m ON p.collected_by_type = 'member' AND p.collected_by = m.id
+     LEFT JOIN users u ON p.collected_by_type = 'staff' AND p.collected_by = u.id
+     GROUP BY p.collected_by_type, p.collected_by, m.name, m.member_id, u.name
      ORDER BY total_collected DESC`
   );
 

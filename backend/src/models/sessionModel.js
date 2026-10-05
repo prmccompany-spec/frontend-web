@@ -1,9 +1,9 @@
 import { query } from '../config/database.js';
 
-export const createSession = async ({ memberId, refreshTokenHash, userAgent, expiresAt }) => {
+export const createSession = async ({ memberId = null, userId = null, accountType = 'member', refreshTokenHash, userAgent, expiresAt }) => {
   const result = await query(
-    'INSERT INTO sessions (member_id, refresh_token_hash, user_agent, expires_at) VALUES (?, ?, ?, ?)',
-    [memberId, refreshTokenHash, userAgent || null, expiresAt]
+    'INSERT INTO sessions (member_id, user_id, account_type, refresh_token_hash, user_agent, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [memberId, userId, accountType, refreshTokenHash, userAgent || null, expiresAt]
   );
   return result.insertId;
 };
@@ -26,5 +26,12 @@ export const revokeAllSessionsForMember = async (memberId) => {
   return await query(
     'UPDATE sessions SET revoked_at = NOW() WHERE member_id = ? AND revoked_at IS NULL',
     [memberId]
+  );
+};
+
+export const revokeAllSessionsForStaff = async (userId) => {
+  return await query(
+    'UPDATE sessions SET revoked_at = NOW() WHERE user_id = ? AND account_type = ? AND revoked_at IS NULL',
+    [userId, 'staff']
   );
 };

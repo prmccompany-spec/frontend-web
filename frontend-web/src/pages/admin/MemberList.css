@@ -277,6 +277,32 @@
   gap: 10px;
 }
 
+.ml-name-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ml-bachelor-indicator,
+.db-bachelor-indicator,
+.ms-bachelor-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .ml-avatar {
   width: 30px;
   height: 30px;

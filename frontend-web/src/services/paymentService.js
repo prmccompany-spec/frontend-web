@@ -30,6 +30,11 @@ export const createPayment = async (data) => {
   return res.data;
 };
 
+export const updatePayment = async (id, data) => {
+  const res = await api.put(`/payments/${id}`, data);
+  return res.data;
+};
+
 export const getPaymentById = async (id) => {
   const res = await api.get(`/payments/${id}`);
   return res.data.data;

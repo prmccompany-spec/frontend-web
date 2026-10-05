@@ -50,6 +50,7 @@ export const createMember = async (memberData) => {
     blood_group = null,
     dob = null,
     occupation = null,
+    marital_status = null,
     out_of_rajapalayam = false,
     email = null,
     aadhar_number = null,
@@ -66,11 +67,13 @@ export const createMember = async (memberData) => {
   // (e.g. member_id 88 -> 000088).
   const rawPassword = password || (member_id ? String(member_id).padStart(6, '0') : null);
   const hashedPassword = rawPassword ? await hashPassword(rawPassword) : null;
+  const savedEngagementDate = marital_status === 'Bachelor' ? null : engagement_date;
+  const savedMarriageDate = marital_status === 'Bachelor' ? null : marriage_date;
 
   const results = await query(
     `INSERT INTO members
-      (member_id, user_type_id, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, branch_id, gotra_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      (member_id, user_type_id, family_name, name, father_name, phone, password, whatsapp, blood_group, dob, occupation, marital_status, address_id, outside_address_id, address_proof_id, out_of_rajapalayam, email, aadhar_number, engagement_date, marriage_date, status_id, branch_id, gotra_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       member_id,
       user_type_id,
@@ -83,14 +86,15 @@ export const createMember = async (memberData) => {
       blood_group,
       dob,
       occupation,
+      marital_status,
       address_id,
       outside_address_id,
       address_proof_id,
       out_of_rajapalayam ? 1 : 0,
       email,
       aadhar_number,
-      engagement_date,
-      marriage_date,
+      savedEngagementDate,
+      savedMarriageDate,
       status_id,
       branch_id,
       gotra_id,
@@ -117,10 +121,13 @@ export const createMember = async (memberData) => {
 export const updateMember = async (memberId, updates) => {
   const fields = [];
   const values = [];
+  const normalizedUpdates = updates.marital_status === 'Bachelor'
+    ? { ...updates, engagement_date: null, marriage_date: null }
+    : updates;
 
   // password is intentionally excluded — it can only be changed via
   // updateMemberPassword, which hashes it first.
-  Object.entries(updates).forEach(([key, value]) => {
+  Object.entries(normalizedUpdates).forEach(([key, value]) => {
     if (key === 'password') return;
     if (value !== undefined) {
       if (key === 'out_of_rajapalayam') {

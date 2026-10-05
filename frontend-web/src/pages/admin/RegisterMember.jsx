@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import {
   USER_TYPES,
   BLOOD_GROUPS,
+  MARITAL_STATUSES,
+  MEMBER_FIELDS_REQUIRED,
   toMemberPayload,
   toLocalAddressPayload,
   toOutsideAddressPayload,
@@ -32,6 +34,7 @@ const initialForm = {
   bloodGroup: '',
   dob: '',
   occupation: '',
+  maritalStatus: '',
   outOfRajapalayam: false,
   email: '',
   aadharNumber: '',
@@ -149,6 +152,14 @@ function RegisterMember() {
       // Branch list is scoped to the selected gotra — a branch chosen under
       // a previous gotra is no longer valid, so clear it.
       setForm((prev) => ({ ...prev, gotraId: value, branchId: '' }));
+      return;
+    }
+    if (name === 'maritalStatus') {
+      setForm((prev) => ({
+        ...prev,
+        maritalStatus: value,
+        ...(value === 'Bachelor' ? { engagementDate: '', marriageDate: '' } : {}),
+      }));
       return;
     }
 
@@ -309,7 +320,8 @@ function RegisterMember() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="rm-form">
+      <form onSubmit={handleSubmit} noValidate={!MEMBER_FIELDS_REQUIRED}
+        className={`rm-form${MEMBER_FIELDS_REQUIRED ? '' : ' rm-form--optional'}`}>
 
         {/* ── Core Details ── */}
         <div className="rm-card">
@@ -507,7 +519,7 @@ function RegisterMember() {
                 value={form.whatsapp}
                 onChange={handleChange}
                 disabled={form.sameAsPhone}
-                required={!form.sameAsPhone}
+                required={MEMBER_FIELDS_REQUIRED && !form.sameAsPhone}
               />
             </div>
           </div>
@@ -673,67 +685,47 @@ function RegisterMember() {
           <div className="rm-grid-3">
             <div className="rm-field">
               <label className="rm-label">Blood Group <span className="rm-required">*</span></label>
-              <select
-                className="rm-input rm-select"
-                name="bloodGroup"
-                value={form.bloodGroup}
-                onChange={handleChange}
-                required
-              >
+              <select className="rm-input rm-select" name="bloodGroup" value={form.bloodGroup}
+                onChange={handleChange} required={MEMBER_FIELDS_REQUIRED}>
                 <option value="">Select</option>
-                {BLOOD_GROUPS.map((bg) => (
-                  <option key={bg} value={bg}>{bg}</option>
-                ))}
+                {BLOOD_GROUPS.map((bg) => <option key={bg} value={bg}>{bg}</option>)}
+              </select>
+            </div>
+            <div className="rm-field">
+              <label className="rm-label">Marital Status</label>
+              <select className="rm-input rm-select" name="maritalStatus"
+                value={form.maritalStatus} onChange={handleChange} required={MEMBER_FIELDS_REQUIRED}>
+                <option value="">Select status</option>
+                {MARITAL_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
               </select>
             </div>
             <div className="rm-field">
               <label className="rm-label">Date of Birth <span className="rm-required">*</span></label>
-              <input
-                className="rm-input"
-                name="dob"
-                type="date"
-                value={form.dob}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="rm-field">
-              <label className="rm-label">Occupation <span className="rm-required">*</span></label>
-              <input
-                className="rm-input"
-                name="occupation"
-                placeholder="e.g. Engineer"
-                value={form.occupation}
-                onChange={handleChange}
-                required
-              />
+              <input className="rm-input" name="dob" type="date" value={form.dob}
+                onChange={handleChange} required={MEMBER_FIELDS_REQUIRED} />
             </div>
           </div>
 
-          <div className="rm-grid-2">
+          <div className="rm-grid-3">
+            <div className="rm-field">
+              <label className="rm-label">Occupation <span className="rm-required">*</span></label>
+              <input className="rm-input" name="occupation" placeholder="e.g. Engineer"
+                value={form.occupation} onChange={handleChange} required={MEMBER_FIELDS_REQUIRED} />
+            </div>
+          </div>
+
+          {form.maritalStatus !== 'Bachelor' && <div className="rm-grid-2">
             <div className="rm-field">
               <label className="rm-label">Engagement Date <span className="rm-required">*</span></label>
-              <input
-                className="rm-input"
-                name="engagementDate"
-                type="date"
-                value={form.engagementDate}
-                onChange={handleChange}
-                required
-              />
+              <input className="rm-input" name="engagementDate" type="date"
+                value={form.engagementDate} onChange={handleChange} required={MEMBER_FIELDS_REQUIRED} />
             </div>
             <div className="rm-field">
               <label className="rm-label">Marriage Date <span className="rm-required">*</span></label>
-              <input
-                className="rm-input"
-                name="marriageDate"
-                type="date"
-                value={form.marriageDate}
-                onChange={handleChange}
-                required
-              />
+              <input className="rm-input" name="marriageDate" type="date"
+                value={form.marriageDate} onChange={handleChange} required={MEMBER_FIELDS_REQUIRED} />
             </div>
-          </div>
+          </div>}
 
           <div className="rm-field rm-field--checkbox">
             <label className="rm-checkbox-row">

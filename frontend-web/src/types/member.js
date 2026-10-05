@@ -8,6 +8,8 @@ export const USER_TYPES = [
 ];
 
 export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+export const MARITAL_STATUSES = ['Married', 'Bachelor'];
+export const MEMBER_FIELDS_REQUIRED = false;
 
 /**
  * @typedef {Object} MemberFormState
@@ -23,6 +25,7 @@ export const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
  * @property {string} bloodGroup      - Blood group
  * @property {string} dob             - Date of birth (YYYY-MM-DD)
  * @property {string} occupation      - Occupation
+ * @property {string} maritalStatus   - Marital status
  * @property {boolean} outOfRajapalayam - Lives outside Rajapalayam
  * @property {string} email           - Email address
  * @property {string} aadharNumber    - Aadhar card number (12 digits)
@@ -53,6 +56,7 @@ export function toMemberPayload(form) {
     blood_group: form.bloodGroup || null,
     dob: form.dob || null,
     occupation: form.occupation || null,
+    marital_status: form.maritalStatus || null,
     out_of_rajapalayam: Boolean(form.outOfRajapalayam),
     email: form.email || null,
     aadhar_number: form.aadharNumber || null,

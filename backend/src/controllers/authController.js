@@ -1,5 +1,13 @@
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { loginWithPassword, refreshSession, logout, resetOwnPassword } from '../services/authService.js';
+import { identifyLoginAccount, loginWithPassword, refreshSession, logout, resetOwnPassword } from '../services/authService.js';
+
+export const identifyLoginType = asyncHandler(async (req, res) => {
+  const phone = String(req.body?.phone ?? '').trim();
+  if (phone.length < 10) {
+    return res.status(400).json({ success: false, message: 'A valid phone number is required' });
+  }
+  res.json({ success: true, ...await identifyLoginAccount(phone) });
+});
 
 export const handleLogin = asyncHandler(async (req, res) => {
   const { phone, password } = req.body;
@@ -30,7 +38,7 @@ export const handleResetPassword = asyncHandler(async (req, res) => {
   if (!old_password || !new_password) {
     return res.status(400).json({ success: false, message: 'old_password and new_password are required' });
   }
-  await resetOwnPassword(req.user.id, old_password.trim(), new_password.trim());
+  await resetOwnPassword(req.user, old_password.trim(), new_password.trim());
   res.json({ success: true, message: 'Password reset successfully' });
 });
 

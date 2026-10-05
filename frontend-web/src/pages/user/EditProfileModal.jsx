@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { updateMember } from '../../services/memberService';
-import { BLOOD_GROUPS } from '../../types/member';
+import { BLOOD_GROUPS, MARITAL_STATUSES, MEMBER_FIELDS_REQUIRED } from '../../types/member';
 import '../../components/ProfileMenu/ProfileMenu.css';
 
 function EditProfileModal({ member, onClose, onSaved }) {
@@ -13,6 +13,7 @@ function EditProfileModal({ member, onClose, onSaved }) {
     bloodGroup: member.blood_group ?? '',
     dob: member.dob ? member.dob.split('T')[0] : '',
     occupation: member.occupation ?? '',
+    maritalStatus: member.marital_status ?? '',
     email: member.email ?? '',
     aadharNumber: member.aadhar_number ?? '',
     engagementDate: member.engagement_date ? member.engagement_date.split('T')[0] : '',
@@ -23,6 +24,14 @@ function EditProfileModal({ member, onClose, onSaved }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'maritalStatus') {
+      setForm((f) => ({
+        ...f,
+        maritalStatus: value,
+        ...(value === 'Bachelor' ? { engagementDate: '', marriageDate: '' } : {}),
+      }));
+      return;
+    }
     setForm((f) => ({ ...f, [name]: value }));
   };
 
@@ -40,6 +49,7 @@ function EditProfileModal({ member, onClose, onSaved }) {
         blood_group: form.bloodGroup || null,
         dob: form.dob || null,
         occupation: form.occupation || null,
+        marital_status: form.maritalStatus || null,
         email: form.email || null,
         aadhar_number: form.aadharNumber || null,
         engagement_date: form.engagementDate || null,
@@ -65,7 +75,7 @@ function EditProfileModal({ member, onClose, onSaved }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="pm-modal-body">
+        <form onSubmit={handleSubmit} className="pm-modal-body" noValidate={!MEMBER_FIELDS_REQUIRED}>
           {error && <div className="pm-alert pm-alert--error">{error}</div>}
 
           <div className="pm-field-grid">
@@ -105,6 +115,14 @@ function EditProfileModal({ member, onClose, onSaved }) {
               <input className="pm-input pm-input--text" name="occupation" value={form.occupation} onChange={handleChange} disabled={loading} />
             </div>
             <div className="pm-field">
+              <label className="pm-label">Marital Status</label>
+              <select className="pm-input pm-input--text" name="maritalStatus" value={form.maritalStatus}
+                onChange={handleChange} disabled={loading}>
+                <option value="">Select status</option>
+                {MARITAL_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+            </div>
+            <div className="pm-field">
               <label className="pm-label">Date of Birth</label>
               <input className="pm-input pm-input--text" type="date" name="dob" value={form.dob} onChange={handleChange} disabled={loading} />
             </div>
@@ -112,6 +130,7 @@ function EditProfileModal({ member, onClose, onSaved }) {
               <label className="pm-label">Aadhar Number</label>
               <input className="pm-input pm-input--text" name="aadharNumber" maxLength={12} value={form.aadharNumber} onChange={handleChange} disabled={loading} />
             </div>
+            {form.maritalStatus !== 'Bachelor' && <>
             <div className="pm-field">
               <label className="pm-label">Engagement Date</label>
               <input className="pm-input pm-input--text" type="date" name="engagementDate" value={form.engagementDate} onChange={handleChange} disabled={loading} />
@@ -120,6 +139,7 @@ function EditProfileModal({ member, onClose, onSaved }) {
               <label className="pm-label">Marriage Date</label>
               <input className="pm-input pm-input--text" type="date" name="marriageDate" value={form.marriageDate} onChange={handleChange} disabled={loading} />
             </div>
+            </>}
           </div>
 
           <button type="submit" className="pm-submit" disabled={loading}>

@@ -321,7 +321,10 @@ function Dashboard() {
               <div className="db-profile-card" data-tour="member-profile">
                 <div className="db-avatar">{initials(user?.name)}</div>
                 <div className="db-profile-info">
-                  <div className="db-profile-name">{user?.name}</div>
+                  <div className="db-profile-name">
+                    {user?.name}
+                    {member?.marital_status === 'Bachelor' && <span className="db-bachelor-indicator" title="Bachelor" aria-label="Bachelor">B</span>}
+                  </div>
                   <div className="db-profile-meta">
                     <span className="db-badge db-badge--id">{member?.member_id || user?.member_id || '—'}</span>
                     <span className="db-badge db-badge--type">{user?.type_name || 'Member'}</span>
@@ -421,13 +424,19 @@ function Dashboard() {
                         <span className="db-personal-val">{member.whatsapp}</span>
                       </div>
                     )}
-                    {member.engagement_date && (
+                    {member.marital_status && (
+                      <div className="db-personal-item">
+                        <span className="db-personal-key">Marital Status</span>
+                        <span className="db-personal-val">{member.marital_status}</span>
+                      </div>
+                    )}
+                    {member.marital_status !== 'Bachelor' && member.engagement_date && (
                       <div className="db-personal-item">
                         <span className="db-personal-key">Engagement</span>
                         <span className="db-personal-val">{fmtDate(member.engagement_date)}</span>
                       </div>
                     )}
-                    {member.marriage_date && (
+                    {member.marital_status !== 'Bachelor' && member.marriage_date && (
                       <div className="db-personal-item">
                         <span className="db-personal-key">Marriage</span>
                         <span className="db-personal-val">{fmtDate(member.marriage_date)}</span>

@@ -10,7 +10,7 @@ import {
   getPendingPayments,
   resetMemberPassword,
 } from '../../services/memberService';
-import { USER_TYPES, BLOOD_GROUPS, toMemberPayload } from '../../types/member';
+import { USER_TYPES, BLOOD_GROUPS, MARITAL_STATUSES, toMemberPayload } from '../../types/member';
 import { getUserTypes } from '../../services/userTypeService';
 import { getMemberStatuses } from '../../services/memberStatusService';
 import { getBranches } from '../../services/branchService';
@@ -71,7 +71,10 @@ function ViewModal({ member, typeMap, onClose }) {
               ? <img src={resolveFileUrl(member.photo)} alt={member.name} className="vm-profile-img" />
               : <span className="vm-profile-initial">{(member.name || '?')[0].toUpperCase()}</span>}
           </div>
-          <h2 className="vm-profile-name">{member.name}</h2>
+          <h2 className="vm-profile-name">
+            {member.name}
+            {member.marital_status === 'Bachelor' && <span className="ml-bachelor-indicator" title="Bachelor" aria-label="Bachelor">B</span>}
+          </h2>
           <div className="vm-profile-meta">
             <span className="ml-modal-badge">{typeMap[member.user_type_id] ?? `Type ${member.user_type_id}`}</span>
             {member.member_id && <span className="vm-profile-id">#{member.member_id}</span>}
@@ -95,8 +98,9 @@ function ViewModal({ member, typeMap, onClose }) {
           {row('Blood Group', member.blood_group)}
           {row('Date of Birth', member.dob ? new Date(member.dob).toLocaleDateString('en-IN') : null)}
           {row('Occupation', member.occupation)}
-          {row('Engagement Date', member.engagement_date ? new Date(member.engagement_date).toLocaleDateString('en-IN') : null)}
-          {row('Marriage Date', member.marriage_date ? new Date(member.marriage_date).toLocaleDateString('en-IN') : null)}
+          {row('Marital Status', member.marital_status)}
+          {member.marital_status !== 'Bachelor' && row('Engagement Date', member.engagement_date ? new Date(member.engagement_date).toLocaleDateString('en-IN') : null)}
+          {member.marital_status !== 'Bachelor' && row('Marriage Date', member.marriage_date ? new Date(member.marriage_date).toLocaleDateString('en-IN') : null)}
           {row('Outside Rajapalayam', member.out_of_rajapalayam ? 'Yes' : null)}
 
           {pendings.length > 0 && (
@@ -169,6 +173,7 @@ function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onS
     bloodGroup: member.blood_group ?? '',
     dob: member.dob ? member.dob.split('T')[0] : '',
     occupation: member.occupation ?? '',
+    maritalStatus: member.marital_status ?? '',
     outOfRajapalayam: !!member.out_of_rajapalayam,
     email: member.email ?? '',
     aadharNumber: member.aadhar_number ?? '',
@@ -271,6 +276,14 @@ function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onS
       // Branch list is scoped to the selected gotra — a branch chosen under
       // a previous gotra is no longer valid, so clear it.
       setForm((p) => ({ ...p, gotraId: value, branchId: '' }));
+      return;
+    }
+    if (name === 'maritalStatus') {
+      setForm((p) => ({
+        ...p,
+        maritalStatus: value,
+        ...(value === 'Bachelor' ? { engagementDate: '', marriageDate: '' } : {}),
+      }));
       return;
     }
     setForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
@@ -600,6 +613,16 @@ function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onS
 
             {/* Personal */}
             <div className="ml-form-section">Personal Details</div>
+            <div className="ml-form-grid-2">
+              <div className="ml-form-field">
+                <label className="ml-form-label">Marital Status</label>
+                <select className="ml-form-input ml-form-select" name="maritalStatus"
+                  value={form.maritalStatus} onChange={handleChange}>
+                  <option value="">Select status</option>
+                  {MARITAL_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </div>
+            </div>
             <div className="ml-form-grid-3">
               <div className="ml-form-field">
                 <label className="ml-form-label">Blood Group</label>
@@ -620,7 +643,7 @@ function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onS
               </div>
             </div>
 
-            <div className="ml-form-grid-2">
+            {form.maritalStatus !== 'Bachelor' && <div className="ml-form-grid-2">
               <div className="ml-form-field">
                 <label className="ml-form-label">Engagement Date</label>
                 <input className="ml-form-input" name="engagementDate" type="date"
@@ -631,7 +654,7 @@ function EditModal({ member, userTypes, statuses, gotras, branches, onClose, onS
                 <input className="ml-form-input" name="marriageDate" type="date"
                   value={form.marriageDate} onChange={handleChange} />
               </div>
-            </div>
+            </div>}
 
             <div className="ml-form-field">
               <label className="ml-form-checkbox-row">
@@ -983,7 +1006,10 @@ function MemberList() {
                           ? <img src={resolveFileUrl(m.photo)} alt={m.name} className="ml-avatar-img" />
                           : (m.name || '?')[0].toUpperCase()}
                       </div>
-                      <span>{m.name}</span>
+                      <span className="ml-name-label">
+                        {m.name}
+                        {m.marital_status === 'Bachelor' && <span className="ml-bachelor-indicator" title="Bachelor" aria-label="Bachelor">B</span>}
+                      </span>
                     </div>
                   </td>
                   <td>

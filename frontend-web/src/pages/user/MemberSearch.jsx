@@ -71,7 +71,10 @@ function DetailsModal({ member, typeMap, onClose }) {
               initialClassName="ms-profile-initial"
             />
           </div>
-          <h2 className="ms-profile-name">{member.name}</h2>
+          <h2 className="ms-profile-name">
+            {member.name}
+            {member.marital_status === 'Bachelor' && <span className="ms-bachelor-indicator" title="Bachelor" aria-label="Bachelor">B</span>}
+          </h2>
           <div className="ms-profile-meta">
             <span className="ms-badge">{typeMap[member.user_type_id] ?? `Type ${member.user_type_id}`}</span>
             {member.member_id && <span className="ms-profile-id">#{member.member_id}</span>}
@@ -98,8 +101,9 @@ function DetailsModal({ member, typeMap, onClose }) {
           {row('Blood Group', member.blood_group)}
           {row('Date of Birth', member.dob ? fmtDate(member.dob) : null)}
           {row('Occupation', member.occupation)}
-          {row('Engagement Date', member.engagement_date ? fmtDate(member.engagement_date) : null)}
-          {row('Marriage Date', member.marriage_date ? fmtDate(member.marriage_date) : null)}
+          {row('Marital Status', member.marital_status)}
+          {member.marital_status !== 'Bachelor' && row('Engagement Date', member.engagement_date ? fmtDate(member.engagement_date) : null)}
+          {member.marital_status !== 'Bachelor' && row('Marriage Date', member.marriage_date ? fmtDate(member.marriage_date) : null)}
           {row('Outside Rajapalayam', member.out_of_rajapalayam ? 'Yes' : null)}
 
           {(local || outside) && <div className="ms-section-label">Addresses</div>}
@@ -237,7 +241,10 @@ function MemberSearch() {
                   />
                 </div>
                 <div className="ms-card-body">
-                  <div className="ms-card-name">{m.name}</div>
+                  <div className="ms-card-name">
+                    {m.name}
+                    {m.marital_status === 'Bachelor' && <span className="ms-bachelor-indicator" title="Bachelor" aria-label="Bachelor">B</span>}
+                  </div>
                   <span className="ms-card-type">{typeMap[m.user_type_id] ?? `Type ${m.user_type_id}`}</span>
                   <div className="ms-card-meta">
                     <span className="ms-card-meta-row">

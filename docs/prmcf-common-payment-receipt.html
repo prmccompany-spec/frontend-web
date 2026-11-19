@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRMCF Payment Receipt</title>
+  <style>
+    :root {
+      --ink: #142b55;
+      --muted: #52627b;
+      --line: #aab6c8;
+      --soft: #f1f5fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #eef1f5;
+      color: #172033;
+      font-family: Arial, "Noto Sans Tamil", "Latha", sans-serif;
+    }
+
+    .receipt {
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: 20px 22px 18px;
+      background: #fff;
+      border: 1.5px solid var(--ink);
+      box-shadow: 0 4px 18px rgba(20, 43, 85, .10);
+    }
+
+    .header {
+      text-align: center;
+      color: var(--ink);
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .invocation {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .org-name {
+      margin: 0;
+      font-size: 19px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .address {
+      margin-top: 5px;
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+
+    .receipt-title-ta {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 18px;
+      border-radius: 5px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .receipt-title-en {
+      margin-top: 5px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .8px;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .meta strong { color: var(--ink); }
+
+    .details {
+      padding: 12px 0 10px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 126px 10px minmax(0, 1fr);
+      gap: 5px;
+      margin: 0 0 10px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .detail-row .label { color: var(--muted); }
+    .detail-row .value { font-weight: 700; overflow-wrap: anywhere; }
+
+    .amount-panel {
+      margin: 5px 0 12px;
+      padding: 12px;
+      border: 1px solid #d7e1f2;
+      border-radius: 7px;
+      background: var(--soft);
+      text-align: center;
+    }
+
+    .amount-label {
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .amount {
+      margin-top: 3px;
+      color: var(--ink);
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .amount-words {
+      margin-top: 4px;
+      color: #3e4e69;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    .payment-mode {
+      padding: 9px 0 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 30px 4px 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .signature {
+      width: 48%;
+      border-top: 1px solid #65738a;
+      padding-top: 7px;
+    }
+
+    .footer {
+      margin-top: 15px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .toolbar {
+      max-width: 430px;
+      margin: 14px auto 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 16px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media print {
+      @page { size: 3.5in 5.5in; margin: 0.12in; }
+      body { padding: 0; background: #fff; }
+      .receipt {
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        border: 1px solid var(--ink);
+        box-shadow: none;
+        padding: 14px 15px 12px;
+      }
+      .toolbar { display: none; }
+      .org-name { font-size: 17px; }
+      .receipt-title-ta { font-size: 14px; }
+      .receipt-title-en { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="receipt" id="receipt">
+    <header class="header">
+      <div class="invocation">ஸ்ரீ ராமஜெயம்</div>
+      <h1 class="org-name">பழையபாளையம் ராஜாக்கள் முறைமை<br />பொதுப்பண்டு</h1>
+      <div class="address">இராஜபாளையம் – 626 117</div>
+      <div class="receipt-title-ta">பணம் பெற்றுக்கொண்ட ரசீது</div>
+      <div class="receipt-title-en">PAYMENT RECEIPT</div>
+    </header>
+
+    <section class="meta">
+      <div><strong>Receipt No:</strong> <span id="receiptNo">PRMCF-2026-00125</span></div>
+      <div><strong>Date:</strong> <span id="date">17-11-2026</span></div>
+    </section>
+
+    <section class="details">
+      <div class="detail-row">
+        <span class="label">Received from</span><span>:</span>
+        <span class="value" id="memberName">Member Name</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Member ID</span><span>:</span>
+        <span class="value" id="memberId">PRM00125</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Payment for</span><span>:</span>
+        <span class="value" id="purpose">Annual Maintenance</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Description</span><span>:</span>
+        <span class="value" id="description">Maintenance Fee – 2026</span>
+      </div>
+    </section>
+
+    <section class="amount-panel">
+      <div class="amount-label">பெற்ற தொகை / Amount Received</div>
+      <div class="amount" id="amount">₹7,000</div>
+      <div class="amount-words" id="amountWords">Rupees Seven Thousand Only</div>
+    </section>
+
+    <div class="payment-mode">
+      <strong>Payment Mode:</strong> <span id="paymentMode">UPI</span>
+    </div>
+
+    <section class="signatures">
+      <div class="signature">பெற்றவர் / Received by</div>
+      <div class="signature">அதிகாரி கையொப்பம் / Authorized Signature</div>
+    </section>
+
+    <footer class="footer">Thank you for your contribution.</footer>
+  </main>
+
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">Print receipt</button>
+  </div>
+
+  <script>
+    /*
+      Populate this object from your payment API when the user clicks
+      "View / Print Receipt". Replace the sample values with API data.
+    */
+    const receiptData = {
+      receiptNo: "PRMCF-2026-00125",
+      date: "17-11-2026",
+      memberName: "Member Name",
+      memberId: "PRM00125",
+      purpose: "Annual Maintenance",
+      description: "Maintenance Fee – 2026",
+      amount: 7000,
+      amountWords: "Rupees Seven Thousand Only",
+      paymentMode: "UPI"
+    };
+
+    const fields = ["receiptNo", "date", "memberName", "memberId",
+      "purpose", "description", "amountWords", "paymentMode"];
+
+    fields.forEach((key) => {
+      const element = document.getElementById(key);
+      if (element && receiptData[key] !== undefined) {
+        element.textContent = receiptData[key];
+      }
+    });
+
+    document.getElementById("amount").textContent =
+      new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+      }).format(receiptData.amount);
+  </script>
+</body>
+</html>

@@ -8,7 +8,10 @@ import { getRentals } from '../../services/rentalService';
 import { getExpenses } from '../../services/expenseService';
 import { getRealizedRentalIncome } from '../../utils/rentalIncome';
 import { exportTableToPdf } from '../../utils/pdfExport';
+import { exportTableToExcel } from '../../utils/excelExport';
 import ExportPdfButton from '../../components/ExportPdfButton/ExportPdfButton';
+import ExportExcelButton from '../../components/ExportExcelButton/ExportExcelButton';
+import RentalProductsBadge from '../../components/RentalProductsBadge/RentalProductsBadge';
 import './Reports.css';
 
 const fmt = (val) =>
@@ -39,7 +42,8 @@ const inRange = (d, from, to) => {
 };
 
 const INCOME_TYPES = ['Payment', 'Due Collection', 'Rental'];
-const INCOME_TYPE_COLOR = { Payment: '#2563eb', 'Due Collection': '#d97706', Rental: '#7c3aed' };
+const ALL_INCOME_TYPES = ['Payment', 'Due Collection', 'Rental', 'Rental Refund'];
+const INCOME_TYPE_COLOR = { Payment: '#2563eb', 'Due Collection': '#d97706', Rental: '#7c3aed', 'Rental Refund': '#dc2626' };
 const EXPENSE_CAT_COLORS = ['#dc3545', '#d97706', '#7c3aed', '#2563eb', '#059669'];
 
 const chartTheme = createTheme({
@@ -123,21 +127,30 @@ function Reports() {
     const rentalById = new Map(rentals.map((r) => [r.id, r]));
     const fromRentals = getRealizedRentalIncome(rentals).map((entry) => {
       const r = rentalById.get(entry.rentalId);
+      if (!r) return null;
       const isOutsider = !r.member_name;
+      const productLabel = r.items && r.items.length > 0
+        ? r.items.map((i) => `${i.product_name} (${i.quantity})`).join(', ')
+        : `${r.product_name || 'Equipment'} (${r.quantity || 1})`;
+      const isRefund = entry.kind === 'out' || entry.stage === 'refund';
+      const stageLabel = entry.stage === 'advance' ? 'Advance' : isRefund ? 'Refund' : 'Balance';
+
       return {
         id: `rental-${entry.rentalId}-${entry.stage}`,
         date: entry.date,
-        type: 'Rental',
-        label: r.product_name,
+        type: isRefund ? 'Rental Refund' : 'Rental',
+        label: productLabel,
+        items: r.items,
         ref: r.rental_ref,
-        meta: `${fmtDate(r.start_date)} – ${fmtDate(r.end_date)} (${entry.stage === 'advance' ? 'Advance' : 'Balance'})`,
+        meta: `${fmtDate(r.start_date)} – ${fmtDate(r.end_date)} (${stageLabel})`,
         party: r.member_name || r.renter_name,
         partyCode: isOutsider ? 'Non-member' : r.member_code,
         amount: entry.amount,
+        kind: entry.kind || 'in',
         mode: entry.mode,
         handledBy: r.collected_by_name,
       };
-    });
+    }).filter(Boolean);
     return [...fromPayments, ...fromRentals].sort((a, b) => asDate(b.date) - asDate(a.date));
   }, [payments, rentals]);
 
@@ -155,8 +168,27 @@ function Reports() {
   // ── Tally book: chronological ledger with a running balance ──
   const tallyWithBalance = useMemo(() => {
     const merged = [
-      ...incomeEntries.map((e) => ({ id: e.id, date: e.date, kind: 'in', label: `${e.type} — ${e.label}`, party: e.party, amount: e.amount })),
-      ...expenseEntries.map((e) => ({ id: e.id, date: e.date, kind: 'out', label: `Expense — ${e.category}`, party: e.recordedBy, amount: e.amount })),
+      ...incomeEntries.map((e) => ({
+        id: e.id,
+        date: e.date,
+        kind: e.kind || 'in',
+        type: e.type,
+        ref: e.ref,
+        label: `${e.type} — ${e.label}`,
+        items: e.items,
+        party: e.party,
+        amount: e.amount,
+      })),
+      ...expenseEntries.map((e) => ({
+        id: e.id,
+        date: e.date,
+        kind: 'out',
+        type: 'Expense',
+        ref: '',
+        label: `Expense — ${e.category}`,
+        party: e.recordedBy,
+        amount: e.amount,
+      })),
     ].sort((a, b) => asDate(a.date) - asDate(b.date));
 
     let balance = 0;
@@ -170,22 +202,31 @@ function Reports() {
   const now = new Date();
   const thisMonth = monthKey(now);
 
-  const totalIncomeAllTime = incomeEntries.reduce((s, e) => s + e.amount, 0);
+  const totalIncomeAllTime = incomeEntries.reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0);
   const totalExpensesAllTime = expenseEntries.reduce((s, e) => s + e.amount, 0);
   const netAllTime = totalIncomeAllTime - totalExpensesAllTime;
-  const incomeThisMonth = incomeEntries.filter((e) => monthKey(e.date) === thisMonth).reduce((s, e) => s + e.amount, 0);
+  const incomeThisMonth = incomeEntries.filter((e) => monthKey(e.date) === thisMonth).reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0);
   const expensesThisMonth = expenseEntries.filter((e) => monthKey(e.date) === thisMonth).reduce((s, e) => s + e.amount, 0);
   const netThisMonth = incomeThisMonth - expensesThisMonth;
+
+  // Cash in Hand vs Digital Bank (QR)
+  const totalCashIn = incomeEntries.filter((e) => e.mode === 'cash').reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0);
+  const totalQrIn = incomeEntries.filter((e) => e.mode === 'qr').reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0);
 
   const monthsWindow = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
     return { key: monthKey(d), label: d.toLocaleDateString('en-IN', { month: 'short' }) };
   });
-  const incomeByMonth = monthsWindow.map(({ key }) => incomeEntries.filter((e) => monthKey(e.date) === key).reduce((s, e) => s + e.amount, 0));
+  const incomeByMonth = monthsWindow.map(({ key }) => incomeEntries.filter((e) => monthKey(e.date) === key).reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0));
   const expenseByMonth = monthsWindow.map(({ key }) => expenseEntries.filter((e) => monthKey(e.date) === key).reduce((s, e) => s + e.amount, 0));
 
   const incomeBySource = INCOME_TYPES
-    .map((type, i) => ({ id: i, label: type, value: incomeEntries.filter((e) => e.type === type).reduce((s, e) => s + e.amount, 0), color: INCOME_TYPE_COLOR[type] }))
+    .map((type, i) => ({
+      id: i,
+      label: type,
+      value: Math.max(0, incomeEntries.filter((e) => e.type === type || (type === 'Rental' && e.type === 'Rental Refund')).reduce((s, e) => s + (e.kind === 'out' ? -e.amount : e.amount), 0)),
+      color: INCOME_TYPE_COLOR[type],
+    }))
     .filter((d) => d.value > 0);
 
   const expensesByCategory = Object.entries(
@@ -214,7 +255,9 @@ function Reports() {
     });
   }, [incomeEntries, incomeFilters]);
   const incomeHasFilters = !!(incomeFilters.search || incomeFilters.type || incomeFilters.label || incomeFilters.mode || incomeFilters.date_from || incomeFilters.date_to);
-  const incomeTotal = filteredIncome.reduce((s, e) => s + e.amount, 0);
+  const incomeGross = filteredIncome.filter((e) => e.kind !== 'out').reduce((s, e) => s + e.amount, 0);
+  const incomeRefunds = filteredIncome.filter((e) => e.kind === 'out').reduce((s, e) => s + e.amount, 0);
+  const incomeTotal = incomeGross - incomeRefunds;
 
   const incomeFilterParts = [];
   if (incomeFilters.type) incomeFilterParts.push(`Type: ${incomeFilters.type}`);
@@ -229,7 +272,9 @@ function Reports() {
     subtitle: incomeFilterParts.length ? incomeFilterParts.join(' · ') : 'All income entries',
     summary: [
       { label: 'Entries', value: filteredIncome.length },
-      { label: 'Total', value: `Rs. ${fmt(incomeTotal)}` },
+      { label: 'Gross Inflows', value: `Rs. ${fmt(incomeGross)}` },
+      ...(incomeRefunds > 0 ? [{ label: 'Refunds Out', value: `-Rs. ${fmt(incomeRefunds)}` }] : []),
+      { label: 'Net Income', value: `Rs. ${fmt(incomeTotal)}` },
     ],
     columns: [
       { header: 'Ref', key: 'ref' },
@@ -247,12 +292,54 @@ function Reports() {
       type: e.type,
       member: `${e.party}${e.partyCode ? ` (${e.partyCode})` : ''}`,
       label: `${e.label}${e.meta ? ` — ${e.meta}` : ''}`,
-      amount: `Rs. ${fmt(e.amount)}`,
+      amount: e.kind === 'out' ? `-Rs. ${fmt(e.amount)}` : `Rs. ${fmt(e.amount)}`,
       mode: e.mode === 'qr' ? 'QR' : 'Cash',
       collectedBy: e.handledBy || '—',
     })),
     filename: 'income-ledger',
     orientation: 'landscape',
+  });
+
+  const handleExportIncomeExcel = () => exportTableToExcel({
+    title: 'Income Ledger',
+    subtitle: incomeFilterParts.length ? incomeFilterParts.join(' · ') : 'All income entries',
+    summary: [
+      { label: 'Entries', value: filteredIncome.length },
+      { label: 'Gross Inflows', value: incomeGross },
+      ...(incomeRefunds > 0 ? [{ label: 'Refunds Out', value: -incomeRefunds }] : []),
+      { label: 'Net Income', value: incomeTotal },
+    ],
+    columns: [
+      { header: 'Ref', key: 'ref' },
+      { header: 'Date', key: 'date' },
+      { header: 'Type', key: 'type' },
+      { header: 'Member', key: 'member' },
+      { header: 'Category / Product', key: 'label' },
+      { header: 'Amount', key: 'amount' },
+      { header: 'Mode', key: 'mode' },
+      { header: 'Collected By', key: 'collectedBy' },
+    ],
+    rows: filteredIncome.map((e) => ({
+      ref: e.ref || '—',
+      date: fmtDate(e.date),
+      type: e.type,
+      member: `${e.party}${e.partyCode ? ` (${e.partyCode})` : ''}`,
+      label: `${e.label}${e.meta ? ` — ${e.meta}` : ''}`,
+      amount: e.kind === 'out' ? -e.amount : e.amount,
+      mode: e.mode === 'qr' ? 'QR' : 'Cash',
+      collectedBy: e.handledBy || '—',
+    })),
+    totalRow: {
+      ref: 'Total',
+      date: '',
+      type: `${filteredIncome.length} entries`,
+      member: '',
+      label: '',
+      amount: incomeTotal,
+      mode: '',
+      collectedBy: '',
+    },
+    filename: 'income-ledger',
   });
 
   // ══════════ EXPENSES TAB ══════════
@@ -303,6 +390,37 @@ function Reports() {
     filename: 'expenses-report',
   });
 
+  const handleExportExpensesExcel = () => exportTableToExcel({
+    title: 'Expenses Report',
+    subtitle: expenseFilterParts.length ? expenseFilterParts.join(' · ') : 'All expense entries',
+    summary: [
+      { label: 'Expenses', value: filteredExpenses.length },
+      { label: 'Total', value: expenseTotal },
+    ],
+    columns: [
+      { header: 'Date & Time', key: 'date' },
+      { header: 'Category', key: 'category' },
+      { header: 'Reason', key: 'reason' },
+      { header: 'Amount', key: 'amount' },
+      { header: 'Recorded By', key: 'recordedBy' },
+    ],
+    rows: filteredExpenses.map((e) => ({
+      date: fmtDateTime(e.date),
+      category: e.category,
+      reason: e.reason,
+      amount: e.amount,
+      recordedBy: e.recordedBy,
+    })),
+    totalRow: {
+      date: 'Total',
+      category: `${filteredExpenses.length} expenses`,
+      reason: '',
+      amount: expenseTotal,
+      recordedBy: '',
+    },
+    filename: 'expenses-report',
+  });
+
   // ══════════ TALLY TAB ══════════
   const [tallyFilters, setTallyFilters] = useState({ search: '', kind: '', date_from: '', date_to: '' });
   const filteredTally = useMemo(() => {
@@ -311,7 +429,7 @@ function Reports() {
       if (tallyFilters.kind && t.kind !== tallyFilters.kind) return false;
       if (!inRange(t.date, tallyFilters.date_from, tallyFilters.date_to)) return false;
       if (q) {
-        const hay = `${t.label} ${t.party}`.toLowerCase();
+        const hay = `${t.label} ${t.party} ${t.ref || ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -321,6 +439,17 @@ function Reports() {
   const tallyIn = filteredTally.filter((t) => t.kind === 'in').reduce((s, t) => s + t.amount, 0);
   const tallyOut = filteredTally.filter((t) => t.kind === 'out').reduce((s, t) => s + t.amount, 0);
   const tallyDisplayed = [...filteredTally].reverse();
+
+  // Opening Balance calculation for date-filtered tally ledger
+  const openingBalance = useMemo(() => {
+    if (!tallyFilters.date_from) return null;
+    const fromDate = new Date(tallyFilters.date_from);
+    return tallyWithBalance
+      .filter((t) => asDate(t.date) < fromDate)
+      .reduce((sum, t) => sum + (t.kind === 'in' ? t.amount : -t.amount), 0);
+  }, [tallyWithBalance, tallyFilters.date_from]);
+
+  const closingBalance = openingBalance !== null ? openingBalance + tallyIn - tallyOut : null;
 
   const tallyFilterParts = [];
   if (tallyFilters.kind) tallyFilterParts.push(tallyFilters.kind === 'in' ? 'Income Only' : 'Expenses Only');
@@ -333,9 +462,11 @@ function Reports() {
     subtitle: tallyFilterParts.length ? tallyFilterParts.join(' · ') : 'All ledger entries',
     summary: [
       { label: 'Entries', value: filteredTally.length },
+      ...(openingBalance !== null ? [{ label: 'Opening Balance', value: `Rs. ${fmt(openingBalance)}` }] : []),
       { label: 'In', value: `Rs. ${fmt(tallyIn)}` },
       { label: 'Out', value: `Rs. ${fmt(tallyOut)}` },
-      { label: 'Net', value: `Rs. ${fmt(Math.abs(tallyIn - tallyOut))}` },
+      { label: 'Net Change', value: `Rs. ${fmt(tallyIn - tallyOut)}` },
+      ...(closingBalance !== null ? [{ label: 'Closing Balance', value: `Rs. ${fmt(closingBalance)}` }] : []),
     ],
     columns: [
       { header: 'Date', key: 'date' },
@@ -353,6 +484,47 @@ function Reports() {
       out: t.kind === 'out' ? `Rs. ${fmt(t.amount)}` : '',
       balance: `Rs. ${fmt(t.balance)}`,
     })),
+    filename: 'tally-book',
+  });
+
+  const handleExportTallyExcel = () => exportTableToExcel({
+    title: 'Tally Book',
+    subtitle: tallyFilterParts.length ? tallyFilterParts.join(' · ') : 'All ledger entries',
+    summary: [
+      { label: 'Entries', value: filteredTally.length },
+      ...(openingBalance !== null ? [{ label: 'Opening Balance', value: openingBalance }] : []),
+      { label: 'In', value: tallyIn },
+      { label: 'Out', value: tallyOut },
+      { label: 'Net Change', value: tallyIn - tallyOut },
+      ...(closingBalance !== null ? [{ label: 'Closing Balance', value: closingBalance }] : []),
+    ],
+    columns: [
+      { header: 'Date', key: 'date' },
+      { header: 'Ref', key: 'ref' },
+      { header: 'Description', key: 'description' },
+      { header: 'Party', key: 'party' },
+      { header: 'In', key: 'in' },
+      { header: 'Out', key: 'out' },
+      { header: 'Balance', key: 'balance' },
+    ],
+    rows: tallyDisplayed.map((t) => ({
+      date: fmtDate(t.date),
+      ref: t.ref || '—',
+      description: t.label,
+      party: t.party || '—',
+      in: t.kind === 'in' ? t.amount : '',
+      out: t.kind === 'out' ? t.amount : '',
+      balance: t.balance,
+    })),
+    totalRow: {
+      date: 'Total',
+      ref: '',
+      description: `${filteredTally.length} entries`,
+      party: '',
+      in: tallyIn,
+      out: tallyOut,
+      balance: tallyIn - tallyOut,
+    },
     filename: 'tally-book',
   });
 
@@ -392,6 +564,23 @@ function Reports() {
             <StatCard label="Total Expenses" value={`₹${fmt(totalExpensesAllTime)}`} sub="All time" color="#dc2626" />
             <StatCard label="Net Position" value={`₹${fmt(Math.abs(netAllTime))}`} sub={netAllTime >= 0 ? 'Surplus, all time' : 'Deficit, all time'} color={netAllTime >= 0 ? '#059669' : '#dc2626'} />
             <StatCard label="Net (This Month)" value={`₹${fmt(Math.abs(netThisMonth))}`} sub={netThisMonth >= 0 ? 'Surplus this month' : 'Deficit this month'} color={netThisMonth >= 0 ? '#059669' : '#dc2626'} />
+          </div>
+
+          <div className="rp-mode-stats-row">
+            <div className="rp-mode-card rp-mode-card--cash">
+              <span className="rp-mode-card__icon">💵</span>
+              <div className="rp-mode-card__info">
+                <span className="rp-mode-card__label">Cash in Hand (நேரடி ரொக்கம்)</span>
+                <span className="rp-mode-card__val">₹{fmt(totalCashIn)}</span>
+              </div>
+            </div>
+            <div className="rp-mode-card rp-mode-card--qr">
+              <span className="rp-mode-card__icon">📱</span>
+              <div className="rp-mode-card__info">
+                <span className="rp-mode-card__label">Bank / QR UPI (வங்கி / டிஜிட்டல்)</span>
+                <span className="rp-mode-card__val">₹{fmt(totalQrIn)}</span>
+              </div>
+            </div>
           </div>
 
           <div className="rp-row-3">
@@ -471,7 +660,7 @@ function Reports() {
             />
             <select className="rp-filter-input" value={incomeFilters.type} onChange={(e) => setIncomeFilters((f) => ({ ...f, type: e.target.value }))}>
               <option value="">All Types</option>
-              {INCOME_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {ALL_INCOME_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
             <select className="rp-filter-input" value={incomeFilters.label} onChange={(e) => setIncomeFilters((f) => ({ ...f, label: e.target.value }))}>
               <option value="">All Categories/Products</option>
@@ -490,6 +679,7 @@ function Reports() {
               <button className="rp-filter-clear" onClick={() => setIncomeFilters({ search: '', type: '', label: '', mode: '', date_from: '', date_to: '' })}>Clear</button>
             )}
             <ExportPdfButton onExport={handleExportIncome} disabled={filteredIncome.length === 0} />
+            <ExportExcelButton onExport={handleExportIncomeExcel} disabled={filteredIncome.length === 0} />
           </div>
 
           {filteredIncome.length === 0 ? (
@@ -498,7 +688,13 @@ function Reports() {
             <>
               <div className="rp-summary-bar">
                 <span>{filteredIncome.length} entr{filteredIncome.length !== 1 ? 'ies' : 'y'}</span>
-                <span className="rp-summary-total">Total: <strong>₹{fmt(incomeTotal)}</strong></span>
+                <span className="rp-summary-total">
+                  Gross: <strong className="rp-text-in">₹{fmt(incomeGross)}</strong>
+                  {incomeRefunds > 0 && (
+                    <> · Refunds: <strong className="rp-text-out">-₹{fmt(incomeRefunds)}</strong></>
+                  )}
+                  {' '}· Net Income: <strong>₹{fmt(incomeTotal)}</strong>
+                </span>
               </div>
               <div className="rp-table-wrap">
                 <table className="rp-table">
@@ -525,10 +721,18 @@ function Reports() {
                           <div className="rp-td-meta">{e.partyCode}</div>
                         </td>
                         <td>
-                          <div>{e.label}</div>
+                          <div>
+                            {e.items && e.items.length > 0 ? (
+                              <RentalProductsBadge items={e.items} fallback={e.label} />
+                            ) : (
+                              e.label
+                            )}
+                          </div>
                           <div className="rp-td-meta">{e.meta}</div>
                         </td>
-                        <td className="rp-amount rp-amount--in">₹{fmt(e.amount)}</td>
+                        <td className={`rp-amount ${e.kind === 'out' ? 'rp-amount--out' : 'rp-amount--in'}`}>
+                          {e.kind === 'out' ? `-₹${fmt(e.amount)}` : `₹${fmt(e.amount)}`}
+                        </td>
                         <td>
                           <span className={`rp-mode-badge rp-mode-badge--${e.mode}`}>{e.mode === 'qr' ? 'QR' : 'Cash'}</span>
                         </td>
@@ -565,6 +769,7 @@ function Reports() {
               <button className="rp-filter-clear" onClick={() => setExpenseFilters({ search: '', category: '', date_from: '', date_to: '' })}>Clear</button>
             )}
             <ExportPdfButton onExport={handleExportExpenses} disabled={filteredExpenses.length === 0} />
+            <ExportExcelButton onExport={handleExportExpensesExcel} disabled={filteredExpenses.length === 0} />
             <button className="rp-manage-btn" onClick={() => navigate('/admin/expenses')}>Manage in Expense Book</button>
           </div>
 
@@ -628,6 +833,7 @@ function Reports() {
               <button className="rp-filter-clear" onClick={() => setTallyFilters({ search: '', kind: '', date_from: '', date_to: '' })}>Clear</button>
             )}
             <ExportPdfButton onExport={handleExportTally} disabled={filteredTally.length === 0} />
+            <ExportExcelButton onExport={handleExportTallyExcel} disabled={filteredTally.length === 0} />
           </div>
 
           {filteredTally.length === 0 ? (
@@ -637,7 +843,13 @@ function Reports() {
               <div className="rp-summary-bar">
                 <span>{filteredTally.length} entr{filteredTally.length !== 1 ? 'ies' : 'y'}</span>
                 <span className="rp-summary-total">
-                  In: <strong className="rp-text-in">₹{fmt(tallyIn)}</strong> · Out: <strong className="rp-text-out">₹{fmt(tallyOut)}</strong> · Net: <strong className={tallyIn - tallyOut >= 0 ? 'rp-text-in' : 'rp-text-out'}>₹{fmt(Math.abs(tallyIn - tallyOut))}</strong>
+                  {openingBalance !== null && (
+                    <>Opening: <strong>₹{fmt(openingBalance)}</strong> · </>
+                  )}
+                  In: <strong className="rp-text-in">₹{fmt(tallyIn)}</strong> · Out: <strong className="rp-text-out">₹{fmt(tallyOut)}</strong> · Net Change: <strong className={tallyIn - tallyOut >= 0 ? 'rp-text-in' : 'rp-text-out'}>₹{fmt(Math.abs(tallyIn - tallyOut))}</strong>
+                  {closingBalance !== null && (
+                    <> · Closing: <strong className={closingBalance >= 0 ? 'rp-text-in' : 'rp-text-out'}>₹{fmt(closingBalance)}</strong></>
+                  )}
                 </span>
               </div>
               <div className="rp-table-wrap">
@@ -653,10 +865,31 @@ function Reports() {
                     </tr>
                   </thead>
                   <tbody>
+                    {openingBalance !== null && (
+                      <tr className="rp-tally-opening-row">
+                        <td className="rp-td-meta">{fmtDate(tallyFilters.date_from)}</td>
+                        <td className="rp-bold rp-text-opening">தொடக்க இருப்பு / Opening Balance</td>
+                        <td className="rp-td-meta">—</td>
+                        <td className="rp-amount">—</td>
+                        <td className="rp-amount">—</td>
+                        <td className={`rp-balance ${openingBalance >= 0 ? 'rp-text-in' : 'rp-text-out'}`}>
+                          ₹{fmt(openingBalance)}
+                        </td>
+                      </tr>
+                    )}
                     {tallyDisplayed.map((t) => (
                       <tr key={t.id}>
                         <td className="rp-td-meta">{fmtDate(t.date)}</td>
-                        <td className="rp-bold">{t.label}</td>
+                        <td className="rp-bold">
+                          {t.items && t.items.length > 0 ? (
+                            <span className="rp-tally-item">
+                              <span className="rp-tally-type">{t.type} — </span>
+                              <RentalProductsBadge items={t.items} fallback={t.label} />
+                            </span>
+                          ) : (
+                            t.label
+                          )}
+                        </td>
                         <td className="rp-td-meta">{t.party}</td>
                         <td className="rp-amount rp-amount--in">{t.kind === 'in' ? `₹${fmt(t.amount)}` : ''}</td>
                         <td className="rp-amount rp-amount--out">{t.kind === 'out' ? `₹${fmt(t.amount)}` : ''}</td>

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getCategories, createPayment, collectDues, getPayments } from '../../../services/paymentService';
+import { getCategories, createPayment, collectDues, getPayments, getPaymentById } from '../../../services/paymentService';
 import { getMembers, getPendingPayments } from '../../../services/memberService';
 import { matchesIdOrText, sortByMemberId } from '../../../utils/memberSearch';
 import { showToast } from '../../../components/Toast/toastBus';
 import { useAuth } from '../../../context/AuthContext';
+import ReceiptModal from '../../../components/ReceiptModal/ReceiptModal';
 import './PaymentEntry.css';
 
 // Local calendar date, not UTC — toISOString() converts to UTC first, so
@@ -41,6 +42,7 @@ function PaymentEntry() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [receiptPayment, setReceiptPayment] = useState(null);
 
   // ── Selected member's dues + payment history panel ──
   const [memberDues, setMemberDues] = useState([]);
@@ -102,7 +104,7 @@ function PaymentEntry() {
 
     setCollecting(true);
     try {
-      await collectDues({
+      const res = await collectDues({
         member_id: form.member_id,
         pending_payment_ids: ids,
         collected_by: user.id,
@@ -114,6 +116,14 @@ function PaymentEntry() {
       showToast(`Cleared ${ids.length} due${ids.length !== 1 ? 's' : ''} successfully.`, 'success');
       setSelectedDueIds([]);
       loadMemberPanel(form.member_id);
+      if (res?.payments?.length > 0) {
+        try {
+          const firstPayment = await getPaymentById(res.payments[0].id);
+          if (firstPayment) setReceiptPayment(firstPayment);
+        } catch (receiptErr) {
+          console.error('Failed to load receipt:', receiptErr);
+        }
+      }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to clear due(s).';
       setCollectError(msg);
@@ -168,6 +178,14 @@ function PaymentEntry() {
       });
       setResult(res);
       showToast('Payment recorded successfully.', 'success');
+      try {
+        if (res?.id) {
+          const fullPayment = await getPaymentById(res.id);
+          if (fullPayment) setReceiptPayment(fullPayment);
+        }
+      } catch (receiptErr) {
+        console.error('Failed to load receipt:', receiptErr);
+      }
       setForm({
         member_id: '',
         memberDisplay: '',
@@ -197,8 +215,26 @@ function PaymentEntry() {
       <div className="pe-card">
         {result && (
           <div className="pe-success">
-            Payment recorded successfully! Reference: <strong>{result.payment_ref}</strong>
-            <button className="pe-success-close" onClick={() => setResult(null)}>×</button>
+            <div className="pe-success-text">
+              Payment recorded successfully! Reference: <strong>{result.payment_ref}</strong>
+            </div>
+            <div className="pe-success-actions">
+              <button
+                type="button"
+                className="pe-success-receipt-btn"
+                onClick={async () => {
+                  try {
+                    const full = await getPaymentById(result.id);
+                    if (full) setReceiptPayment(full);
+                  } catch {
+                    showToast('Could not load receipt.', 'error');
+                  }
+                }}
+              >
+                View Receipt
+              </button>
+              <button className="pe-success-close" onClick={() => setResult(null)}>×</button>
+            </div>
           </div>
         )}
         {error && <div className="pe-error">{error}</div>}
@@ -434,6 +470,12 @@ function PaymentEntry() {
         </div>
       )}
       </div>
+      {receiptPayment && (
+        <ReceiptModal
+          payment={receiptPayment}
+          onClose={() => setReceiptPayment(null)}
+        />
+      )}
     </div>
   );
 }

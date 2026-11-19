@@ -1,0 +1,31 @@
+/* ExportExcelButton.css */
+.excel-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #107c41;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.excel-export-btn:hover:not(:disabled) {
+  background-color: #0b5a2f;
+}
+
+.excel-export-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.excel-export-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}

@@ -26,30 +26,29 @@ const MS_PER_UNIT = {
 
 // The day rate is always the floor — a month/year rental returned early (or
 // any rental billed under a whole day) never charges below one day's rate.
-const computeAmount = (rateType, rateAmount, dayRate, startDate, endDate) => {
+const computeAmount = (rateType, rateAmount, dayRate, startDate, endDate, quantity = 1) => {
   const ms = new Date(endDate) - new Date(startDate);
   const units = Math.max(Math.ceil(ms / MS_PER_UNIT[rateType]), 1);
-  const computed = units * Number(rateAmount);
-  return Math.max(computed, Number(dayRate));
+  const qty = Math.max(1, Number(quantity) || 1);
+  const computed = units * Number(rateAmount) * qty;
+  return Math.max(computed, Number(dayRate) * qty);
 };
 
 export const bookRental = async (data) => {
   const {
-    product_id, member_id, renter_name, rate_type, start_date, end_date,
-    amount, advance_amount, advance_payment_type, collected_by, collected_by_type = 'member', notes,
+    items, product_id, quantity, rate_type, amount,
+    member_id, renter_name, start_date, end_date,
+    advance_amount, advance_payment_type, collected_by, collected_by_type = 'member', notes,
   } = data;
 
-  if (!product_id || !rate_type || !start_date || !end_date) {
-    fail('product_id, rate_type, start_date and end_date are required', 400);
+  if (!start_date || !end_date) {
+    fail('start_date and end_date are required', 400);
   }
   if (!member_id && !(renter_name && renter_name.trim())) {
     fail('Select a member or enter a renter name', 400);
   }
   if (member_id && renter_name && renter_name.trim()) {
     fail('Provide either a member or a renter name, not both', 400);
-  }
-  if (!RATE_TYPES.includes(rate_type)) {
-    fail(`rate_type must be one of: ${RATE_TYPES.join(', ')}`, 400);
   }
   if (!['member', 'staff'].includes(collected_by_type)) {
     fail('collected_by_type must be member or staff', 400);
@@ -58,53 +57,95 @@ export const bookRental = async (data) => {
     fail('end_date must be after start_date', 400);
   }
 
-  const advanceNum = advance_amount ? Number(advance_amount) : 0;
-  if (Number.isNaN(advanceNum) || advanceNum < 0) fail('advance_amount cannot be negative', 400);
-  if (advanceNum > 0 && (!advance_payment_type || !PAYMENT_TYPES.includes(advance_payment_type))) {
-    fail('advance_payment_type (cash or qr) is required when an advance is collected', 400);
-  }
-
-  const [product, member, collector] = await Promise.all([
-    getRentalProductById(product_id),
+  const [member, collector] = await Promise.all([
     member_id ? getMemberById(member_id) : Promise.resolve(null),
     collected_by
       ? collected_by_type === 'staff' ? getStaffUserById(collected_by) : getMemberById(collected_by)
       : Promise.resolve(null),
   ]);
 
-  if (!product) fail('Rental product not found', 404);
   if (member_id && !member) fail('Member not found', 404);
   if (collected_by && (!collector || (collected_by_type === 'staff' && !collector.is_active))) {
     fail(`Collector (collected_by) ${collected_by_type} not found or inactive`, 404);
   }
 
-  const rateAmount = product[`${rate_type}_rate`];
-  if (!rateAmount) fail(`This product has no ${rate_type} rate configured`, 400);
+  // Normalize items array: supports both multi-item bookings (data.items) and legacy single product
+  const rawItems = Array.isArray(items) && items.length > 0
+    ? items
+    : [{ product_id, quantity: quantity || 1, rate_type, amount }];
 
-  // Auto-computed with the day-rate floor by default, but the admin can
-  // override it (e.g. a discount) — same pattern as the return settlement.
-  let finalAmount = computeAmount(rate_type, rateAmount, product.day_rate, start_date, end_date);
-  if (amount !== undefined && amount !== null && amount !== '') {
-    finalAmount = Number(amount);
-    if (Number.isNaN(finalAmount) || finalAmount <= 0) fail('amount must be a positive number', 400);
+  if (rawItems.length === 0 || !rawItems[0].product_id) {
+    fail('At least one rental product must be selected', 400);
   }
-  if (advanceNum > finalAmount) fail('advance_amount cannot exceed the amount', 400);
 
-  return await createRental({
-    product_id,
+  // Validate each item and check inventory availability
+  const processedItems = [];
+  for (const item of rawItems) {
+    if (!item.product_id) fail('Product is required for each rental item', 400);
+    const itemQty = Math.max(1, parseInt(item.quantity, 10) || 1);
+    const itemRateType = item.rate_type || 'day';
+
+    if (!RATE_TYPES.includes(itemRateType)) {
+      fail(`rate_type must be one of: ${RATE_TYPES.join(', ')}`, 400);
+    }
+
+    const product = await getRentalProductById(item.product_id);
+    if (!product) fail(`Rental product ID ${item.product_id} not found`, 404);
+
+    const available = Number(product.available_quantity !== undefined ? product.available_quantity : product.total_quantity || 1);
+    if (itemQty > available) {
+      fail(`Cannot rent ${itemQty} of "${product.name}". Only ${available} available.`, 400);
+    }
+
+    const rateAmount = product[`${itemRateType}_rate`];
+    if (!rateAmount) fail(`"${product.name}" has no ${itemRateType} rate configured`, 400);
+
+    let finalItemAmount = computeAmount(itemRateType, rateAmount, product.day_rate, start_date, end_date, itemQty);
+    if (item.amount !== undefined && item.amount !== null && item.amount !== '') {
+      finalItemAmount = Number(item.amount);
+      if (Number.isNaN(finalItemAmount) || finalItemAmount <= 0) fail('amount must be a positive number', 400);
+    }
+
+    processedItems.push({
+      product_id: item.product_id,
+      product_name: product.name,
+      quantity: itemQty,
+      rate_type: itemRateType,
+      rate_amount: rateAmount,
+      amount: finalItemAmount,
+    });
+  }
+
+  const totalAmount = processedItems.reduce((sum, item) => sum + item.amount, 0);
+
+  const advanceNum = advance_amount ? Number(advance_amount) : 0;
+  if (Number.isNaN(advanceNum) || advanceNum < 0) fail('advance_amount cannot be negative', 400);
+  if (advanceNum > 0 && (!advance_payment_type || !PAYMENT_TYPES.includes(advance_payment_type))) {
+    fail('advance_payment_type (cash or qr) is required when an advance is collected', 400);
+  }
+  if (advanceNum > totalAmount) fail('advance_amount cannot exceed the total amount', 400);
+
+  // Create single rental booking header with all items attached
+  const created = await createRental({
+    items: processedItems,
     member_id: member_id || null,
     renter_name: member_id ? null : renter_name.trim(),
-    rate_type,
-    rate_amount: rateAmount,
     start_date,
     end_date,
-    amount: finalAmount,
+    amount: totalAmount,
     advance_amount: advanceNum,
     advance_payment_type: advanceNum > 0 ? advance_payment_type : null,
     collected_by: collected_by || null,
     collected_by_type,
     notes: notes || null,
   });
+
+  return {
+    id: created.id,
+    rental_ref: created.rental_ref,
+    total_amount: totalAmount,
+    items: processedItems,
+  };
 };
 
 export const fetchRentals = async (filters) => {
@@ -147,8 +188,24 @@ export const returnRental = async (id, { end_date, amount, settlement_payment_ty
     finalAmount = Number(amount);
     if (Number.isNaN(finalAmount) || finalAmount <= 0) fail('amount must be a positive number', 400);
   } else {
-    const product = await getRentalProductById(existing.product_id);
-    finalAmount = computeAmount(existing.rate_type, existing.rate_amount, product.day_rate, existing.start_date, actualEndDate);
+    if (existing.items && existing.items.length > 0) {
+      finalAmount = 0;
+      for (const item of existing.items) {
+        const prod = await getRentalProductById(item.product_id);
+        const itemTotal = computeAmount(
+          item.rate_type,
+          item.rate_amount,
+          prod ? prod.day_rate : 0,
+          existing.start_date,
+          actualEndDate,
+          item.quantity || 1
+        );
+        finalAmount += itemTotal;
+      }
+    } else {
+      const product = await getRentalProductById(existing.product_id);
+      finalAmount = computeAmount(existing.rate_type, existing.rate_amount, product ? product.day_rate : 0, existing.start_date, actualEndDate, existing.quantity || 1);
+    }
   }
 
   const balance = finalAmount - Number(existing.advance_amount);
@@ -159,6 +216,6 @@ export const returnRental = async (id, { end_date, amount, settlement_payment_ty
   return await settleRentalReturn(id, {
     end_date: actualEndDate,
     amount: finalAmount,
-    settlement_payment_type: balance > 0 ? settlement_payment_type : null,
+    settlement_payment_type: settlement_payment_type || (balance !== 0 ? 'cash' : null),
   });
 };

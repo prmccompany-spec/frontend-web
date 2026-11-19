@@ -607,3 +607,77 @@ JOIN users u ON u.phone = lh.phone
 SET lh.user_id = u.id, lh.account_type = 'staff'
 WHERE lh.member_id IS NULL AND lh.account_type IS NULL;
 UPDATE login_history SET account_type = 'unknown' WHERE account_type IS NULL;
+
+-- ============================================================
+-- RENTAL & INVENTORY MANAGEMENT SYSTEM (DROP & RECREATE)
+-- ============================================================
+-- Clean standalone schema for rental products, multi-product rental bookings,
+-- and child line items.
+-- Drops existing rental tables if they exist and creates fresh schema.
+
+DROP TABLE IF EXISTS rental_items;
+DROP TABLE IF EXISTS rentals;
+DROP TABLE IF EXISTS rental_products;
+
+-- 1. Rental Products / Inventory Fleet
+CREATE TABLE rental_products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT NULL,
+  total_quantity INT NOT NULL DEFAULT 1,
+  day_rate DECIMAL(10,2) NOT NULL,
+  month_rate DECIMAL(10,2) NULL,
+  year_rate DECIMAL(10,2) NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2. Rental Booking Headers (Parent Transaction)
+CREATE TABLE rentals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  rental_ref VARCHAR(30) UNIQUE NOT NULL,
+  product_id INT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  member_id INT NULL,
+  renter_name VARCHAR(200) NULL,
+  rate_type ENUM('day','month','year') NULL,
+  rate_amount DECIMAL(10,2) NULL,
+  start_date DATETIME NOT NULL,
+  end_date DATETIME NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  advance_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  advance_payment_type ENUM('cash','qr') NULL,
+  settlement_payment_type ENUM('cash','qr') NULL,
+  status ENUM('active','returned','cancelled') NOT NULL DEFAULT 'active',
+  collected_by INT NULL,
+  collected_by_type ENUM('member','staff') NOT NULL DEFAULT 'member',
+  returned_at DATETIME NULL,
+  notes TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_rentals_member (member_id),
+  KEY idx_rentals_ref (rental_ref)
+);
+
+-- 3. Rental Items (Child Line Items for Multi-Product Bookings)
+CREATE TABLE rental_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  rental_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  rate_type ENUM('day','month','year') NOT NULL DEFAULT 'day',
+  rate_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_rental_items_rental (rental_id),
+  KEY idx_rental_items_product (product_id)
+);
+
+-- 4. Seed Initial Rental Inventory
+INSERT INTO rental_products (name, description, total_quantity, day_rate, month_rate, year_rate, is_active) VALUES
+('Plastic Chairs (Armless)', 'Sturdy plastic banquet chairs for events and functions', 100, 10.00, 200.00, 1500.00, 1),
+('Banquet Tables (6 ft)', 'Folding rectangular tables suitable for dining and stage setup', 20, 50.00, 900.00, 6000.00, 1),
+('Shamiana Tent (20x20 ft)', 'Weather-resistant canopy tent for outdoor gatherings', 5, 500.00, 8000.00, 50000.00, 1),
+('PA Sound System & Mic', 'Amplifier, speakers, and wireless microphones', 2, 800.00, 12000.00, 80000.00, 1),
+('Diesel Generator (5 kVA)', 'Backup power generator with distribution cables', 2, 1200.00, 18000.00, 120000.00, 1);

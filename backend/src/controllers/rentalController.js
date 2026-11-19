@@ -30,12 +30,19 @@ export const getRental = asyncHandler(async (req, res) => {
 });
 
 export const createRental = asyncHandler(async (req, res) => {
-  const { id, rental_ref } = await bookRental({
+  const result = await bookRental({
     ...req.body,
     collected_by: req.user.id,
     collected_by_type: req.user.account_type,
   });
-  res.status(201).json({ success: true, message: 'Rental recorded', id, rental_ref });
+  const fullRental = await fetchRentalDetail(result.id);
+  res.status(201).json({
+    success: true,
+    message: 'Rental recorded',
+    id: result.id,
+    rental_ref: result.rental_ref,
+    data: fullRental,
+  });
 });
 
 export const updateRentalStatus = asyncHandler(async (req, res) => {
@@ -49,5 +56,10 @@ export const returnRental = asyncHandler(async (req, res) => {
   const id = parseId(req, res);
   if (id === null) return;
   await settleReturn(id, req.body);
-  res.json({ success: true, message: 'Rental returned and settled' });
+  const updatedRental = await fetchRentalDetail(id);
+  res.json({
+    success: true,
+    message: 'Rental returned and settled',
+    data: updatedRental,
+  });
 });

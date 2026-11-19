@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getRentalProducts, createRentalProduct, updateRentalProduct, deleteRentalProduct } from '../../../services/rentalService';
 import './RentalProducts.css';
 
-const emptyForm = { name: '', description: '', day_rate: '', month_rate: '', year_rate: '' };
+const emptyForm = { name: '', description: '', total_quantity: '10', day_rate: '', month_rate: '', year_rate: '' };
 
 function ProductModal({ product, onClose, onSaved }) {
   const isEdit = !!product;
@@ -11,6 +11,7 @@ function ProductModal({ product, onClose, onSaved }) {
       ? {
           name: product.name,
           description: product.description ?? '',
+          total_quantity: String(product.total_quantity ?? 1),
           day_rate: product.day_rate ?? '',
           month_rate: product.month_rate ?? '',
           year_rate: product.year_rate ?? '',
@@ -25,6 +26,9 @@ function ProductModal({ product, onClose, onSaved }) {
     setError('');
 
     if (!form.name.trim()) return setError('Product name is required.');
+    if (!form.total_quantity || parseInt(form.total_quantity, 10) < 1) {
+      return setError('Total quantity is required and must be at least 1.');
+    }
     if (!form.day_rate || Number(form.day_rate) <= 0) {
       return setError('Day rate is required — it is the minimum charge for any rental of this product.');
     }
@@ -32,6 +36,7 @@ function ProductModal({ product, onClose, onSaved }) {
     const payload = {
       name: form.name.trim(),
       description: form.description || null,
+      total_quantity: parseInt(form.total_quantity, 10),
       day_rate: Number(form.day_rate),
       month_rate: form.month_rate ? Number(form.month_rate) : null,
       year_rate: form.year_rate ? Number(form.year_rate) : null,
@@ -75,6 +80,20 @@ function ProductModal({ product, onClose, onSaved }) {
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
+            </div>
+
+            <div className="rp-field">
+              <label className="rp-label">Total Quantity (Available Inventory) *</label>
+              <input
+                type="number"
+                className="rp-input"
+                min="1"
+                step="1"
+                placeholder="e.g. 50"
+                value={form.total_quantity}
+                onChange={(e) => setForm((f) => ({ ...f, total_quantity: e.target.value }))}
+              />
+              <p className="rp-hint">Total number of units owned by the organisation for rental.</p>
             </div>
 
             <div className="rp-field">
@@ -209,12 +228,16 @@ function RentalProducts() {
 
   useEffect(() => { load(); }, [load]);
 
+  const totalFleetUnits = products.reduce((sum, p) => sum + (Number(p.total_quantity) || 1), 0);
+  const totalRentedUnits = products.reduce((sum, p) => sum + (Number(p.rented_quantity) || 0), 0);
+  const totalAvailableUnits = products.reduce((sum, p) => sum + (Number(p.available_quantity) || 0), 0);
+
   return (
     <div className="admin-content rp-page">
       <div className="admin-page-header">
         <div>
-          <h1 className="admin-page-title">Rental Products</h1>
-          <p className="admin-page-subtitle">Manage items available for rental, with day / month / year rates</p>
+          <h1 className="admin-page-title">Rental Products &amp; Inventory</h1>
+          <p className="admin-page-subtitle">Manage items, rates, and live available quantity in inventory</p>
         </div>
         <button className="rp-add-btn" onClick={() => setCreating(true)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -225,6 +248,26 @@ function RentalProducts() {
       </div>
 
       {error && <div className="rp-alert">{error}</div>}
+
+      {/* ── Inventory Overview Cards ── */}
+      <div className="rp-stats-grid">
+        <div className="rp-stat-card">
+          <span className="rp-stat-label">Product Types</span>
+          <span className="rp-stat-val">{products.length}</span>
+        </div>
+        <div className="rp-stat-card">
+          <span className="rp-stat-label">Total Fleet Units</span>
+          <span className="rp-stat-val">{totalFleetUnits}</span>
+        </div>
+        <div className="rp-stat-card rp-stat-card--rented">
+          <span className="rp-stat-label">Currently Rented</span>
+          <span className="rp-stat-val">{totalRentedUnits}</span>
+        </div>
+        <div className="rp-stat-card rp-stat-card--available">
+          <span className="rp-stat-label">Available to Rent</span>
+          <span className="rp-stat-val">{totalAvailableUnits}</span>
+        </div>
+      </div>
 
       {loading ? (
         <div className="rp-state">Loading…</div>
@@ -238,36 +281,59 @@ function RentalProducts() {
             <thead>
               <tr>
                 <th>Product</th>
-                <th>Day</th>
-                <th>Month</th>
-                <th>Year</th>
+                <th>Total Qty</th>
+                <th>Rented</th>
+                <th>Available</th>
+                <th>Day Rate</th>
+                <th>Month Rate</th>
+                <th>Year Rate</th>
                 <th>Status</th>
                 <th className="rp-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <div className="rp-td-name">{p.name}</div>
-                    {p.description && <div className="rp-td-desc">{p.description}</div>}
-                  </td>
-                  <td>{fmt(p.day_rate)}</td>
-                  <td>{fmt(p.month_rate)}</td>
-                  <td>{fmt(p.year_rate)}</td>
-                  <td>
-                    <span className={`rp-status ${p.is_active ? 'rp-status--active' : 'rp-status--inactive'}`}>
-                      {p.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="rp-td-actions">
-                    <button className="rp-row-btn" onClick={() => setEditTarget(p)}>Edit</button>
-                    {p.is_active === 1 && (
-                      <button className="rp-row-btn rp-row-btn--danger" onClick={() => setDeactivateTarget(p)}>Deactivate</button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {products.map((p) => {
+                const total = Number(p.total_quantity) || 1;
+                const rented = Number(p.rented_quantity) || 0;
+                const avail = Number(p.available_quantity) !== undefined ? Number(p.available_quantity) : Math.max(0, total - rented);
+                const isOutOfStock = avail <= 0;
+
+                return (
+                  <tr key={p.id}>
+                    <td>
+                      <div className="rp-td-name">{p.name}</div>
+                      {p.description && <div className="rp-td-desc">{p.description}</div>}
+                    </td>
+                    <td>
+                      <span className="rp-qty-total">{total}</span>
+                    </td>
+                    <td>
+                      <span className={`rp-qty-rented ${rented > 0 ? 'rp-qty-rented--active' : ''}`}>
+                        {rented}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`rp-qty-badge ${isOutOfStock ? 'rp-qty-badge--out' : avail <= 3 ? 'rp-qty-badge--low' : 'rp-qty-badge--avail'}`}>
+                        {avail} {isOutOfStock ? '(Out of stock)' : ''}
+                      </span>
+                    </td>
+                    <td>{fmt(p.day_rate)}</td>
+                    <td>{fmt(p.month_rate)}</td>
+                    <td>{fmt(p.year_rate)}</td>
+                    <td>
+                      <span className={`rp-status ${p.is_active ? 'rp-status--active' : 'rp-status--inactive'}`}>
+                        {p.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="rp-td-actions">
+                      <button className="rp-row-btn" onClick={() => setEditTarget(p)}>Edit</button>
+                      {p.is_active === 1 && (
+                        <button className="rp-row-btn rp-row-btn--danger" onClick={() => setDeactivateTarget(p)}>Deactivate</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

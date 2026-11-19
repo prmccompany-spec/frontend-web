@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { getPayments, getCategories, updatePayment } from '../../../services/paymentService';
 import { matchesIdOrText } from '../../../utils/memberSearch';
 import { exportTableToPdf } from '../../../utils/pdfExport';
+import { exportTableToExcel } from '../../../utils/excelExport';
 import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
+import ExportExcelButton from '../../../components/ExportExcelButton/ExportExcelButton';
+import ReceiptModal from '../../../components/ReceiptModal/ReceiptModal';
 import { showToast } from '../../../components/Toast/toastBus';
 import './PaymentHistory.css';
 
@@ -110,6 +113,7 @@ function PaymentHistory() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingPayment, setEditingPayment] = useState(null);
+  const [receiptPayment, setReceiptPayment] = useState(null);
 
   const [filters, setFilters] = useState({
     category_id: '',
@@ -179,6 +183,46 @@ function PaymentHistory() {
     filename: 'payment-history',
   });
 
+  const handleExportExcel = () => exportTableToExcel({
+    title: 'Payment History',
+    subtitle: activeFilterParts.length ? activeFilterParts.join(' · ') : 'All records',
+    summary: [
+      { label: 'Payments', value: displayed.length },
+      { label: 'Total', value: total },
+    ],
+    columns: [
+      { header: 'Ref', key: 'ref' },
+      { header: 'Member', key: 'member' },
+      { header: 'Category', key: 'category' },
+      { header: 'Payment Mode', key: 'type' },
+      { header: 'Amount', key: 'amount' },
+      { header: 'Date', key: 'date' },
+      { header: 'Collected By', key: 'collectedBy' },
+      { header: 'Notes', key: 'notes' },
+    ],
+    rows: displayed.map((p) => ({
+      ref: p.payment_ref,
+      member: `${p.member_name}${p.member_code ? ` (${p.member_code})` : ''}`,
+      category: p.category_name,
+      type: p.payment_type === 'qr' ? 'QR' : 'Cash',
+      amount: p.amount,
+      date: fmtDate(p.payment_date),
+      collectedBy: p.collected_by_name || '—',
+      notes: p.notes || '',
+    })),
+    totalRow: {
+      ref: 'Total',
+      member: `${displayed.length} payments`,
+      category: '',
+      type: '',
+      amount: total,
+      date: '',
+      collectedBy: '',
+      notes: '',
+    },
+    filename: 'payment-history',
+  });
+
   const handleSaved = () => {
     setEditingPayment(null);
     load();
@@ -231,6 +275,7 @@ function PaymentHistory() {
           </button>
         )}
         <ExportPdfButton onExport={handleExport} disabled={displayed.length === 0} />
+        <ExportExcelButton onExport={handleExportExcel} disabled={displayed.length === 0} />
       </div>
 
       {loading ? (
@@ -278,11 +323,36 @@ function PaymentHistory() {
                     <td>{p.collected_by_name}</td>
                     <td className="ph-notes">{p.notes || '—'}</td>
                     <td>
-                      {p.pending_payment_id ? (
-                        <span className="ph-locked">Due cleared</span>
-                      ) : (
-                        <button type="button" className="ph-row-btn" onClick={() => setEditingPayment(p)}>Edit</button>
-                      )}
+                      <div className="ph-actions-group">
+                        <button
+                          type="button"
+                          className="ph-receipt-btn"
+                          title="View & Print Receipt"
+                          onClick={() => setReceiptPayment(p)}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            width="14"
+                            height="14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" />
+                            <line x1="8" y1="6" x2="16" y2="6" />
+                            <line x1="8" y1="10" x2="16" y2="10" />
+                            <line x1="8" y1="14" x2="12" y2="14" />
+                          </svg>
+                          Receipt
+                        </button>
+                        {p.pending_payment_id ? (
+                          <span className="ph-locked">Due cleared</span>
+                        ) : (
+                          <button type="button" className="ph-row-btn" onClick={() => setEditingPayment(p)}>Edit</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -297,6 +367,12 @@ function PaymentHistory() {
           payment={editingPayment}
           onClose={() => setEditingPayment(null)}
           onSaved={handleSaved}
+        />
+      )}
+      {receiptPayment && (
+        <ReceiptModal
+          payment={receiptPayment}
+          onClose={() => setReceiptPayment(null)}
         />
       )}
     </div>

@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { getPendingPayments, getMembers } from '../../../services/memberService';
 import { matchesIdOrText } from '../../../utils/memberSearch';
 import { exportTableToPdf } from '../../../utils/pdfExport';
+import { exportTableToExcel } from '../../../utils/excelExport';
 import ExportPdfButton from '../../../components/ExportPdfButton/ExportPdfButton';
+import ExportExcelButton from '../../../components/ExportExcelButton/ExportExcelButton';
 import './DueTracker.css';
 
 const fmt = (val) =>
@@ -231,6 +233,44 @@ function DueTracker() {
     filename: 'due-tracker',
   });
 
+  const handleExportExcel = () => exportTableToExcel({
+    title: 'Due Tracker — Outstanding Dues',
+    subtitle: search ? `Search "${search}"` : 'All pending dues',
+    summary: [
+      { label: 'Dues', value: filtered.length },
+      { label: 'Outstanding', value: outstandingTotal },
+      { label: 'Overdue', value: overdueTotal },
+    ],
+    columns: [
+      { header: 'Member', key: 'member' },
+      { header: 'Due Title', key: 'due' },
+      { header: 'Category', key: 'category' },
+      { header: 'Amount', key: 'amount' },
+      { header: 'Due Date', key: 'dueDate' },
+      { header: 'Status', key: 'status' },
+      { header: 'Contact', key: 'contact' },
+    ],
+    rows: filtered.map((d) => ({
+      member: `${d.member_name}${d.member_code ? ` (${d.member_code})` : ''}`,
+      due: d.title,
+      category: d.category_name,
+      amount: d.amount,
+      dueDate: fmtDate(d.due_date),
+      status: d.isOverdue ? `${d.daysOverdue}d overdue` : d.isToday ? 'Due today' : d.daysOverdue === null ? 'No due date' : `In ${Math.abs(d.daysOverdue)}d`,
+      contact: d.phone || '—',
+    })),
+    totalRow: {
+      member: 'Total',
+      due: `${filtered.length} dues`,
+      category: '',
+      amount: filtered.reduce((s, d) => s + Number(d.amount), 0),
+      dueDate: '',
+      status: '',
+      contact: '',
+    },
+    filename: 'due-tracker',
+  });
+
   if (loading) {
     return (
       <div className="admin-content">
@@ -274,6 +314,7 @@ function DueTracker() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <ExportPdfButton onExport={handleExport} disabled={filtered.length === 0} />
+        <ExportExcelButton onExport={handleExportExcel} disabled={filtered.length === 0} />
       </div>
 
       {activeTab === 'overdue' && (

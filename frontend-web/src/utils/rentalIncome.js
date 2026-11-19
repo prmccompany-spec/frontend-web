@@ -1,8 +1,8 @@
-// A rental's advance is real income the moment it's collected. The
-// remaining balance only becomes income once the rental is actually
-// returned and settled — it must not be counted while still active (the
-// money hasn't come in yet), and never for a cancelled rental (nothing was
-// ultimately earned there, regardless of any advance taken).
+// A rental's advance is real income the moment it's collected. When
+// returned, if the final usage charge exceeds the advance, the remaining
+// balance is additional incoming money.
+// If the rental was returned early and the final charge is less than the advance,
+// the difference is an outgoing REFUND returned to the renter (tracked as 'out' in Tally Book).
 export function getRealizedRentalIncome(rentals) {
   const entries = [];
 
@@ -20,17 +20,30 @@ export function getRealizedRentalIncome(rentals) {
         date: r.created_at,
         amount: advance,
         mode: r.advance_payment_type,
+        kind: 'in',
       });
     }
 
-    if (r.status === 'returned' && balance > 0) {
-      entries.push({
-        rentalId: r.id,
-        stage: 'balance',
-        date: r.returned_at,
-        amount: balance,
-        mode: r.settlement_payment_type,
-      });
+    if (r.status === 'returned') {
+      if (balance > 0) {
+        entries.push({
+          rentalId: r.id,
+          stage: 'balance',
+          date: r.returned_at || r.end_date,
+          amount: balance,
+          mode: r.settlement_payment_type,
+          kind: 'in',
+        });
+      } else if (balance < 0) {
+        entries.push({
+          rentalId: r.id,
+          stage: 'refund',
+          date: r.returned_at || r.end_date,
+          amount: Math.abs(balance),
+          mode: r.settlement_payment_type,
+          kind: 'out',
+        });
+      }
     }
   }
 

@@ -40,9 +40,14 @@ export const addRentalProduct = async (data) => {
   if (!data.name || !data.name.trim()) fail('Product name is required', 400);
   validateRates(data);
 
+  const totalQuantity = data.total_quantity !== undefined && data.total_quantity !== null && data.total_quantity !== ''
+    ? Math.max(1, parseInt(data.total_quantity, 10) || 1)
+    : 1;
+
   return await createRentalProduct({
     name: data.name.trim(),
     description: data.description || null,
+    total_quantity: totalQuantity,
     day_rate: Number(data.day_rate),
     month_rate: data.month_rate ? Number(data.month_rate) : null,
     year_rate: data.year_rate ? Number(data.year_rate) : null,
@@ -55,9 +60,14 @@ export const modifyRentalProduct = async (id, data) => {
   if (!data.name || !data.name.trim()) fail('Product name is required', 400);
   validateRates(data);
 
+  const totalQuantity = data.total_quantity !== undefined && data.total_quantity !== null && data.total_quantity !== ''
+    ? Math.max(1, parseInt(data.total_quantity, 10) || 1)
+    : (existing.total_quantity || 1);
+
   return await updateRentalProduct(id, {
     name: data.name.trim(),
     description: data.description || null,
+    total_quantity: totalQuantity,
     day_rate: Number(data.day_rate),
     month_rate: data.month_rate ? Number(data.month_rate) : null,
     year_rate: data.year_rate ? Number(data.year_rate) : null,

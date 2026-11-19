@@ -198,6 +198,28 @@
   gap: 12px;
 }
 
+.pe-success-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pe-success-receipt-btn {
+  background: #065f46;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pe-success-receipt-btn:hover {
+  background: #044e39;
+}
+
 .pe-success-close {
   background: none;
   border: none;
